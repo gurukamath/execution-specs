@@ -15,6 +15,7 @@ Subpackages
    :titlesonly:
    :maxdepth: 3
 
+   dao_fork/index.rst
    frontier/index.rst
    homestead/index.rst
    utils/index.rst
