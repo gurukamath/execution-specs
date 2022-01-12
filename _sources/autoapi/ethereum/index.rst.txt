@@ -18,6 +18,7 @@ Subpackages
    dao_fork/index.rst
    frontier/index.rst
    homestead/index.rst
+   tangerine_whistle/index.rst
    utils/index.rst
 
 
