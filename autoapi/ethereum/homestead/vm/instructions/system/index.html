@@ -178,6 +178,10 @@
         <span class="n">push</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">,</span> <span class="n">U256</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
         <span class="k">return</span> <span class="kc">None</span>
 
+    <span class="k">if</span> <span class="n">sender</span><span class="o">.</span><span class="n">nonce</span> <span class="o">==</span> <span class="n">Uint</span><span class="p">(</span><span class="mi">2</span> <span class="o">**</span> <span class="mi">64</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="n">push</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">,</span> <span class="n">U256</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
     <span class="k">if</span> <span class="n">evm</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">depth</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">&gt;</span> <span class="n">STACK_DEPTH_LIMIT</span><span class="p">:</span>
         <span class="n">push</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">,</span> <span class="n">U256</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
         <span class="k">return</span> <span class="kc">None</span>
@@ -267,10 +271,7 @@
 </dd></dl>
 
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">call</span><span class="p">(</span><span class="n">evm</span><span class="p">:</span> <span class="n">Evm</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">ethereum.homestead.vm.interpreter</span> <span class="kn">import</span> <span class="p">(</span>
-        <span class="n">STACK_DEPTH_LIMIT</span><span class="p">,</span>
-        <span class="n">process_message</span><span class="p">,</span>
-    <span class="p">)</span>
+    <span class="kn">from</span> <span class="nn">...vm.interpreter</span> <span class="kn">import</span> <span class="n">STACK_DEPTH_LIMIT</span><span class="p">,</span> <span class="n">process_message</span>
 
     <span class="n">gas</span> <span class="o">=</span> <span class="n">pop</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">)</span>
     <span class="n">to</span> <span class="o">=</span> <span class="n">to_address</span><span class="p">(</span><span class="n">pop</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">))</span>
@@ -364,10 +365,7 @@
 </dd></dl>
 
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">callcode</span><span class="p">(</span><span class="n">evm</span><span class="p">:</span> <span class="n">Evm</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">ethereum.homestead.vm.interpreter</span> <span class="kn">import</span> <span class="p">(</span>
-        <span class="n">STACK_DEPTH_LIMIT</span><span class="p">,</span>
-        <span class="n">process_message</span><span class="p">,</span>
-    <span class="p">)</span>
+    <span class="kn">from</span> <span class="nn">...vm.interpreter</span> <span class="kn">import</span> <span class="n">STACK_DEPTH_LIMIT</span><span class="p">,</span> <span class="n">process_message</span>
 
     <span class="n">gas</span> <span class="o">=</span> <span class="n">pop</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">)</span>
     <span class="n">code_address</span> <span class="o">=</span> <span class="n">to_address</span><span class="p">(</span><span class="n">pop</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">))</span>
@@ -498,10 +496,7 @@ but persisting the current values for sender.</p>
 </dd></dl>
 
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">delegatecall</span><span class="p">(</span><span class="n">evm</span><span class="p">:</span> <span class="n">Evm</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">ethereum.homestead.vm.interpreter</span> <span class="kn">import</span> <span class="p">(</span>
-        <span class="n">STACK_DEPTH_LIMIT</span><span class="p">,</span>
-        <span class="n">process_message</span><span class="p">,</span>
-    <span class="p">)</span>
+    <span class="kn">from</span> <span class="nn">...vm.interpreter</span> <span class="kn">import</span> <span class="n">STACK_DEPTH_LIMIT</span><span class="p">,</span> <span class="n">process_message</span>
 
     <span class="n">gas</span> <span class="o">=</span> <span class="n">pop</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">)</span>
     <span class="n">code_address</span> <span class="o">=</span> <span class="n">to_address</span><span class="p">(</span><span class="n">pop</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">))</span>

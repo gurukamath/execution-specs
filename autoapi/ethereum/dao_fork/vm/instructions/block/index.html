@@ -150,15 +150,15 @@ stack. The block number to hash is present at the top of the stack.</p>
 </dd>
 <dt class="field-even">Raises</dt>
 <dd class="field-even"><ul class="simple">
-<li><p><a class="reference internal" href="../../error/index.html#ethereum.dao_fork.vm.error.StackUnderflowError" title="ethereum.dao_fork.vm.error.StackUnderflowError"><strong>ethereum.dao_fork.vm.error.StackUnderflowError</strong></a> – If <cite>len(stack)</cite> is less than <cite>1</cite>.</p></li>
-<li><p><a class="reference internal" href="../../error/index.html#ethereum.dao_fork.vm.error.OutOfGasError" title="ethereum.dao_fork.vm.error.OutOfGasError"><strong>ethereum.dao_fork.vm.error.OutOfGasError</strong></a> – If <cite>evm.gas_left</cite> is less than <cite>20</cite>.</p></li>
+<li><p><a class="reference internal" href="../../error/index.html#ethereum.dao_fork.vm.error.StackUnderflowError" title="ethereum.dao_fork.vm.error.StackUnderflowError"><strong>StackUnderflowError</strong></a> – If <cite>len(stack)</cite> is less than <cite>1</cite>.</p></li>
+<li><p><a class="reference internal" href="../../error/index.html#ethereum.dao_fork.vm.error.OutOfGasError" title="ethereum.dao_fork.vm.error.OutOfGasError"><strong>OutOfGasError</strong></a> – If <cite>evm.gas_left</cite> is less than <cite>20</cite>.</p></li>
 </ul>
 </dd>
 </dl>
 </dd></dl>
 
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">block_hash</span><span class="p">(</span><span class="n">evm</span><span class="p">:</span> <span class="n">Evm</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span> <span class="o">=</span> <span class="n">subtract_gas</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span><span class="p">,</span> <span class="n">GAS_EXTERNAL</span><span class="p">)</span>
+    <span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span> <span class="o">=</span> <span class="n">subtract_gas</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span><span class="p">,</span> <span class="n">GAS_BLOCK_HASH</span><span class="p">)</span>
 
     <span class="n">block_number</span> <span class="o">=</span> <span class="n">pop</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">)</span>
 
@@ -191,8 +191,8 @@ executing transaction/call resides.</p>
 </dd>
 <dt class="field-even">Raises</dt>
 <dd class="field-even"><ul class="simple">
-<li><p><a class="reference internal" href="../../error/index.html#ethereum.dao_fork.vm.error.StackOverflowError" title="ethereum.dao_fork.vm.error.StackOverflowError"><strong>ethereum.dao_fork.vm.error.StackOverflowError</strong></a> – If <cite>len(stack)</cite> is equal to <cite>1024</cite>.</p></li>
-<li><p><a class="reference internal" href="../../error/index.html#ethereum.dao_fork.vm.error.OutOfGasError" title="ethereum.dao_fork.vm.error.OutOfGasError"><strong>ethereum.dao_fork.vm.error.OutOfGasError</strong></a> – If <cite>evm.gas_left</cite> is less than <cite>2</cite>.</p></li>
+<li><p><a class="reference internal" href="../../error/index.html#ethereum.dao_fork.vm.error.StackOverflowError" title="ethereum.dao_fork.vm.error.StackOverflowError"><strong>StackOverflowError</strong></a> – If <cite>len(stack)</cite> is equal to <cite>1024</cite>.</p></li>
+<li><p><a class="reference internal" href="../../error/index.html#ethereum.dao_fork.vm.error.OutOfGasError" title="ethereum.dao_fork.vm.error.OutOfGasError"><strong>OutOfGasError</strong></a> – If <cite>evm.gas_left</cite> is less than <cite>2</cite>.</p></li>
 </ul>
 </dd>
 </dl>
@@ -221,8 +221,8 @@ executing transaction/call resides.</p>
 </dd>
 <dt class="field-even">Raises</dt>
 <dd class="field-even"><ul class="simple">
-<li><p><a class="reference internal" href="../../error/index.html#ethereum.dao_fork.vm.error.StackOverflowError" title="ethereum.dao_fork.vm.error.StackOverflowError"><strong>ethereum.dao_fork.vm.error.StackOverflowError</strong></a> – If <cite>len(stack)</cite> is equal to <cite>1024</cite>.</p></li>
-<li><p><a class="reference internal" href="../../error/index.html#ethereum.dao_fork.vm.error.OutOfGasError" title="ethereum.dao_fork.vm.error.OutOfGasError"><strong>ethereum.dao_fork.vm.error.OutOfGasError</strong></a> – If <cite>evm.gas_left</cite> is less than <cite>2</cite>.</p></li>
+<li><p><a class="reference internal" href="../../error/index.html#ethereum.dao_fork.vm.error.StackOverflowError" title="ethereum.dao_fork.vm.error.StackOverflowError"><strong>StackOverflowError</strong></a> – If <cite>len(stack)</cite> is equal to <cite>1024</cite>.</p></li>
+<li><p><a class="reference internal" href="../../error/index.html#ethereum.dao_fork.vm.error.OutOfGasError" title="ethereum.dao_fork.vm.error.OutOfGasError"><strong>OutOfGasError</strong></a> – If <cite>evm.gas_left</cite> is less than <cite>2</cite>.</p></li>
 </ul>
 </dd>
 </dl>
@@ -250,8 +250,8 @@ executing transaction/call resides.</p>
 </dd>
 <dt class="field-even">Raises</dt>
 <dd class="field-even"><ul class="simple">
-<li><p><a class="reference internal" href="../../error/index.html#ethereum.dao_fork.vm.error.StackOverflowError" title="ethereum.dao_fork.vm.error.StackOverflowError"><strong>ethereum.dao_fork.vm.error.StackOverflowError</strong></a> – If <cite>len(stack)</cite> is equal to <cite>1024</cite>.</p></li>
-<li><p><a class="reference internal" href="../../error/index.html#ethereum.dao_fork.vm.error.OutOfGasError" title="ethereum.dao_fork.vm.error.OutOfGasError"><strong>ethereum.dao_fork.vm.error.OutOfGasError</strong></a> – If <cite>evm.gas_left</cite> is less than <cite>2</cite>.</p></li>
+<li><p><a class="reference internal" href="../../error/index.html#ethereum.dao_fork.vm.error.StackOverflowError" title="ethereum.dao_fork.vm.error.StackOverflowError"><strong>StackOverflowError</strong></a> – If <cite>len(stack)</cite> is equal to <cite>1024</cite>.</p></li>
+<li><p><a class="reference internal" href="../../error/index.html#ethereum.dao_fork.vm.error.OutOfGasError" title="ethereum.dao_fork.vm.error.OutOfGasError"><strong>OutOfGasError</strong></a> – If <cite>evm.gas_left</cite> is less than <cite>2</cite>.</p></li>
 </ul>
 </dd>
 </dl>
@@ -279,8 +279,8 @@ executing transaction/call resides.</p>
 </dd>
 <dt class="field-even">Raises</dt>
 <dd class="field-even"><ul class="simple">
-<li><p><a class="reference internal" href="../../error/index.html#ethereum.dao_fork.vm.error.StackOverflowError" title="ethereum.dao_fork.vm.error.StackOverflowError"><strong>ethereum.dao_fork.vm.error.StackOverflowError</strong></a> – If <cite>len(stack)</cite> is equal to <cite>1024</cite>.</p></li>
-<li><p><a class="reference internal" href="../../error/index.html#ethereum.dao_fork.vm.error.OutOfGasError" title="ethereum.dao_fork.vm.error.OutOfGasError"><strong>ethereum.dao_fork.vm.error.OutOfGasError</strong></a> – If <cite>evm.gas_left</cite> is less than <cite>2</cite>.</p></li>
+<li><p><a class="reference internal" href="../../error/index.html#ethereum.dao_fork.vm.error.StackOverflowError" title="ethereum.dao_fork.vm.error.StackOverflowError"><strong>StackOverflowError</strong></a> – If <cite>len(stack)</cite> is equal to <cite>1024</cite>.</p></li>
+<li><p><a class="reference internal" href="../../error/index.html#ethereum.dao_fork.vm.error.OutOfGasError" title="ethereum.dao_fork.vm.error.OutOfGasError"><strong>OutOfGasError</strong></a> – If <cite>evm.gas_left</cite> is less than <cite>2</cite>.</p></li>
 </ul>
 </dd>
 </dl>
@@ -308,8 +308,8 @@ executing transaction/call resides.</p>
 </dd>
 <dt class="field-even">Raises</dt>
 <dd class="field-even"><ul class="simple">
-<li><p><a class="reference internal" href="../../error/index.html#ethereum.dao_fork.vm.error.StackOverflowError" title="ethereum.dao_fork.vm.error.StackOverflowError"><strong>ethereum.dao_fork.vm.error.StackOverflowError</strong></a> – If <cite>len(stack)</cite> is equal to <cite>1024</cite>.</p></li>
-<li><p><a class="reference internal" href="../../error/index.html#ethereum.dao_fork.vm.error.OutOfGasError" title="ethereum.dao_fork.vm.error.OutOfGasError"><strong>ethereum.dao_fork.vm.error.OutOfGasError</strong></a> – If <cite>evm.gas_left</cite> is less than <cite>2</cite>.</p></li>
+<li><p><a class="reference internal" href="../../error/index.html#ethereum.dao_fork.vm.error.StackOverflowError" title="ethereum.dao_fork.vm.error.StackOverflowError"><strong>StackOverflowError</strong></a> – If <cite>len(stack)</cite> is equal to <cite>1024</cite>.</p></li>
+<li><p><a class="reference internal" href="../../error/index.html#ethereum.dao_fork.vm.error.OutOfGasError" title="ethereum.dao_fork.vm.error.OutOfGasError"><strong>OutOfGasError</strong></a> – If <cite>evm.gas_left</cite> is less than <cite>2</cite>.</p></li>
 </ul>
 </dd>
 </dl>
