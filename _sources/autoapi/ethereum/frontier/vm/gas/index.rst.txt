@@ -50,6 +50,7 @@ Attributes
    ethereum.frontier.vm.gas.GAS_MID
    ethereum.frontier.vm.gas.GAS_HIGH
    ethereum.frontier.vm.gas.GAS_EXPONENTIATION
+   ethereum.frontier.vm.gas.GAS_EXPONENTIATION_PER_BYTE
    ethereum.frontier.vm.gas.GAS_MEMORY
    ethereum.frontier.vm.gas.GAS_KECCAK256
    ethereum.frontier.vm.gas.GAS_KECCAK256_WORD
@@ -234,6 +235,20 @@ GAS_EXPONENTIATION
    :lines: 32-32
 
 
+GAS_EXPONENTIATION_PER_BYTE
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+
+.. py:data:: GAS_EXPONENTIATION_PER_BYTE
+
+   
+
+.. undocinclude:: /../src/ethereum/frontier/vm/gas.py
+   :language: python
+   :lines: 33-33
+
+
 GAS_MEMORY
 ~~~~~~~~~~
 
@@ -245,7 +260,7 @@ GAS_MEMORY
 
 .. undocinclude:: /../src/ethereum/frontier/vm/gas.py
    :language: python
-   :lines: 33-33
+   :lines: 34-34
 
 
 GAS_KECCAK256
@@ -259,7 +274,7 @@ GAS_KECCAK256
 
 .. undocinclude:: /../src/ethereum/frontier/vm/gas.py
    :language: python
-   :lines: 34-34
+   :lines: 35-35
 
 
 GAS_KECCAK256_WORD
@@ -273,7 +288,7 @@ GAS_KECCAK256_WORD
 
 .. undocinclude:: /../src/ethereum/frontier/vm/gas.py
    :language: python
-   :lines: 35-35
+   :lines: 36-36
 
 
 GAS_COPY
@@ -287,7 +302,7 @@ GAS_COPY
 
 .. undocinclude:: /../src/ethereum/frontier/vm/gas.py
    :language: python
-   :lines: 36-36
+   :lines: 37-37
 
 
 GAS_BLOCK_HASH
@@ -301,7 +316,7 @@ GAS_BLOCK_HASH
 
 .. undocinclude:: /../src/ethereum/frontier/vm/gas.py
    :language: python
-   :lines: 37-37
+   :lines: 38-38
 
 
 GAS_EXTERNAL
@@ -315,7 +330,7 @@ GAS_EXTERNAL
 
 .. undocinclude:: /../src/ethereum/frontier/vm/gas.py
    :language: python
-   :lines: 38-38
+   :lines: 39-39
 
 
 GAS_BALANCE
@@ -329,7 +344,7 @@ GAS_BALANCE
 
 .. undocinclude:: /../src/ethereum/frontier/vm/gas.py
    :language: python
-   :lines: 39-39
+   :lines: 40-40
 
 
 GAS_LOG
@@ -343,7 +358,7 @@ GAS_LOG
 
 .. undocinclude:: /../src/ethereum/frontier/vm/gas.py
    :language: python
-   :lines: 40-40
+   :lines: 41-41
 
 
 GAS_LOG_DATA
@@ -357,7 +372,7 @@ GAS_LOG_DATA
 
 .. undocinclude:: /../src/ethereum/frontier/vm/gas.py
    :language: python
-   :lines: 41-41
+   :lines: 42-42
 
 
 GAS_LOG_TOPIC
@@ -371,7 +386,7 @@ GAS_LOG_TOPIC
 
 .. undocinclude:: /../src/ethereum/frontier/vm/gas.py
    :language: python
-   :lines: 42-42
+   :lines: 43-43
 
 
 GAS_CREATE
@@ -385,7 +400,7 @@ GAS_CREATE
 
 .. undocinclude:: /../src/ethereum/frontier/vm/gas.py
    :language: python
-   :lines: 43-43
+   :lines: 44-44
 
 
 GAS_CODE_DEPOSIT
@@ -399,7 +414,7 @@ GAS_CODE_DEPOSIT
 
 .. undocinclude:: /../src/ethereum/frontier/vm/gas.py
    :language: python
-   :lines: 44-44
+   :lines: 45-45
 
 
 GAS_ZERO
@@ -413,7 +428,7 @@ GAS_ZERO
 
 .. undocinclude:: /../src/ethereum/frontier/vm/gas.py
    :language: python
-   :lines: 45-45
+   :lines: 46-46
 
 
 GAS_CALL
@@ -427,7 +442,7 @@ GAS_CALL
 
 .. undocinclude:: /../src/ethereum/frontier/vm/gas.py
    :language: python
-   :lines: 46-46
+   :lines: 47-47
 
 
 GAS_NEW_ACCOUNT
@@ -441,7 +456,7 @@ GAS_NEW_ACCOUNT
 
 .. undocinclude:: /../src/ethereum/frontier/vm/gas.py
    :language: python
-   :lines: 47-47
+   :lines: 48-48
 
 
 GAS_CALL_VALUE
@@ -455,7 +470,7 @@ GAS_CALL_VALUE
 
 .. undocinclude:: /../src/ethereum/frontier/vm/gas.py
    :language: python
-   :lines: 48-48
+   :lines: 49-49
 
 
 GAS_CALL_STIPEND
@@ -469,7 +484,7 @@ GAS_CALL_STIPEND
 
 .. undocinclude:: /../src/ethereum/frontier/vm/gas.py
    :language: python
-   :lines: 49-49
+   :lines: 50-50
 
 
 REFUND_SELF_DESTRUCT
@@ -483,7 +498,7 @@ REFUND_SELF_DESTRUCT
 
 .. undocinclude:: /../src/ethereum/frontier/vm/gas.py
    :language: python
-   :lines: 50-50
+   :lines: 51-51
 
 
 GAS_ECRECOVER
@@ -497,7 +512,7 @@ GAS_ECRECOVER
 
 .. undocinclude:: /../src/ethereum/frontier/vm/gas.py
    :language: python
-   :lines: 51-51
+   :lines: 52-52
 
 
 GAS_SHA256
@@ -511,7 +526,7 @@ GAS_SHA256
 
 .. undocinclude:: /../src/ethereum/frontier/vm/gas.py
    :language: python
-   :lines: 52-52
+   :lines: 53-53
 
 
 GAS_SHA256_WORD
@@ -525,7 +540,7 @@ GAS_SHA256_WORD
 
 .. undocinclude:: /../src/ethereum/frontier/vm/gas.py
    :language: python
-   :lines: 53-53
+   :lines: 54-54
 
 
 GAS_RIPEMD160
@@ -539,7 +554,7 @@ GAS_RIPEMD160
 
 .. undocinclude:: /../src/ethereum/frontier/vm/gas.py
    :language: python
-   :lines: 54-54
+   :lines: 55-55
 
 
 GAS_RIPEMD160_WORD
@@ -553,7 +568,7 @@ GAS_RIPEMD160_WORD
 
 .. undocinclude:: /../src/ethereum/frontier/vm/gas.py
    :language: python
-   :lines: 55-55
+   :lines: 56-56
 
 
 GAS_IDENTITY
@@ -567,7 +582,7 @@ GAS_IDENTITY
 
 .. undocinclude:: /../src/ethereum/frontier/vm/gas.py
    :language: python
-   :lines: 56-56
+   :lines: 57-57
 
 
 GAS_IDENTITY_WORD
@@ -581,7 +596,7 @@ GAS_IDENTITY_WORD
 
 .. undocinclude:: /../src/ethereum/frontier/vm/gas.py
    :language: python
-   :lines: 57-57
+   :lines: 58-58
 
 
 subtract_gas

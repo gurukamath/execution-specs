@@ -57,6 +57,10 @@
                     <a href="../../../../tangerine_whistle/vm/instructions/arithmetic/index.html">Tangerine_whistle</a>
                 </li>
                 
+                <li>
+                    <a href="../../../../spurious_dragon/vm/instructions/arithmetic/index.html">Spurious_dragon</a>
+                </li>
+                
             </ol>
         </li>
     </ol>
@@ -508,7 +512,7 @@ the stack.</p>
         <span class="c1"># function is inaccurate leading to wrong results.</span>
         <span class="n">exponent_bits</span> <span class="o">=</span> <span class="n">exponent</span><span class="o">.</span><span class="n">bit_length</span><span class="p">()</span>
         <span class="n">exponent_bytes</span> <span class="o">=</span> <span class="p">(</span><span class="n">exponent_bits</span> <span class="o">+</span> <span class="mi">7</span><span class="p">)</span> <span class="o">//</span> <span class="mi">8</span>
-        <span class="n">gas_used</span> <span class="o">+=</span> <span class="n">GAS_EXPONENTIATION</span> <span class="o">*</span> <span class="n">exponent_bytes</span>
+        <span class="n">gas_used</span> <span class="o">+=</span> <span class="n">GAS_EXPONENTIATION_PER_BYTE</span> <span class="o">*</span> <span class="n">exponent_bytes</span>
     <span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span> <span class="o">=</span> <span class="n">subtract_gas</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span><span class="p">,</span> <span class="n">gas_used</span><span class="p">)</span>
 
     <span class="n">result</span> <span class="o">=</span> <span class="n">U256</span><span class="p">(</span><span class="nb">pow</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="n">exponent</span><span class="p">,</span> <span class="n">U256_CEIL_VALUE</span><span class="p">))</span>

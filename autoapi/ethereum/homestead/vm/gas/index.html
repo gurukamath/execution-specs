@@ -57,6 +57,10 @@
                     <a href="../../../tangerine_whistle/vm/gas/index.html">Tangerine_whistle</a>
                 </li>
                 
+                <li>
+                    <a href="../../../spurious_dragon/vm/gas/index.html">Spurious_dragon</a>
+                </li>
+                
             </ol>
         </li>
     </ol>
@@ -101,36 +105,37 @@
 <li><p><a class="reference internal" href="#gas-mid" id="id14">GAS_MID</a></p></li>
 <li><p><a class="reference internal" href="#gas-high" id="id15">GAS_HIGH</a></p></li>
 <li><p><a class="reference internal" href="#gas-exponentiation" id="id16">GAS_EXPONENTIATION</a></p></li>
-<li><p><a class="reference internal" href="#gas-memory" id="id17">GAS_MEMORY</a></p></li>
-<li><p><a class="reference internal" href="#gas-keccak256" id="id18">GAS_KECCAK256</a></p></li>
-<li><p><a class="reference internal" href="#gas-keccak256-word" id="id19">GAS_KECCAK256_WORD</a></p></li>
-<li><p><a class="reference internal" href="#gas-copy" id="id20">GAS_COPY</a></p></li>
-<li><p><a class="reference internal" href="#gas-block-hash" id="id21">GAS_BLOCK_HASH</a></p></li>
-<li><p><a class="reference internal" href="#gas-external" id="id22">GAS_EXTERNAL</a></p></li>
-<li><p><a class="reference internal" href="#gas-balance" id="id23">GAS_BALANCE</a></p></li>
-<li><p><a class="reference internal" href="#gas-log" id="id24">GAS_LOG</a></p></li>
-<li><p><a class="reference internal" href="#gas-log-data" id="id25">GAS_LOG_DATA</a></p></li>
-<li><p><a class="reference internal" href="#gas-log-topic" id="id26">GAS_LOG_TOPIC</a></p></li>
-<li><p><a class="reference internal" href="#gas-create" id="id27">GAS_CREATE</a></p></li>
-<li><p><a class="reference internal" href="#gas-code-deposit" id="id28">GAS_CODE_DEPOSIT</a></p></li>
-<li><p><a class="reference internal" href="#gas-zero" id="id29">GAS_ZERO</a></p></li>
-<li><p><a class="reference internal" href="#gas-call" id="id30">GAS_CALL</a></p></li>
-<li><p><a class="reference internal" href="#gas-new-account" id="id31">GAS_NEW_ACCOUNT</a></p></li>
-<li><p><a class="reference internal" href="#gas-call-value" id="id32">GAS_CALL_VALUE</a></p></li>
-<li><p><a class="reference internal" href="#gas-call-stipend" id="id33">GAS_CALL_STIPEND</a></p></li>
-<li><p><a class="reference internal" href="#refund-self-destruct" id="id34">REFUND_SELF_DESTRUCT</a></p></li>
-<li><p><a class="reference internal" href="#gas-ecrecover" id="id35">GAS_ECRECOVER</a></p></li>
-<li><p><a class="reference internal" href="#gas-sha256" id="id36">GAS_SHA256</a></p></li>
-<li><p><a class="reference internal" href="#gas-sha256-word" id="id37">GAS_SHA256_WORD</a></p></li>
-<li><p><a class="reference internal" href="#gas-ripemd160" id="id38">GAS_RIPEMD160</a></p></li>
-<li><p><a class="reference internal" href="#gas-ripemd160-word" id="id39">GAS_RIPEMD160_WORD</a></p></li>
-<li><p><a class="reference internal" href="#gas-identity" id="id40">GAS_IDENTITY</a></p></li>
-<li><p><a class="reference internal" href="#gas-identity-word" id="id41">GAS_IDENTITY_WORD</a></p></li>
-<li><p><a class="reference internal" href="#subtract-gas" id="id42">subtract_gas</a></p></li>
-<li><p><a class="reference internal" href="#calculate-memory-gas-cost" id="id43">calculate_memory_gas_cost</a></p></li>
-<li><p><a class="reference internal" href="#calculate-gas-extend-memory" id="id44">calculate_gas_extend_memory</a></p></li>
-<li><p><a class="reference internal" href="#calculate-call-gas-cost" id="id45">calculate_call_gas_cost</a></p></li>
-<li><p><a class="reference internal" href="#calculate-message-call-gas-stipend" id="id46">calculate_message_call_gas_stipend</a></p></li>
+<li><p><a class="reference internal" href="#gas-exponentiation-per-byte" id="id17">GAS_EXPONENTIATION_PER_BYTE</a></p></li>
+<li><p><a class="reference internal" href="#gas-memory" id="id18">GAS_MEMORY</a></p></li>
+<li><p><a class="reference internal" href="#gas-keccak256" id="id19">GAS_KECCAK256</a></p></li>
+<li><p><a class="reference internal" href="#gas-keccak256-word" id="id20">GAS_KECCAK256_WORD</a></p></li>
+<li><p><a class="reference internal" href="#gas-copy" id="id21">GAS_COPY</a></p></li>
+<li><p><a class="reference internal" href="#gas-block-hash" id="id22">GAS_BLOCK_HASH</a></p></li>
+<li><p><a class="reference internal" href="#gas-external" id="id23">GAS_EXTERNAL</a></p></li>
+<li><p><a class="reference internal" href="#gas-balance" id="id24">GAS_BALANCE</a></p></li>
+<li><p><a class="reference internal" href="#gas-log" id="id25">GAS_LOG</a></p></li>
+<li><p><a class="reference internal" href="#gas-log-data" id="id26">GAS_LOG_DATA</a></p></li>
+<li><p><a class="reference internal" href="#gas-log-topic" id="id27">GAS_LOG_TOPIC</a></p></li>
+<li><p><a class="reference internal" href="#gas-create" id="id28">GAS_CREATE</a></p></li>
+<li><p><a class="reference internal" href="#gas-code-deposit" id="id29">GAS_CODE_DEPOSIT</a></p></li>
+<li><p><a class="reference internal" href="#gas-zero" id="id30">GAS_ZERO</a></p></li>
+<li><p><a class="reference internal" href="#gas-call" id="id31">GAS_CALL</a></p></li>
+<li><p><a class="reference internal" href="#gas-new-account" id="id32">GAS_NEW_ACCOUNT</a></p></li>
+<li><p><a class="reference internal" href="#gas-call-value" id="id33">GAS_CALL_VALUE</a></p></li>
+<li><p><a class="reference internal" href="#gas-call-stipend" id="id34">GAS_CALL_STIPEND</a></p></li>
+<li><p><a class="reference internal" href="#refund-self-destruct" id="id35">REFUND_SELF_DESTRUCT</a></p></li>
+<li><p><a class="reference internal" href="#gas-ecrecover" id="id36">GAS_ECRECOVER</a></p></li>
+<li><p><a class="reference internal" href="#gas-sha256" id="id37">GAS_SHA256</a></p></li>
+<li><p><a class="reference internal" href="#gas-sha256-word" id="id38">GAS_SHA256_WORD</a></p></li>
+<li><p><a class="reference internal" href="#gas-ripemd160" id="id39">GAS_RIPEMD160</a></p></li>
+<li><p><a class="reference internal" href="#gas-ripemd160-word" id="id40">GAS_RIPEMD160_WORD</a></p></li>
+<li><p><a class="reference internal" href="#gas-identity" id="id41">GAS_IDENTITY</a></p></li>
+<li><p><a class="reference internal" href="#gas-identity-word" id="id42">GAS_IDENTITY_WORD</a></p></li>
+<li><p><a class="reference internal" href="#subtract-gas" id="id43">subtract_gas</a></p></li>
+<li><p><a class="reference internal" href="#calculate-memory-gas-cost" id="id44">calculate_memory_gas_cost</a></p></li>
+<li><p><a class="reference internal" href="#calculate-gas-extend-memory" id="id45">calculate_gas_extend_memory</a></p></li>
+<li><p><a class="reference internal" href="#calculate-call-gas-cost" id="id46">calculate_call_gas_cost</a></p></li>
+<li><p><a class="reference internal" href="#calculate-message-call-gas-stipend" id="id47">calculate_message_call_gas_stipend</a></p></li>
 </ul>
 </li>
 </ul>
@@ -208,79 +213,82 @@
 <tr class="row-odd"><td><p><a class="reference internal" href="#ethereum.homestead.vm.gas.GAS_EXPONENTIATION" title="ethereum.homestead.vm.gas.GAS_EXPONENTIATION"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GAS_EXPONENTIATION</span></code></a></p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#ethereum.homestead.vm.gas.GAS_MEMORY" title="ethereum.homestead.vm.gas.GAS_MEMORY"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GAS_MEMORY</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#ethereum.homestead.vm.gas.GAS_EXPONENTIATION_PER_BYTE" title="ethereum.homestead.vm.gas.GAS_EXPONENTIATION_PER_BYTE"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GAS_EXPONENTIATION_PER_BYTE</span></code></a></p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#ethereum.homestead.vm.gas.GAS_KECCAK256" title="ethereum.homestead.vm.gas.GAS_KECCAK256"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GAS_KECCAK256</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ethereum.homestead.vm.gas.GAS_MEMORY" title="ethereum.homestead.vm.gas.GAS_MEMORY"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GAS_MEMORY</span></code></a></p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#ethereum.homestead.vm.gas.GAS_KECCAK256_WORD" title="ethereum.homestead.vm.gas.GAS_KECCAK256_WORD"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GAS_KECCAK256_WORD</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#ethereum.homestead.vm.gas.GAS_KECCAK256" title="ethereum.homestead.vm.gas.GAS_KECCAK256"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GAS_KECCAK256</span></code></a></p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#ethereum.homestead.vm.gas.GAS_COPY" title="ethereum.homestead.vm.gas.GAS_COPY"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GAS_COPY</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ethereum.homestead.vm.gas.GAS_KECCAK256_WORD" title="ethereum.homestead.vm.gas.GAS_KECCAK256_WORD"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GAS_KECCAK256_WORD</span></code></a></p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#ethereum.homestead.vm.gas.GAS_BLOCK_HASH" title="ethereum.homestead.vm.gas.GAS_BLOCK_HASH"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GAS_BLOCK_HASH</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#ethereum.homestead.vm.gas.GAS_COPY" title="ethereum.homestead.vm.gas.GAS_COPY"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GAS_COPY</span></code></a></p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#ethereum.homestead.vm.gas.GAS_EXTERNAL" title="ethereum.homestead.vm.gas.GAS_EXTERNAL"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GAS_EXTERNAL</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ethereum.homestead.vm.gas.GAS_BLOCK_HASH" title="ethereum.homestead.vm.gas.GAS_BLOCK_HASH"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GAS_BLOCK_HASH</span></code></a></p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#ethereum.homestead.vm.gas.GAS_BALANCE" title="ethereum.homestead.vm.gas.GAS_BALANCE"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GAS_BALANCE</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#ethereum.homestead.vm.gas.GAS_EXTERNAL" title="ethereum.homestead.vm.gas.GAS_EXTERNAL"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GAS_EXTERNAL</span></code></a></p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#ethereum.homestead.vm.gas.GAS_LOG" title="ethereum.homestead.vm.gas.GAS_LOG"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GAS_LOG</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ethereum.homestead.vm.gas.GAS_BALANCE" title="ethereum.homestead.vm.gas.GAS_BALANCE"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GAS_BALANCE</span></code></a></p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#ethereum.homestead.vm.gas.GAS_LOG_DATA" title="ethereum.homestead.vm.gas.GAS_LOG_DATA"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GAS_LOG_DATA</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#ethereum.homestead.vm.gas.GAS_LOG" title="ethereum.homestead.vm.gas.GAS_LOG"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GAS_LOG</span></code></a></p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#ethereum.homestead.vm.gas.GAS_LOG_TOPIC" title="ethereum.homestead.vm.gas.GAS_LOG_TOPIC"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GAS_LOG_TOPIC</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ethereum.homestead.vm.gas.GAS_LOG_DATA" title="ethereum.homestead.vm.gas.GAS_LOG_DATA"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GAS_LOG_DATA</span></code></a></p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#ethereum.homestead.vm.gas.GAS_CREATE" title="ethereum.homestead.vm.gas.GAS_CREATE"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GAS_CREATE</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#ethereum.homestead.vm.gas.GAS_LOG_TOPIC" title="ethereum.homestead.vm.gas.GAS_LOG_TOPIC"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GAS_LOG_TOPIC</span></code></a></p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#ethereum.homestead.vm.gas.GAS_CODE_DEPOSIT" title="ethereum.homestead.vm.gas.GAS_CODE_DEPOSIT"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GAS_CODE_DEPOSIT</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ethereum.homestead.vm.gas.GAS_CREATE" title="ethereum.homestead.vm.gas.GAS_CREATE"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GAS_CREATE</span></code></a></p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#ethereum.homestead.vm.gas.GAS_ZERO" title="ethereum.homestead.vm.gas.GAS_ZERO"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GAS_ZERO</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#ethereum.homestead.vm.gas.GAS_CODE_DEPOSIT" title="ethereum.homestead.vm.gas.GAS_CODE_DEPOSIT"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GAS_CODE_DEPOSIT</span></code></a></p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#ethereum.homestead.vm.gas.GAS_CALL" title="ethereum.homestead.vm.gas.GAS_CALL"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GAS_CALL</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ethereum.homestead.vm.gas.GAS_ZERO" title="ethereum.homestead.vm.gas.GAS_ZERO"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GAS_ZERO</span></code></a></p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#ethereum.homestead.vm.gas.GAS_NEW_ACCOUNT" title="ethereum.homestead.vm.gas.GAS_NEW_ACCOUNT"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GAS_NEW_ACCOUNT</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#ethereum.homestead.vm.gas.GAS_CALL" title="ethereum.homestead.vm.gas.GAS_CALL"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GAS_CALL</span></code></a></p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#ethereum.homestead.vm.gas.GAS_CALL_VALUE" title="ethereum.homestead.vm.gas.GAS_CALL_VALUE"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GAS_CALL_VALUE</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ethereum.homestead.vm.gas.GAS_NEW_ACCOUNT" title="ethereum.homestead.vm.gas.GAS_NEW_ACCOUNT"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GAS_NEW_ACCOUNT</span></code></a></p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#ethereum.homestead.vm.gas.GAS_CALL_STIPEND" title="ethereum.homestead.vm.gas.GAS_CALL_STIPEND"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GAS_CALL_STIPEND</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#ethereum.homestead.vm.gas.GAS_CALL_VALUE" title="ethereum.homestead.vm.gas.GAS_CALL_VALUE"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GAS_CALL_VALUE</span></code></a></p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#ethereum.homestead.vm.gas.REFUND_SELF_DESTRUCT" title="ethereum.homestead.vm.gas.REFUND_SELF_DESTRUCT"><code class="xref py py-obj docutils literal notranslate"><span class="pre">REFUND_SELF_DESTRUCT</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ethereum.homestead.vm.gas.GAS_CALL_STIPEND" title="ethereum.homestead.vm.gas.GAS_CALL_STIPEND"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GAS_CALL_STIPEND</span></code></a></p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#ethereum.homestead.vm.gas.GAS_ECRECOVER" title="ethereum.homestead.vm.gas.GAS_ECRECOVER"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GAS_ECRECOVER</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#ethereum.homestead.vm.gas.REFUND_SELF_DESTRUCT" title="ethereum.homestead.vm.gas.REFUND_SELF_DESTRUCT"><code class="xref py py-obj docutils literal notranslate"><span class="pre">REFUND_SELF_DESTRUCT</span></code></a></p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#ethereum.homestead.vm.gas.GAS_SHA256" title="ethereum.homestead.vm.gas.GAS_SHA256"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GAS_SHA256</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ethereum.homestead.vm.gas.GAS_ECRECOVER" title="ethereum.homestead.vm.gas.GAS_ECRECOVER"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GAS_ECRECOVER</span></code></a></p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#ethereum.homestead.vm.gas.GAS_SHA256_WORD" title="ethereum.homestead.vm.gas.GAS_SHA256_WORD"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GAS_SHA256_WORD</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#ethereum.homestead.vm.gas.GAS_SHA256" title="ethereum.homestead.vm.gas.GAS_SHA256"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GAS_SHA256</span></code></a></p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#ethereum.homestead.vm.gas.GAS_RIPEMD160" title="ethereum.homestead.vm.gas.GAS_RIPEMD160"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GAS_RIPEMD160</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ethereum.homestead.vm.gas.GAS_SHA256_WORD" title="ethereum.homestead.vm.gas.GAS_SHA256_WORD"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GAS_SHA256_WORD</span></code></a></p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#ethereum.homestead.vm.gas.GAS_RIPEMD160_WORD" title="ethereum.homestead.vm.gas.GAS_RIPEMD160_WORD"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GAS_RIPEMD160_WORD</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#ethereum.homestead.vm.gas.GAS_RIPEMD160" title="ethereum.homestead.vm.gas.GAS_RIPEMD160"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GAS_RIPEMD160</span></code></a></p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#ethereum.homestead.vm.gas.GAS_IDENTITY" title="ethereum.homestead.vm.gas.GAS_IDENTITY"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GAS_IDENTITY</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ethereum.homestead.vm.gas.GAS_RIPEMD160_WORD" title="ethereum.homestead.vm.gas.GAS_RIPEMD160_WORD"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GAS_RIPEMD160_WORD</span></code></a></p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#ethereum.homestead.vm.gas.GAS_IDENTITY_WORD" title="ethereum.homestead.vm.gas.GAS_IDENTITY_WORD"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GAS_IDENTITY_WORD</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#ethereum.homestead.vm.gas.GAS_IDENTITY" title="ethereum.homestead.vm.gas.GAS_IDENTITY"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GAS_IDENTITY</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ethereum.homestead.vm.gas.GAS_IDENTITY_WORD" title="ethereum.homestead.vm.gas.GAS_IDENTITY_WORD"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GAS_IDENTITY_WORD</span></code></a></p></td>
 <td><p></p></td>
 </tr>
 </tbody>
@@ -407,6 +415,17 @@
 <dd></dd></dl>
 
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">GAS_EXPONENTIATION</span> <span class="o">=</span> <span class="n">U256</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="gas-exponentiation-per-byte">
+<h4>GAS_EXPONENTIATION_PER_BYTE<a class="headerlink" href="#gas-exponentiation-per-byte" title="Permalink to this headline">¶</a></h4>
+<dl class="py data">
+<dt class="sig sig-object py" id="ethereum.homestead.vm.gas.GAS_EXPONENTIATION_PER_BYTE">
+<span class="sig-name descname"><span class="pre">GAS_EXPONENTIATION_PER_BYTE</span></span><a class="headerlink" href="#ethereum.homestead.vm.gas.GAS_EXPONENTIATION_PER_BYTE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">GAS_EXPONENTIATION_PER_BYTE</span> <span class="o">=</span> <span class="n">U256</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
