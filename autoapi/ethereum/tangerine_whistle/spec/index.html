@@ -822,18 +822,12 @@ block.</p></li>
         <span class="n">env</span><span class="p">,</span>
     <span class="p">)</span>
 
-    <span class="p">(</span>
-        <span class="n">gas_left</span><span class="p">,</span>
-        <span class="n">refund_counter</span><span class="p">,</span>
-        <span class="n">logs</span><span class="p">,</span>
-        <span class="n">accounts_to_delete</span><span class="p">,</span>
-        <span class="n">has_erred</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">=</span> <span class="n">process_message_call</span><span class="p">(</span><span class="n">message</span><span class="p">,</span> <span class="n">env</span><span class="p">)</span>
+    <span class="n">output</span> <span class="o">=</span> <span class="n">process_message_call</span><span class="p">(</span><span class="n">message</span><span class="p">,</span> <span class="n">env</span><span class="p">)</span>
 
-    <span class="n">gas_used</span> <span class="o">=</span> <span class="n">tx</span><span class="o">.</span><span class="n">gas</span> <span class="o">-</span> <span class="n">gas_left</span>
-    <span class="n">gas_refund</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">gas_used</span> <span class="o">//</span> <span class="mi">2</span><span class="p">,</span> <span class="n">refund_counter</span><span class="p">)</span>
-    <span class="n">gas_refund_amount</span> <span class="o">=</span> <span class="p">(</span><span class="n">gas_left</span> <span class="o">+</span> <span class="n">gas_refund</span><span class="p">)</span> <span class="o">*</span> <span class="n">tx</span><span class="o">.</span><span class="n">gas_price</span>
-    <span class="n">transaction_fee</span> <span class="o">=</span> <span class="p">(</span><span class="n">tx</span><span class="o">.</span><span class="n">gas</span> <span class="o">-</span> <span class="n">gas_left</span> <span class="o">-</span> <span class="n">gas_refund</span><span class="p">)</span> <span class="o">*</span> <span class="n">tx</span><span class="o">.</span><span class="n">gas_price</span>
+    <span class="n">gas_used</span> <span class="o">=</span> <span class="n">tx</span><span class="o">.</span><span class="n">gas</span> <span class="o">-</span> <span class="n">output</span><span class="o">.</span><span class="n">gas_left</span>
+    <span class="n">gas_refund</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">gas_used</span> <span class="o">//</span> <span class="mi">2</span><span class="p">,</span> <span class="n">output</span><span class="o">.</span><span class="n">refund_counter</span><span class="p">)</span>
+    <span class="n">gas_refund_amount</span> <span class="o">=</span> <span class="p">(</span><span class="n">output</span><span class="o">.</span><span class="n">gas_left</span> <span class="o">+</span> <span class="n">gas_refund</span><span class="p">)</span> <span class="o">*</span> <span class="n">tx</span><span class="o">.</span><span class="n">gas_price</span>
+    <span class="n">transaction_fee</span> <span class="o">=</span> <span class="p">(</span><span class="n">tx</span><span class="o">.</span><span class="n">gas</span> <span class="o">-</span> <span class="n">output</span><span class="o">.</span><span class="n">gas_left</span> <span class="o">-</span> <span class="n">gas_refund</span><span class="p">)</span> <span class="o">*</span> <span class="n">tx</span><span class="o">.</span><span class="n">gas_price</span>
     <span class="n">total_gas_used</span> <span class="o">=</span> <span class="n">gas_used</span> <span class="o">-</span> <span class="n">gas_refund</span>
 
     <span class="c1"># refund gas</span>
@@ -850,10 +844,10 @@ block.</p></li>
         <span class="n">env</span><span class="o">.</span><span class="n">state</span><span class="p">,</span> <span class="n">env</span><span class="o">.</span><span class="n">coinbase</span><span class="p">,</span> <span class="n">coinbase_balance_after_mining_fee</span>
     <span class="p">)</span>
 
-    <span class="k">for</span> <span class="n">address</span> <span class="ow">in</span> <span class="n">accounts_to_delete</span><span class="p">:</span>
+    <span class="k">for</span> <span class="n">address</span> <span class="ow">in</span> <span class="n">output</span><span class="o">.</span><span class="n">accounts_to_delete</span><span class="p">:</span>
         <span class="n">destroy_account</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">state</span><span class="p">,</span> <span class="n">address</span><span class="p">)</span>
 
-    <span class="k">return</span> <span class="n">total_gas_used</span><span class="p">,</span> <span class="n">logs</span>
+    <span class="k">return</span> <span class="n">total_gas_used</span><span class="p">,</span> <span class="n">output</span><span class="o">.</span><span class="n">logs</span>
 </pre></div>
 </div>
 </section>

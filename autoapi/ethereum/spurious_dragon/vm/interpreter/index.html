@@ -88,21 +88,23 @@
 <li><p><a class="reference internal" href="#introduction" id="id1">Introduction</a></p></li>
 <li><p><a class="reference internal" href="#module-contents" id="id2">Module Contents</a></p>
 <ul>
-<li><p><a class="reference internal" href="#functions" id="id3">Functions</a></p></li>
-<li><p><a class="reference internal" href="#attributes" id="id4">Attributes</a></p></li>
+<li><p><a class="reference internal" href="#classes" id="id3">Classes</a></p></li>
+<li><p><a class="reference internal" href="#functions" id="id4">Functions</a></p></li>
+<li><p><a class="reference internal" href="#attributes" id="id5">Attributes</a></p></li>
 </ul>
 </li>
-<li><p><a class="reference internal" href="#module-details" id="id5">Module Details</a></p>
+<li><p><a class="reference internal" href="#module-details" id="id6">Module Details</a></p>
 <ul>
-<li><p><a class="reference internal" href="#stack-depth-limit" id="id6">STACK_DEPTH_LIMIT</a></p></li>
-<li><p><a class="reference internal" href="#max-code-size" id="id7">MAX_CODE_SIZE</a></p></li>
-<li><p><a class="reference internal" href="#ripemd160-address" id="id8">RIPEMD160_ADDRESS</a></p></li>
-<li><p><a class="reference internal" href="#process-message-call" id="id9">process_message_call</a></p></li>
-<li><p><a class="reference internal" href="#process-create-message" id="id10">process_create_message</a></p></li>
-<li><p><a class="reference internal" href="#process-message" id="id11">process_message</a></p></li>
-<li><p><a class="reference internal" href="#execute-code" id="id12">execute_code</a></p></li>
-<li><p><a class="reference internal" href="#collect-touched-accounts" id="id13">collect_touched_accounts</a></p></li>
-<li><p><a class="reference internal" href="#collect-accounts-to-delete" id="id14">collect_accounts_to_delete</a></p></li>
+<li><p><a class="reference internal" href="#stack-depth-limit" id="id7">STACK_DEPTH_LIMIT</a></p></li>
+<li><p><a class="reference internal" href="#max-code-size" id="id8">MAX_CODE_SIZE</a></p></li>
+<li><p><a class="reference internal" href="#ripemd160-address" id="id9">RIPEMD160_ADDRESS</a></p></li>
+<li><p><a class="reference internal" href="#messagecalloutput" id="id10">MessageCallOutput</a></p></li>
+<li><p><a class="reference internal" href="#process-message-call" id="id11">process_message_call</a></p></li>
+<li><p><a class="reference internal" href="#process-create-message" id="id12">process_create_message</a></p></li>
+<li><p><a class="reference internal" href="#process-message" id="id13">process_message</a></p></li>
+<li><p><a class="reference internal" href="#execute-code" id="id14">execute_code</a></p></li>
+<li><p><a class="reference internal" href="#collect-touched-accounts" id="id15">collect_touched_accounts</a></p></li>
+<li><p><a class="reference internal" href="#collect-accounts-to-delete" id="id16">collect_accounts_to_delete</a></p></li>
 </ul>
 </li>
 </ul>
@@ -113,6 +115,20 @@
 </section>
 <section id="module-contents">
 <h3>Module Contents<a class="headerlink" href="#module-contents" title="Permalink to this headline">¶</a></h3>
+<section id="classes">
+<h4>Classes<a class="headerlink" href="#classes" title="Permalink to this headline">¶</a></h4>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ethereum.spurious_dragon.vm.interpreter.MessageCallOutput" title="ethereum.spurious_dragon.vm.interpreter.MessageCallOutput"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MessageCallOutput</span></code></a></p></td>
+<td><p>Output of a particular message call</p></td>
+</tr>
+</tbody>
+</table>
+</section>
 <section id="functions">
 <h4>Functions<a class="headerlink" href="#functions" title="Permalink to this headline">¶</a></h4>
 <table class="longtable docutils align-default">
@@ -198,23 +214,10 @@
 </pre></div>
 </div>
 </section>
-<section id="process-message-call">
-<h4>process_message_call<a class="headerlink" href="#process-message-call" title="Permalink to this headline">¶</a></h4>
-<dl class="py function">
-<dt class="sig sig-object py" id="ethereum.spurious_dragon.vm.interpreter.process_message_call">
-<span class="sig-name descname"><span class="pre">process_message_call</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="../index.html#ethereum.spurious_dragon.vm.Message" title="ethereum.spurious_dragon.vm.Message"><span class="pre">ethereum.spurious_dragon.vm.Message</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">env</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="../index.html#ethereum.spurious_dragon.vm.Environment" title="ethereum.spurious_dragon.vm.Environment"><span class="pre">ethereum.spurious_dragon.vm.Environment</span></a></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">Tuple[ethereum.base_types.U256,</span> <span class="pre">ethereum.base_types.U256,</span> <span class="pre">Union[Tuple[],</span> <span class="pre">Tuple[ethereum.spurious_dragon.eth_types.Log,</span> <span class="pre">Ellipsis]],</span> <span class="pre">Set[ethereum.spurious_dragon.eth_types.Address],</span> <span class="pre">Iterable[ethereum.spurious_dragon.eth_types.Address],</span> <span class="pre">bool]</span><a class="headerlink" href="#ethereum.spurious_dragon.vm.interpreter.process_message_call" title="Permalink to this definition">¶</a></dt>
-<dd><p>If <cite>message.current</cite> is empty then it creates a smart contract
-else it executes a call from the <cite>message.caller</cite> to the <cite>message.target</cite>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>message</strong> – Transaction specific items.</p></li>
-<li><p><strong>env</strong> – External items required for EVM execution.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p><p><strong>output</strong> –</p>
-<p>A tuple of the following:</p>
+<section id="messagecalloutput">
+<h4>MessageCallOutput<a class="headerlink" href="#messagecalloutput" title="Permalink to this headline">¶</a></h4>
+<p>Output of a particular message call</p>
+<p>Contains the following:</p>
 <blockquote>
 <div><ol class="arabic simple">
 <li><p><cite>gas_left</cite>: remaining gas after execution.</p></li>
@@ -225,30 +228,76 @@ else it executes a call from the <cite>message.caller</cite> to the <cite>messag
 <li><p><cite>has_erred</cite>: True if execution has caused an error.</p></li>
 </ol>
 </div></blockquote>
-</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="ethereum.spurious_dragon.vm.interpreter.MessageCallOutput">
+<em class="property"><span class="pre">class</span> </em><span class="sig-name descname"><span class="pre">MessageCallOutput</span></span><a class="headerlink" href="#ethereum.spurious_dragon.vm.interpreter.MessageCallOutput" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py attribute">
+<dt class="sig sig-object py" id="ethereum.spurious_dragon.vm.interpreter.MessageCallOutput.gas_left">
+<span class="sig-name descname"><span class="pre">gas_left</span></span><em class="property"> <span class="pre">:ethereum.base_types.U256</span></em><a class="headerlink" href="#ethereum.spurious_dragon.vm.interpreter.MessageCallOutput.gas_left" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ethereum.spurious_dragon.vm.interpreter.MessageCallOutput.refund_counter">
+<span class="sig-name descname"><span class="pre">refund_counter</span></span><em class="property"> <span class="pre">:ethereum.base_types.U256</span></em><a class="headerlink" href="#ethereum.spurious_dragon.vm.interpreter.MessageCallOutput.refund_counter" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ethereum.spurious_dragon.vm.interpreter.MessageCallOutput.logs">
+<span class="sig-name descname"><span class="pre">logs</span></span><em class="property"> <span class="pre">:Union[Tuple[],</span> <span class="pre">Tuple[ethereum.spurious_dragon.eth_types.Log,</span> <span class="pre">Ellipsis]]</span></em><a class="headerlink" href="#ethereum.spurious_dragon.vm.interpreter.MessageCallOutput.logs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ethereum.spurious_dragon.vm.interpreter.MessageCallOutput.accounts_to_delete">
+<span class="sig-name descname"><span class="pre">accounts_to_delete</span></span><em class="property"> <span class="pre">:Set[ethereum.spurious_dragon.eth_types.Address]</span></em><a class="headerlink" href="#ethereum.spurious_dragon.vm.interpreter.MessageCallOutput.accounts_to_delete" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ethereum.spurious_dragon.vm.interpreter.MessageCallOutput.touched_accounts">
+<span class="sig-name descname"><span class="pre">touched_accounts</span></span><em class="property"> <span class="pre">:Iterable[ethereum.spurious_dragon.eth_types.Address]</span></em><a class="headerlink" href="#ethereum.spurious_dragon.vm.interpreter.MessageCallOutput.touched_accounts" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ethereum.spurious_dragon.vm.interpreter.MessageCallOutput.has_erred">
+<span class="sig-name descname"><span class="pre">has_erred</span></span><em class="property"> <span class="pre">:bool</span></em><a class="headerlink" href="#ethereum.spurious_dragon.vm.interpreter.MessageCallOutput.has_erred" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="process-message-call">
+<h4>process_message_call<a class="headerlink" href="#process-message-call" title="Permalink to this headline">¶</a></h4>
+<dl class="py function">
+<dt class="sig sig-object py" id="ethereum.spurious_dragon.vm.interpreter.process_message_call">
+<span class="sig-name descname"><span class="pre">process_message_call</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="../index.html#ethereum.spurious_dragon.vm.Message" title="ethereum.spurious_dragon.vm.Message"><span class="pre">ethereum.spurious_dragon.vm.Message</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">env</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="../index.html#ethereum.spurious_dragon.vm.Environment" title="ethereum.spurious_dragon.vm.Environment"><span class="pre">ethereum.spurious_dragon.vm.Environment</span></a></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#ethereum.spurious_dragon.vm.interpreter.MessageCallOutput" title="ethereum.spurious_dragon.vm.interpreter.MessageCallOutput"><span class="pre">MessageCallOutput</span></a><a class="headerlink" href="#ethereum.spurious_dragon.vm.interpreter.process_message_call" title="Permalink to this definition">¶</a></dt>
+<dd><p>If <cite>message.current</cite> is empty then it creates a smart contract
+else it executes a call from the <cite>message.caller</cite> to the <cite>message.target</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>message</strong> – Transaction specific items.</p></li>
+<li><p><strong>env</strong> – External items required for EVM execution.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>output</strong> – Output of the message call</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><cite>Tuple</cite></p>
+<dd class="field-odd"><p><cite>MessageCallOutput</cite></p>
 </dd>
 </dl>
 </dd></dl>
 
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">process_message_call</span><span class="p">(</span>
     <span class="n">message</span><span class="p">:</span> <span class="n">Message</span><span class="p">,</span> <span class="n">env</span><span class="p">:</span> <span class="n">Environment</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span>
-    <span class="n">U256</span><span class="p">,</span>
-    <span class="n">U256</span><span class="p">,</span>
-    <span class="n">Union</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[()],</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Log</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span>
-    <span class="n">Set</span><span class="p">[</span><span class="n">Address</span><span class="p">],</span>
-    <span class="n">Iterable</span><span class="p">[</span><span class="n">Address</span><span class="p">],</span>
-    <span class="nb">bool</span><span class="p">,</span>
-<span class="p">]:</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MessageCallOutput</span><span class="p">:</span>
     <span class="k">if</span> <span class="n">message</span><span class="o">.</span><span class="n">target</span> <span class="o">==</span> <span class="n">Bytes0</span><span class="p">(</span><span class="sa">b</span><span class="s2">&quot;&quot;</span><span class="p">):</span>
         <span class="n">is_collision</span> <span class="o">=</span> <span class="n">account_has_code_or_nonce</span><span class="p">(</span>
             <span class="n">env</span><span class="o">.</span><span class="n">state</span><span class="p">,</span> <span class="n">message</span><span class="o">.</span><span class="n">current_target</span>
         <span class="p">)</span>
         <span class="k">if</span> <span class="n">is_collision</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">U256</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="n">U256</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="nb">tuple</span><span class="p">(),</span> <span class="nb">set</span><span class="p">(),</span> <span class="nb">set</span><span class="p">(),</span> <span class="kc">True</span>
+            <span class="k">return</span> <span class="n">MessageCallOutput</span><span class="p">(</span>
+                <span class="n">U256</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="n">U256</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="nb">tuple</span><span class="p">(),</span> <span class="nb">set</span><span class="p">(),</span> <span class="nb">set</span><span class="p">(),</span> <span class="kc">True</span>
+            <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">evm</span> <span class="o">=</span> <span class="n">process_create_message</span><span class="p">(</span><span class="n">message</span><span class="p">,</span> <span class="n">env</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
@@ -257,13 +306,13 @@ else it executes a call from the <cite>message.caller</cite> to the <cite>messag
     <span class="n">accounts_to_delete</span> <span class="o">=</span> <span class="n">collect_accounts_to_delete</span><span class="p">(</span><span class="n">evm</span><span class="p">,</span> <span class="nb">set</span><span class="p">())</span>
     <span class="n">evm</span><span class="o">.</span><span class="n">refund_counter</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="n">accounts_to_delete</span><span class="p">)</span> <span class="o">*</span> <span class="n">REFUND_SELF_DESTRUCT</span>
 
-    <span class="k">return</span> <span class="p">(</span>
-        <span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span><span class="p">,</span>
-        <span class="n">evm</span><span class="o">.</span><span class="n">refund_counter</span><span class="p">,</span>
-        <span class="n">evm</span><span class="o">.</span><span class="n">logs</span><span class="p">,</span>
-        <span class="n">accounts_to_delete</span><span class="p">,</span>
-        <span class="n">collect_touched_accounts</span><span class="p">(</span><span class="n">evm</span><span class="p">),</span>
-        <span class="n">evm</span><span class="o">.</span><span class="n">has_erred</span><span class="p">,</span>
+    <span class="k">return</span> <span class="n">MessageCallOutput</span><span class="p">(</span>
+        <span class="n">gas_left</span><span class="o">=</span><span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span><span class="p">,</span>
+        <span class="n">refund_counter</span><span class="o">=</span><span class="n">evm</span><span class="o">.</span><span class="n">refund_counter</span><span class="p">,</span>
+        <span class="n">logs</span><span class="o">=</span><span class="n">evm</span><span class="o">.</span><span class="n">logs</span><span class="p">,</span>
+        <span class="n">accounts_to_delete</span><span class="o">=</span><span class="n">accounts_to_delete</span><span class="p">,</span>
+        <span class="n">touched_accounts</span><span class="o">=</span><span class="n">collect_touched_accounts</span><span class="p">(</span><span class="n">evm</span><span class="p">),</span>
+        <span class="n">has_erred</span><span class="o">=</span><span class="n">evm</span><span class="o">.</span><span class="n">has_erred</span><span class="p">,</span>
     <span class="p">)</span>
 </pre></div>
 </div>
