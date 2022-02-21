@@ -40,6 +40,8 @@ Functions
    ethereum.spurious_dragon.vm.interpreter.execute_code
    ethereum.spurious_dragon.vm.interpreter.collect_touched_accounts
    ethereum.spurious_dragon.vm.interpreter.collect_accounts_to_delete
+   ethereum.spurious_dragon.vm.interpreter.collect_logs
+   ethereum.spurious_dragon.vm.interpreter.calculate_gas_refund
 
 
 
@@ -67,7 +69,7 @@ STACK_DEPTH_LIMIT
 
 .. undocinclude:: /../src/ethereum/spurious_dragon/vm/interpreter.py
    :language: python
-   :lines: 49-49
+   :lines: 50-50
 
 
 MAX_CODE_SIZE
@@ -81,7 +83,7 @@ MAX_CODE_SIZE
 
 .. undocinclude:: /../src/ethereum/spurious_dragon/vm/interpreter.py
    :language: python
-   :lines: 50-50
+   :lines: 51-51
 
 
 RIPEMD160_ADDRESS
@@ -95,7 +97,7 @@ RIPEMD160_ADDRESS
 
 .. undocinclude:: /../src/ethereum/spurious_dragon/vm/interpreter.py
    :language: python
-   :lines: 51-51
+   :lines: 52-52
 
 
 MessageCallOutput
@@ -278,19 +280,16 @@ collect_accounts_to_delete
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-.. function:: collect_accounts_to_delete(evm: ethereum.spurious_dragon.vm.Evm, accounts_to_delete: Set[ethereum.spurious_dragon.eth_types.Address]) -> Set[ethereum.spurious_dragon.eth_types.Address]
+.. function:: collect_accounts_to_delete(evm: ethereum.spurious_dragon.vm.Evm) -> Set[ethereum.spurious_dragon.eth_types.Address]
    :noindexentry:
 
-   Collects all the accounts that need to deleted from the `evm` object and
-   its children
+   Collects all the accounts that were marked for deletion by the
+   `SELFDESTRUCT` opcode.
 
    :param evm: The current EVM frame.
-   :param accounts_to_delete: list of accounts that need to be deleted.
-                              Note: An empty set should be passed to this parameter. This set
-                              is used to store the results obtained by recursively iterating over the
-                              child evm objects
 
-   :returns: **touched_accounts** -- returns all the accounts that were touched and may need to be deleted.
+   :returns: **accounts_to_delete** -- returns all the accounts need marked for deletion by the
+             `SELFDESTRUCT` opcode.
    :rtype: `set`
 
 
@@ -299,3 +298,48 @@ collect_accounts_to_delete
 .. undocinclude:: /../src/ethereum/spurious_dragon/vm/interpreter.py
    :language: python
    :pyobject: collect_accounts_to_delete
+
+collect_logs
+~~~~~~~~~~~~
+
+
+.. function:: collect_logs(evm: ethereum.spurious_dragon.vm.Evm) -> Tuple[ethereum.spurious_dragon.eth_types.Log, Ellipsis]
+   :noindexentry:
+
+   Collects all the logs emitted while executing the message call.
+
+   :param evm: The current EVM frame.
+
+   :returns: **logs** -- returns all the logs that were emitted while executing the
+             message call.
+   :rtype: `tuple`
+
+
+
+
+.. undocinclude:: /../src/ethereum/spurious_dragon/vm/interpreter.py
+   :language: python
+   :pyobject: collect_logs
+
+calculate_gas_refund
+~~~~~~~~~~~~~~~~~~~~
+
+
+.. function:: calculate_gas_refund(evm: ethereum.spurious_dragon.vm.Evm) -> ethereum.base_types.U256
+   :noindexentry:
+
+   Adds up the gas that was refunded in each execution frame during the
+   message call.
+
+   :param evm: The current EVM frame.
+
+   :returns: **gas_refund** -- returns the total gas that needs to be refunded after executing the
+             message call.
+   :rtype: `ethereum.base_types.U256`
+
+
+
+
+.. undocinclude:: /../src/ethereum/spurious_dragon/vm/interpreter.py
+   :language: python
+   :pyobject: calculate_gas_refund

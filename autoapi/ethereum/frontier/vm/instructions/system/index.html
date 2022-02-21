@@ -216,14 +216,13 @@
         <span class="n">code_address</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">child_evm</span> <span class="o">=</span> <span class="n">process_create_message</span><span class="p">(</span><span class="n">child_message</span><span class="p">,</span> <span class="n">evm</span><span class="o">.</span><span class="n">env</span><span class="p">)</span>
+    <span class="n">evm</span><span class="o">.</span><span class="n">children</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">child_evm</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">child_evm</span><span class="o">.</span><span class="n">has_erred</span><span class="p">:</span>
         <span class="n">push</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">,</span> <span class="n">U256</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">push</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">,</span> <span class="n">U256</span><span class="o">.</span><span class="n">from_be_bytes</span><span class="p">(</span><span class="n">child_evm</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">current_target</span><span class="p">))</span>
     <span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span> <span class="o">=</span> <span class="n">child_evm</span><span class="o">.</span><span class="n">gas_left</span>
-    <span class="n">evm</span><span class="o">.</span><span class="n">refund_counter</span> <span class="o">+=</span> <span class="n">child_evm</span><span class="o">.</span><span class="n">refund_counter</span>
-    <span class="n">evm</span><span class="o">.</span><span class="n">accounts_to_delete</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">child_evm</span><span class="o">.</span><span class="n">accounts_to_delete</span><span class="p">)</span>
-    <span class="n">evm</span><span class="o">.</span><span class="n">logs</span> <span class="o">+=</span> <span class="n">child_evm</span><span class="o">.</span><span class="n">logs</span>
+    <span class="n">child_evm</span><span class="o">.</span><span class="n">gas_left</span> <span class="o">=</span> <span class="n">U256</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
@@ -330,6 +329,7 @@
         <span class="n">code_address</span><span class="o">=</span><span class="n">to</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">child_evm</span> <span class="o">=</span> <span class="n">process_message</span><span class="p">(</span><span class="n">child_message</span><span class="p">,</span> <span class="n">evm</span><span class="o">.</span><span class="n">env</span><span class="p">)</span>
+    <span class="n">evm</span><span class="o">.</span><span class="n">children</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">child_evm</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">child_evm</span><span class="o">.</span><span class="n">has_erred</span><span class="p">:</span>
         <span class="n">push</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">,</span> <span class="n">U256</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
@@ -343,9 +343,7 @@
         <span class="n">child_evm</span><span class="o">.</span><span class="n">output</span><span class="p">[:</span><span class="n">actual_output_size</span><span class="p">],</span>
     <span class="p">)</span>
     <span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span> <span class="o">+=</span> <span class="n">child_evm</span><span class="o">.</span><span class="n">gas_left</span>
-    <span class="n">evm</span><span class="o">.</span><span class="n">refund_counter</span> <span class="o">+=</span> <span class="n">child_evm</span><span class="o">.</span><span class="n">refund_counter</span>
-    <span class="n">evm</span><span class="o">.</span><span class="n">accounts_to_delete</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">child_evm</span><span class="o">.</span><span class="n">accounts_to_delete</span><span class="p">)</span>
-    <span class="n">evm</span><span class="o">.</span><span class="n">logs</span> <span class="o">+=</span> <span class="n">child_evm</span><span class="o">.</span><span class="n">logs</span>
+    <span class="n">child_evm</span><span class="o">.</span><span class="n">gas_left</span> <span class="o">=</span> <span class="n">U256</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
@@ -425,6 +423,7 @@
     <span class="p">)</span>
 
     <span class="n">child_evm</span> <span class="o">=</span> <span class="n">process_message</span><span class="p">(</span><span class="n">child_message</span><span class="p">,</span> <span class="n">evm</span><span class="o">.</span><span class="n">env</span><span class="p">)</span>
+    <span class="n">evm</span><span class="o">.</span><span class="n">children</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">child_evm</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">child_evm</span><span class="o">.</span><span class="n">has_erred</span><span class="p">:</span>
         <span class="n">push</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">,</span> <span class="n">U256</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
     <span class="k">else</span><span class="p">:</span>
@@ -436,9 +435,7 @@
         <span class="n">child_evm</span><span class="o">.</span><span class="n">output</span><span class="p">[:</span><span class="n">actual_output_size</span><span class="p">],</span>
     <span class="p">)</span>
     <span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span> <span class="o">+=</span> <span class="n">child_evm</span><span class="o">.</span><span class="n">gas_left</span>
-    <span class="n">evm</span><span class="o">.</span><span class="n">refund_counter</span> <span class="o">+=</span> <span class="n">child_evm</span><span class="o">.</span><span class="n">refund_counter</span>
-    <span class="n">evm</span><span class="o">.</span><span class="n">accounts_to_delete</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">child_evm</span><span class="o">.</span><span class="n">accounts_to_delete</span><span class="p">)</span>
-    <span class="n">evm</span><span class="o">.</span><span class="n">logs</span> <span class="o">+=</span> <span class="n">child_evm</span><span class="o">.</span><span class="n">logs</span>
+    <span class="n">child_evm</span><span class="o">.</span><span class="n">gas_left</span> <span class="o">=</span> <span class="n">U256</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>

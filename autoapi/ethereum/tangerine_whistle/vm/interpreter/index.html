@@ -101,6 +101,9 @@
 <li><p><a class="reference internal" href="#process-create-message" id="id10">process_create_message</a></p></li>
 <li><p><a class="reference internal" href="#process-message" id="id11">process_message</a></p></li>
 <li><p><a class="reference internal" href="#execute-code" id="id12">execute_code</a></p></li>
+<li><p><a class="reference internal" href="#collect-accounts-to-delete" id="id13">collect_accounts_to_delete</a></p></li>
+<li><p><a class="reference internal" href="#collect-logs" id="id14">collect_logs</a></p></li>
+<li><p><a class="reference internal" href="#calculate-gas-refund" id="id15">calculate_gas_refund</a></p></li>
 </ul>
 </li>
 </ul>
@@ -144,6 +147,15 @@
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#ethereum.tangerine_whistle.vm.interpreter.execute_code" title="ethereum.tangerine_whistle.vm.interpreter.execute_code"><code class="xref py py-obj docutils literal notranslate"><span class="pre">execute_code</span></code></a></p></td>
 <td><p>Executes bytecode present in the <cite>message</cite>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ethereum.tangerine_whistle.vm.interpreter.collect_accounts_to_delete" title="ethereum.tangerine_whistle.vm.interpreter.collect_accounts_to_delete"><code class="xref py py-obj docutils literal notranslate"><span class="pre">collect_accounts_to_delete</span></code></a></p></td>
+<td><p>Collects all the accounts that were marked for deletion by the</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ethereum.tangerine_whistle.vm.interpreter.collect_logs" title="ethereum.tangerine_whistle.vm.interpreter.collect_logs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">collect_logs</span></code></a></p></td>
+<td><p>Collects all the logs emitted while executing the message call.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ethereum.tangerine_whistle.vm.interpreter.calculate_gas_refund" title="ethereum.tangerine_whistle.vm.interpreter.calculate_gas_refund"><code class="xref py py-obj docutils literal notranslate"><span class="pre">calculate_gas_refund</span></code></a></p></td>
+<td><p>Adds up the gas that was refunded in each execution frame during the</p></td>
 </tr>
 </tbody>
 </table>
@@ -257,13 +269,17 @@ else it executes a call from the <cite>message.caller</cite> to the <cite>messag
     <span class="k">else</span><span class="p">:</span>
         <span class="n">evm</span> <span class="o">=</span> <span class="n">process_message</span><span class="p">(</span><span class="n">message</span><span class="p">,</span> <span class="n">env</span><span class="p">)</span>
 
-    <span class="n">evm</span><span class="o">.</span><span class="n">refund_counter</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">accounts_to_delete</span><span class="p">)</span> <span class="o">*</span> <span class="n">REFUND_SELF_DESTRUCT</span>
+    <span class="n">accounts_to_delete</span> <span class="o">=</span> <span class="n">collect_accounts_to_delete</span><span class="p">(</span><span class="n">evm</span><span class="p">)</span>
+    <span class="n">refund_counter</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">calculate_gas_refund</span><span class="p">(</span><span class="n">evm</span><span class="p">)</span>
+        <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">accounts_to_delete</span><span class="p">)</span> <span class="o">*</span> <span class="n">REFUND_SELF_DESTRUCT</span>
+    <span class="p">)</span>
 
     <span class="k">return</span> <span class="n">MessageCallOutput</span><span class="p">(</span>
         <span class="n">gas_left</span><span class="o">=</span><span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span><span class="p">,</span>
-        <span class="n">refund_counter</span><span class="o">=</span><span class="n">evm</span><span class="o">.</span><span class="n">refund_counter</span><span class="p">,</span>
-        <span class="n">logs</span><span class="o">=</span><span class="n">evm</span><span class="o">.</span><span class="n">logs</span><span class="p">,</span>
-        <span class="n">accounts_to_delete</span><span class="o">=</span><span class="n">evm</span><span class="o">.</span><span class="n">accounts_to_delete</span><span class="p">,</span>
+        <span class="n">refund_counter</span><span class="o">=</span><span class="n">refund_counter</span><span class="p">,</span>
+        <span class="n">logs</span><span class="o">=</span><span class="n">collect_logs</span><span class="p">(</span><span class="n">evm</span><span class="p">),</span>
+        <span class="n">accounts_to_delete</span><span class="o">=</span><span class="n">accounts_to_delete</span><span class="p">,</span>
         <span class="n">has_erred</span><span class="o">=</span><span class="n">evm</span><span class="o">.</span><span class="n">has_erred</span><span class="p">,</span>
     <span class="p">)</span>
 </pre></div>
@@ -304,9 +320,6 @@ else it executes a call from the <cite>message.caller</cite> to the <cite>messag
         <span class="k">except</span> <span class="n">OutOfGasError</span><span class="p">:</span>
             <span class="n">rollback_transaction</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">state</span><span class="p">)</span>
             <span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span> <span class="o">=</span> <span class="n">U256</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
-            <span class="n">evm</span><span class="o">.</span><span class="n">logs</span> <span class="o">=</span> <span class="p">()</span>
-            <span class="n">evm</span><span class="o">.</span><span class="n">accounts_to_delete</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
-            <span class="n">evm</span><span class="o">.</span><span class="n">refund_counter</span> <span class="o">=</span> <span class="n">U256</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
             <span class="n">evm</span><span class="o">.</span><span class="n">has_erred</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">set_code</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">state</span><span class="p">,</span> <span class="n">message</span><span class="o">.</span><span class="n">current_target</span><span class="p">,</span> <span class="n">contract_code</span><span class="p">)</span>
@@ -411,6 +424,7 @@ else it executes a call from the <cite>message.caller</cite> to the <cite>messag
         <span class="n">output</span><span class="o">=</span><span class="sa">b</span><span class="s2">&quot;&quot;</span><span class="p">,</span>
         <span class="n">accounts_to_delete</span><span class="o">=</span><span class="nb">set</span><span class="p">(),</span>
         <span class="n">has_erred</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">children</span><span class="o">=</span><span class="p">[],</span>
     <span class="p">)</span>
     <span class="k">try</span><span class="p">:</span>
 
@@ -436,9 +450,6 @@ else it executes a call from the <cite>message.caller</cite> to the <cite>messag
         <span class="n">StackDepthLimitError</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span> <span class="o">=</span> <span class="n">U256</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
-        <span class="n">evm</span><span class="o">.</span><span class="n">logs</span> <span class="o">=</span> <span class="p">()</span>
-        <span class="n">evm</span><span class="o">.</span><span class="n">accounts_to_delete</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
-        <span class="n">evm</span><span class="o">.</span><span class="n">refund_counter</span> <span class="o">=</span> <span class="n">U256</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
         <span class="n">evm</span><span class="o">.</span><span class="n">has_erred</span> <span class="o">=</span> <span class="kc">True</span>
     <span class="k">except</span> <span class="p">(</span>
         <span class="n">EnsureError</span><span class="p">,</span>
@@ -447,6 +458,104 @@ else it executes a call from the <cite>message.caller</cite> to the <cite>messag
         <span class="n">evm</span><span class="o">.</span><span class="n">has_erred</span> <span class="o">=</span> <span class="kc">True</span>
     <span class="k">finally</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">evm</span>
+</pre></div>
+</div>
+</section>
+<section id="collect-accounts-to-delete">
+<h4>collect_accounts_to_delete<a class="headerlink" href="#collect-accounts-to-delete" title="Permalink to this headline">¶</a></h4>
+<dl class="py function">
+<dt class="sig sig-object py" id="ethereum.tangerine_whistle.vm.interpreter.collect_accounts_to_delete">
+<span class="sig-name descname"><span class="pre">collect_accounts_to_delete</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">evm</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="../index.html#ethereum.tangerine_whistle.vm.Evm" title="ethereum.tangerine_whistle.vm.Evm"><span class="pre">ethereum.tangerine_whistle.vm.Evm</span></a></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">Set</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../../eth_types/index.html#ethereum.tangerine_whistle.eth_types.Address" title="ethereum.tangerine_whistle.eth_types.Address"><span class="pre">ethereum.tangerine_whistle.eth_types.Address</span></a><span class="p"><span class="pre">]</span></span><a class="headerlink" href="#ethereum.tangerine_whistle.vm.interpreter.collect_accounts_to_delete" title="Permalink to this definition">¶</a></dt>
+<dd><p>Collects all the accounts that were marked for deletion by the
+<cite>SELFDESTRUCT</cite> opcode.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>evm</strong> – The current EVM frame.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>accounts_to_delete</strong> – returns all the accounts need marked for deletion by the
+<cite>SELFDESTRUCT</cite> opcode.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><cite>set</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">collect_accounts_to_delete</span><span class="p">(</span><span class="n">evm</span><span class="p">:</span> <span class="n">Evm</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Set</span><span class="p">[</span><span class="n">Address</span><span class="p">]:</span>
+    <span class="k">if</span> <span class="n">evm</span><span class="o">.</span><span class="n">has_erred</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">set</span><span class="p">(</span>
+            <span class="n">chain</span><span class="p">(</span>
+                <span class="n">evm</span><span class="o">.</span><span class="n">accounts_to_delete</span><span class="p">,</span>
+                <span class="o">*</span><span class="p">(</span><span class="n">collect_accounts_to_delete</span><span class="p">(</span><span class="n">child</span><span class="p">)</span> <span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="n">evm</span><span class="o">.</span><span class="n">children</span><span class="p">),</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="collect-logs">
+<h4>collect_logs<a class="headerlink" href="#collect-logs" title="Permalink to this headline">¶</a></h4>
+<dl class="py function">
+<dt class="sig sig-object py" id="ethereum.tangerine_whistle.vm.interpreter.collect_logs">
+<span class="sig-name descname"><span class="pre">collect_logs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">evm</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="../index.html#ethereum.tangerine_whistle.vm.Evm" title="ethereum.tangerine_whistle.vm.Evm"><span class="pre">ethereum.tangerine_whistle.vm.Evm</span></a></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../../eth_types/index.html#ethereum.tangerine_whistle.eth_types.Log" title="ethereum.tangerine_whistle.eth_types.Log"><span class="pre">ethereum.tangerine_whistle.eth_types.Log</span></a><span class="p"><span class="pre">,</span> </span><span class="pre">Ellipsis</span><span class="p"><span class="pre">]</span></span><a class="headerlink" href="#ethereum.tangerine_whistle.vm.interpreter.collect_logs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Collects all the logs emitted while executing the message call.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>evm</strong> – The current EVM frame.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>logs</strong> – returns all the logs that were emitted while executing the
+message call.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><cite>tuple</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">collect_logs</span><span class="p">(</span><span class="n">evm</span><span class="p">:</span> <span class="n">Evm</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Log</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+    <span class="k">if</span> <span class="n">evm</span><span class="o">.</span><span class="n">has_erred</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span>
+            <span class="n">chain</span><span class="p">(</span>
+                <span class="n">evm</span><span class="o">.</span><span class="n">logs</span><span class="p">,</span>
+                <span class="o">*</span><span class="p">(</span><span class="n">collect_logs</span><span class="p">(</span><span class="n">child_evm</span><span class="p">)</span> <span class="k">for</span> <span class="n">child_evm</span> <span class="ow">in</span> <span class="n">evm</span><span class="o">.</span><span class="n">children</span><span class="p">),</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="calculate-gas-refund">
+<h4>calculate_gas_refund<a class="headerlink" href="#calculate-gas-refund" title="Permalink to this headline">¶</a></h4>
+<dl class="py function">
+<dt class="sig sig-object py" id="ethereum.tangerine_whistle.vm.interpreter.calculate_gas_refund">
+<span class="sig-name descname"><span class="pre">calculate_gas_refund</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">evm</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="../index.html#ethereum.tangerine_whistle.vm.Evm" title="ethereum.tangerine_whistle.vm.Evm"><span class="pre">ethereum.tangerine_whistle.vm.Evm</span></a></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="../../../base_types/index.html#ethereum.base_types.U256" title="ethereum.base_types.U256"><span class="pre">ethereum.base_types.U256</span></a><a class="headerlink" href="#ethereum.tangerine_whistle.vm.interpreter.calculate_gas_refund" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds up the gas that was refunded in each execution frame during the
+message call.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>evm</strong> – The current EVM frame.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>gas_refund</strong> – returns the total gas that needs to be refunded after executing the
+message call.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><cite>ethereum.base_types.U256</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">calculate_gas_refund</span><span class="p">(</span><span class="n">evm</span><span class="p">:</span> <span class="n">Evm</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">U256</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">evm</span><span class="o">.</span><span class="n">has_erred</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">U256</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">evm</span><span class="o">.</span><span class="n">refund_counter</span> <span class="o">+</span> <span class="nb">sum</span><span class="p">(</span>
+            <span class="n">calculate_gas_refund</span><span class="p">(</span><span class="n">child_evm</span><span class="p">)</span> <span class="k">for</span> <span class="n">child_evm</span> <span class="ow">in</span> <span class="n">evm</span><span class="o">.</span><span class="n">children</span>
+        <span class="p">)</span>
 </pre></div>
 </div>
 </section>

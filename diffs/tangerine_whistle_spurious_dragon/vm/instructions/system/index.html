@@ -18,8 +18,8 @@
     <script src="../../../../../_static/doctools.js"></script>
     <link rel="index" title="Index" href="../../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../../search.html" />
-    <link rel="next" title="ethereum.tangerine_whistle.utils.addressethereum.spurious_dragon.utils.address" href="../../../utils/address/index.html" />
-    <link rel="prev" title="ethereum.tangerine_whistle.vm.instructions.bitwiseethereum.spurious_dragon.vm.instructions.bitwise" href="../bitwise/index.html" />
+    <link rel="next" title="ethereum.tangerine_whistle.vm.precompiled_contracts.ripemd160ethereum.spurious_dragon.vm.precompiled_contracts.ripemd160" href="../../precompiled_contracts/ripemd160/index.html" />
+    <link rel="prev" title="ethereum.tangerine_whistle.vm.precompiled_contractsethereum.spurious_dragon.vm.precompiled_contracts" href="../../precompiled_contracts/index.html" />
    
   <link rel="stylesheet" href="../../../../../_static/custom.css" type="text/css" />
   
@@ -123,83 +123,82 @@
 </dl>
 </dd></dl>
 
-<pre class="literal-block">def create(evm: Evm) -&gt; None:
-    # This import causes a circular import error
-    # if it's not moved inside this method
-    from ...vm.interpreter import STACK_DEPTH_LIMIT, process_create_message
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">create</span><span class="p">(</span><span class="n">evm</span><span class="p">:</span> <span class="n">Evm</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="c1"># This import causes a circular import error</span>
+    <span class="c1"># if it&#39;s not moved inside this method</span>
+    <span class="kn">from</span> <span class="nn">...vm.interpreter</span> <span class="kn">import</span> <span class="n">STACK_DEPTH_LIMIT</span><span class="p">,</span> <span class="n">process_create_message</span>
 
-    endowment = pop(evm.stack)
-    memory_start_position = Uint(pop(evm.stack))
-    memory_size = pop(evm.stack)
+    <span class="n">endowment</span> <span class="o">=</span> <span class="n">pop</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">)</span>
+    <span class="n">memory_start_position</span> <span class="o">=</span> <span class="n">Uint</span><span class="p">(</span><span class="n">pop</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">))</span>
+    <span class="n">memory_size</span> <span class="o">=</span> <span class="n">pop</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">)</span>
 
-    extend_memory_gas_cost = calculate_gas_extend_memory(
-        evm.memory, memory_start_position, memory_size
-    )
-    total_gas_cost = u256_safe_add(
-        GAS_CREATE,
-        extend_memory_gas_cost,
-        exception_type=OutOfGasError,
-    )
-    evm.gas_left = subtract_gas(evm.gas_left, total_gas_cost)
-    extend_memory(evm.memory, memory_start_position, memory_size)
-    sender_address = evm.message.current_target
-    sender = get_account(evm.env.state, sender_address)
+    <span class="n">extend_memory_gas_cost</span> <span class="o">=</span> <span class="n">calculate_gas_extend_memory</span><span class="p">(</span>
+        <span class="n">evm</span><span class="o">.</span><span class="n">memory</span><span class="p">,</span> <span class="n">memory_start_position</span><span class="p">,</span> <span class="n">memory_size</span>
+    <span class="p">)</span>
+    <span class="n">total_gas_cost</span> <span class="o">=</span> <span class="n">u256_safe_add</span><span class="p">(</span>
+        <span class="n">GAS_CREATE</span><span class="p">,</span>
+        <span class="n">extend_memory_gas_cost</span><span class="p">,</span>
+        <span class="n">exception_type</span><span class="o">=</span><span class="n">OutOfGasError</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span> <span class="o">=</span> <span class="n">subtract_gas</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span><span class="p">,</span> <span class="n">total_gas_cost</span><span class="p">)</span>
+    <span class="n">extend_memory</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">memory</span><span class="p">,</span> <span class="n">memory_start_position</span><span class="p">,</span> <span class="n">memory_size</span><span class="p">)</span>
+    <span class="n">sender_address</span> <span class="o">=</span> <span class="n">evm</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">current_target</span>
+    <span class="n">sender</span> <span class="o">=</span> <span class="n">get_account</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">state</span><span class="p">,</span> <span class="n">sender_address</span><span class="p">)</span>
 
-    evm.pc += 1
+    <span class="n">evm</span><span class="o">.</span><span class="n">pc</span> <span class="o">+=</span> <span class="mi">1</span>
 
-    if sender.balance &lt; endowment:
-        push(evm.stack, U256(0))
-        return None
+    <span class="k">if</span> <span class="n">sender</span><span class="o">.</span><span class="n">balance</span> <span class="o">&lt;</span> <span class="n">endowment</span><span class="p">:</span>
+        <span class="n">push</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">,</span> <span class="n">U256</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+        <span class="k">return</span> <span class="kc">None</span>
 
-    if sender.nonce == Uint(2 ** 64 - 1):
-        push(evm.stack, U256(0))
-        return None
+    <span class="k">if</span> <span class="n">sender</span><span class="o">.</span><span class="n">nonce</span> <span class="o">==</span> <span class="n">Uint</span><span class="p">(</span><span class="mi">2</span> <span class="o">**</span> <span class="mi">64</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="n">push</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">,</span> <span class="n">U256</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+        <span class="k">return</span> <span class="kc">None</span>
 
-    if evm.message.depth + 1 &gt; STACK_DEPTH_LIMIT:
-        push(evm.stack, U256(0))
-        return None
+    <span class="k">if</span> <span class="n">evm</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">depth</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">&gt;</span> <span class="n">STACK_DEPTH_LIMIT</span><span class="p">:</span>
+        <span class="n">push</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">,</span> <span class="n">U256</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+        <span class="k">return</span> <span class="kc">None</span>
 
-    call_data = memory_read_bytes(
-        evm.memory, memory_start_position, memory_size
-    )
+    <span class="n">call_data</span> <span class="o">=</span> <span class="n">memory_read_bytes</span><span class="p">(</span>
+        <span class="n">evm</span><span class="o">.</span><span class="n">memory</span><span class="p">,</span> <span class="n">memory_start_position</span><span class="p">,</span> <span class="n">memory_size</span>
+    <span class="p">)</span>
 
-    increment_nonce(evm.env.state, evm.message.current_target)
+    <span class="n">increment_nonce</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">state</span><span class="p">,</span> <span class="n">evm</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">current_target</span><span class="p">)</span>
 
-    create_message_gas = max_message_call_gas(evm.gas_left)
-    evm.gas_left = subtract_gas(evm.gas_left, create_message_gas)
+    <span class="n">create_message_gas</span> <span class="o">=</span> <span class="n">max_message_call_gas</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span><span class="p">)</span>
+    <span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span> <span class="o">=</span> <span class="n">subtract_gas</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span><span class="p">,</span> <span class="n">create_message_gas</span><span class="p">)</span>
 
-    contract_address = compute_contract_address(
-        evm.message.current_target,
-        get_account(evm.env.state, evm.message.current_target).nonce - U256(1),
-    )
-    is_collision = account_has_code_or_nonce(evm.env.state, contract_address)
-    if is_collision:
-        push(evm.stack, U256(0))
-        return
+    <span class="n">contract_address</span> <span class="o">=</span> <span class="n">compute_contract_address</span><span class="p">(</span>
+        <span class="n">evm</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">current_target</span><span class="p">,</span>
+        <span class="n">get_account</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">state</span><span class="p">,</span> <span class="n">evm</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">current_target</span><span class="p">)</span><span class="o">.</span><span class="n">nonce</span> <span class="o">-</span> <span class="n">U256</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">is_collision</span> <span class="o">=</span> <span class="n">account_has_code_or_nonce</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">state</span><span class="p">,</span> <span class="n">contract_address</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">is_collision</span><span class="p">:</span>
+        <span class="n">push</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">,</span> <span class="n">U256</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+        <span class="k">return</span>
 
-    child_message = Message(
-        caller=evm.message.current_target,
-        target=Bytes0(),
-        gas=create_message_gas,
-        value=endowment,
-        data=b&quot;&quot;,
-        code=call_data,
-        current_target=contract_address,
-        depth=evm.message.depth + 1,
-        code_address=None,
-        should_transfer_value=True,
-    )
-    child_evm = process_create_message(child_message, evm.env)
-    <span class="change-added">evm.children.append(child_evm)
-    </span>if child_evm.has_erred:
-        push(evm.stack, U256(0))
-    else:
-        push(evm.stack, U256.from_be_bytes(child_evm.message.current_target))
-    evm.gas_left += child_evm.gas_left
-    evm.refund_counter += child_evm.refund_counter
-    <span class="change-removed">evm.accounts_to_delete.update(child_evm.accounts_to_delete)
-    </span>evm.logs += child_evm.logs
-</pre>
+    <span class="n">child_message</span> <span class="o">=</span> <span class="n">Message</span><span class="p">(</span>
+        <span class="n">caller</span><span class="o">=</span><span class="n">evm</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">current_target</span><span class="p">,</span>
+        <span class="n">target</span><span class="o">=</span><span class="n">Bytes0</span><span class="p">(),</span>
+        <span class="n">gas</span><span class="o">=</span><span class="n">create_message_gas</span><span class="p">,</span>
+        <span class="n">value</span><span class="o">=</span><span class="n">endowment</span><span class="p">,</span>
+        <span class="n">data</span><span class="o">=</span><span class="sa">b</span><span class="s2">&quot;&quot;</span><span class="p">,</span>
+        <span class="n">code</span><span class="o">=</span><span class="n">call_data</span><span class="p">,</span>
+        <span class="n">current_target</span><span class="o">=</span><span class="n">contract_address</span><span class="p">,</span>
+        <span class="n">depth</span><span class="o">=</span><span class="n">evm</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">depth</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="n">code_address</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">should_transfer_value</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">child_evm</span> <span class="o">=</span> <span class="n">process_create_message</span><span class="p">(</span><span class="n">child_message</span><span class="p">,</span> <span class="n">evm</span><span class="o">.</span><span class="n">env</span><span class="p">)</span>
+    <span class="n">evm</span><span class="o">.</span><span class="n">children</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">child_evm</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">child_evm</span><span class="o">.</span><span class="n">has_erred</span><span class="p">:</span>
+        <span class="n">push</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">,</span> <span class="n">U256</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">push</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">,</span> <span class="n">U256</span><span class="o">.</span><span class="n">from_be_bytes</span><span class="p">(</span><span class="n">child_evm</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">current_target</span><span class="p">))</span>
+    <span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span> <span class="o">+=</span> <span class="n">child_evm</span><span class="o">.</span><span class="n">gas_left</span>
+    <span class="n">child_evm</span><span class="o">.</span><span class="n">gas_left</span> <span class="o">=</span> <span class="n">U256</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+</pre></div>
+</div>
 </section>
 <section id="return">
 <h4><a class="reference internal" href="#return">return</a><a class="headerlink" href="#return" title="Permalink to this headline">¶</a></h4>
@@ -316,10 +315,9 @@
         should_transfer_value=True,
     )
     child_evm = process_message(child_message, evm.env)
+    evm.children.append(child_evm)
 
-    <span class="change-added">evm.children.append(child_evm)
-
-    </span>if child_evm.has_erred:
+    if child_evm.has_erred:
         push(evm.stack, U256(0))
     else:
         push(evm.stack, U256(1))
@@ -331,9 +329,7 @@
         child_evm.output[:actual_output_size],
     )
     evm.gas_left += child_evm.gas_left
-    evm.refund_counter += child_evm.refund_counter
-    <span class="change-removed">evm.accounts_to_delete.update(child_evm.accounts_to_delete)
-    </span>evm.logs += child_evm.logs
+    child_evm.gas_left = U256(0)
 </pre>
 </section>
 <section id="callcode">
@@ -349,89 +345,88 @@
 </dl>
 </dd></dl>
 
-<pre class="literal-block">def callcode(evm: Evm) -&gt; None:
-    from ...vm.interpreter import STACK_DEPTH_LIMIT, process_message
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">callcode</span><span class="p">(</span><span class="n">evm</span><span class="p">:</span> <span class="n">Evm</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">...vm.interpreter</span> <span class="kn">import</span> <span class="n">STACK_DEPTH_LIMIT</span><span class="p">,</span> <span class="n">process_message</span>
 
-    evm.gas_left = subtract_gas(evm.gas_left, GAS_CALL)
+    <span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span> <span class="o">=</span> <span class="n">subtract_gas</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span><span class="p">,</span> <span class="n">GAS_CALL</span><span class="p">)</span>
 
-    gas = pop(evm.stack)
-    code_address = to_address(pop(evm.stack))
-    value = pop(evm.stack)
-    memory_input_start_position = Uint(pop(evm.stack))
-    memory_input_size = pop(evm.stack)
-    memory_output_start_position = Uint(pop(evm.stack))
-    memory_output_size = pop(evm.stack)
-    to = evm.message.current_target
+    <span class="n">gas</span> <span class="o">=</span> <span class="n">pop</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">)</span>
+    <span class="n">code_address</span> <span class="o">=</span> <span class="n">to_address</span><span class="p">(</span><span class="n">pop</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">))</span>
+    <span class="n">value</span> <span class="o">=</span> <span class="n">pop</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">)</span>
+    <span class="n">memory_input_start_position</span> <span class="o">=</span> <span class="n">Uint</span><span class="p">(</span><span class="n">pop</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">))</span>
+    <span class="n">memory_input_size</span> <span class="o">=</span> <span class="n">pop</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">)</span>
+    <span class="n">memory_output_start_position</span> <span class="o">=</span> <span class="n">Uint</span><span class="p">(</span><span class="n">pop</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">))</span>
+    <span class="n">memory_output_size</span> <span class="o">=</span> <span class="n">pop</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">)</span>
+    <span class="n">to</span> <span class="o">=</span> <span class="n">evm</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">current_target</span>
 
-    gas_input_memory = calculate_gas_extend_memory(
-        evm.memory, memory_input_start_position, memory_input_size
-    )
-    evm.gas_left = subtract_gas(evm.gas_left, gas_input_memory)
-    extend_memory(evm.memory, memory_input_start_position, memory_input_size)
-    gas_output_memory = calculate_gas_extend_memory(
-        evm.memory, memory_output_start_position, memory_output_size
-    )
-    evm.gas_left = subtract_gas(evm.gas_left, gas_output_memory)
-    extend_memory(evm.memory, memory_output_start_position, memory_output_size)
-    call_data = memory_read_bytes(
-        evm.memory, memory_input_start_position, memory_input_size
-    )
+    <span class="n">gas_input_memory</span> <span class="o">=</span> <span class="n">calculate_gas_extend_memory</span><span class="p">(</span>
+        <span class="n">evm</span><span class="o">.</span><span class="n">memory</span><span class="p">,</span> <span class="n">memory_input_start_position</span><span class="p">,</span> <span class="n">memory_input_size</span>
+    <span class="p">)</span>
+    <span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span> <span class="o">=</span> <span class="n">subtract_gas</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span><span class="p">,</span> <span class="n">gas_input_memory</span><span class="p">)</span>
+    <span class="n">extend_memory</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">memory</span><span class="p">,</span> <span class="n">memory_input_start_position</span><span class="p">,</span> <span class="n">memory_input_size</span><span class="p">)</span>
+    <span class="n">gas_output_memory</span> <span class="o">=</span> <span class="n">calculate_gas_extend_memory</span><span class="p">(</span>
+        <span class="n">evm</span><span class="o">.</span><span class="n">memory</span><span class="p">,</span> <span class="n">memory_output_start_position</span><span class="p">,</span> <span class="n">memory_output_size</span>
+    <span class="p">)</span>
+    <span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span> <span class="o">=</span> <span class="n">subtract_gas</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span><span class="p">,</span> <span class="n">gas_output_memory</span><span class="p">)</span>
+    <span class="n">extend_memory</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">memory</span><span class="p">,</span> <span class="n">memory_output_start_position</span><span class="p">,</span> <span class="n">memory_output_size</span><span class="p">)</span>
+    <span class="n">call_data</span> <span class="o">=</span> <span class="n">memory_read_bytes</span><span class="p">(</span>
+        <span class="n">evm</span><span class="o">.</span><span class="n">memory</span><span class="p">,</span> <span class="n">memory_input_start_position</span><span class="p">,</span> <span class="n">memory_input_size</span>
+    <span class="p">)</span>
 
-    transfer_gas_cost = U256(0) if value == 0 else GAS_CALL_VALUE
-    extra_gas = transfer_gas_cost
-    call_gas_fee = calculate_call_gas_cost(gas, evm.gas_left, extra_gas)
-    message_call_gas_fee = calculate_message_call_gas_stipend(
-        value, gas, evm.gas_left, extra_gas
-    )
+    <span class="n">transfer_gas_cost</span> <span class="o">=</span> <span class="n">U256</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="k">if</span> <span class="n">value</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">GAS_CALL_VALUE</span>
+    <span class="n">extra_gas</span> <span class="o">=</span> <span class="n">transfer_gas_cost</span>
+    <span class="n">call_gas_fee</span> <span class="o">=</span> <span class="n">calculate_call_gas_cost</span><span class="p">(</span><span class="n">gas</span><span class="p">,</span> <span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span><span class="p">,</span> <span class="n">extra_gas</span><span class="p">)</span>
+    <span class="n">message_call_gas_fee</span> <span class="o">=</span> <span class="n">calculate_message_call_gas_stipend</span><span class="p">(</span>
+        <span class="n">value</span><span class="p">,</span> <span class="n">gas</span><span class="p">,</span> <span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span><span class="p">,</span> <span class="n">extra_gas</span>
+    <span class="p">)</span>
 
-    evm.gas_left = subtract_gas(evm.gas_left, call_gas_fee)
+    <span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span> <span class="o">=</span> <span class="n">subtract_gas</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span><span class="p">,</span> <span class="n">call_gas_fee</span><span class="p">)</span>
 
-    sender_balance = get_account(
-        evm.env.state, evm.message.current_target
-    ).balance
+    <span class="n">sender_balance</span> <span class="o">=</span> <span class="n">get_account</span><span class="p">(</span>
+        <span class="n">evm</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">state</span><span class="p">,</span> <span class="n">evm</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">current_target</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">balance</span>
 
-    evm.pc += 1
+    <span class="n">evm</span><span class="o">.</span><span class="n">pc</span> <span class="o">+=</span> <span class="mi">1</span>
 
-    if sender_balance &lt; value:
-        push(evm.stack, U256(0))
-        evm.gas_left += message_call_gas_fee
-        return None
-    if evm.message.depth + 1 &gt; STACK_DEPTH_LIMIT:
-        push(evm.stack, U256(0))
-        evm.gas_left += message_call_gas_fee
-        return None
+    <span class="k">if</span> <span class="n">sender_balance</span> <span class="o">&lt;</span> <span class="n">value</span><span class="p">:</span>
+        <span class="n">push</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">,</span> <span class="n">U256</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+        <span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span> <span class="o">+=</span> <span class="n">message_call_gas_fee</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">evm</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">depth</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">&gt;</span> <span class="n">STACK_DEPTH_LIMIT</span><span class="p">:</span>
+        <span class="n">push</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">,</span> <span class="n">U256</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+        <span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span> <span class="o">+=</span> <span class="n">message_call_gas_fee</span>
+        <span class="k">return</span> <span class="kc">None</span>
 
-    code = get_account(evm.env.state, code_address).code
-    child_message = Message(
-        caller=evm.message.current_target,
-        target=to,
-        gas=message_call_gas_fee,
-        value=value,
-        data=call_data,
-        code=code,
-        current_target=to,
-        depth=evm.message.depth + 1,
-        code_address=code_address,
-        should_transfer_value=True,
-    )
+    <span class="n">code</span> <span class="o">=</span> <span class="n">get_account</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">state</span><span class="p">,</span> <span class="n">code_address</span><span class="p">)</span><span class="o">.</span><span class="n">code</span>
+    <span class="n">child_message</span> <span class="o">=</span> <span class="n">Message</span><span class="p">(</span>
+        <span class="n">caller</span><span class="o">=</span><span class="n">evm</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">current_target</span><span class="p">,</span>
+        <span class="n">target</span><span class="o">=</span><span class="n">to</span><span class="p">,</span>
+        <span class="n">gas</span><span class="o">=</span><span class="n">message_call_gas_fee</span><span class="p">,</span>
+        <span class="n">value</span><span class="o">=</span><span class="n">value</span><span class="p">,</span>
+        <span class="n">data</span><span class="o">=</span><span class="n">call_data</span><span class="p">,</span>
+        <span class="n">code</span><span class="o">=</span><span class="n">code</span><span class="p">,</span>
+        <span class="n">current_target</span><span class="o">=</span><span class="n">to</span><span class="p">,</span>
+        <span class="n">depth</span><span class="o">=</span><span class="n">evm</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">depth</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="n">code_address</span><span class="o">=</span><span class="n">code_address</span><span class="p">,</span>
+        <span class="n">should_transfer_value</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span>
 
-    child_evm = process_message(child_message, evm.env)
-    <span class="change-added">evm.children.append(child_evm)
-    </span>if child_evm.has_erred:
-        push(evm.stack, U256(0))
-    else:
-        push(evm.stack, U256(1))
-    actual_output_size = min(memory_output_size, U256(len(child_evm.output)))
-    memory_write(
-        evm.memory,
-        memory_output_start_position,
-        child_evm.output[:actual_output_size],
-    )
-    evm.gas_left += child_evm.gas_left
-    evm.refund_counter += child_evm.refund_counter
-    <span class="change-removed">evm.accounts_to_delete.update(child_evm.accounts_to_delete)
-    </span>evm.logs += child_evm.logs
-</pre>
+    <span class="n">child_evm</span> <span class="o">=</span> <span class="n">process_message</span><span class="p">(</span><span class="n">child_message</span><span class="p">,</span> <span class="n">evm</span><span class="o">.</span><span class="n">env</span><span class="p">)</span>
+    <span class="n">evm</span><span class="o">.</span><span class="n">children</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">child_evm</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">child_evm</span><span class="o">.</span><span class="n">has_erred</span><span class="p">:</span>
+        <span class="n">push</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">,</span> <span class="n">U256</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">push</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">,</span> <span class="n">U256</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+    <span class="n">actual_output_size</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">memory_output_size</span><span class="p">,</span> <span class="n">U256</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">child_evm</span><span class="o">.</span><span class="n">output</span><span class="p">)))</span>
+    <span class="n">memory_write</span><span class="p">(</span>
+        <span class="n">evm</span><span class="o">.</span><span class="n">memory</span><span class="p">,</span>
+        <span class="n">memory_output_start_position</span><span class="p">,</span>
+        <span class="n">child_evm</span><span class="o">.</span><span class="n">output</span><span class="p">[:</span><span class="n">actual_output_size</span><span class="p">],</span>
+    <span class="p">)</span>
+    <span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span> <span class="o">+=</span> <span class="n">child_evm</span><span class="o">.</span><span class="n">gas_left</span>
+    <span class="n">child_evm</span><span class="o">.</span><span class="n">gas_left</span> <span class="o">=</span> <span class="n">U256</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+</pre></div>
+</div>
 </section>
 <section id="selfdestruct">
 <h4>selfdestruct<a class="headerlink" href="#selfdestruct" title="Permalink to this headline">¶</a></h4>
@@ -463,16 +458,19 @@
             evm.gas_left, GAS_SELF_DESTRUCT_NEW_ACCOUNT
         )
 
-    originator = evm.message.current_target
-    beneficiary_balance = get_account(evm.env.state, beneficiary).balance
-    originator_balance = get_account(evm.env.state, originator).balance
+    <span class="change-replaced">originator = evm.message.current_target</span><span class="change-replacement"># First Transfer to beneficiary
+    set_account_balance(
+        evm.env.state, beneficiary,</span>
+    beneficiary_balance <span class="change-replaced">= get_account(evm.env.state, beneficiary).balance</span><span class="change-replacement">+</span>
+    originator_balance <span class="change-replaced">= get_account(evm.env.state, originator).balance</span><span class="change-replacement">)</span>
 
-    # First Transfer to beneficiary
+    # <span class="change-replaced">First Transfer</span><span class="change-replacement">Next, Zero the balance of the address being deleted (must come after
+    # sending</span> to beneficiary<span class="change-removed">
     set_account_balance(
         evm.env.state, beneficiary, beneficiary_balance + originator_balance
     )
     # Next, Zero the balance of the address being deleted (must come after
-    # sending to beneficiary in case the contract named itself as the
+    # sending to beneficiary</span> in case the contract named itself as the
     # beneficiary).
     set_account_balance(evm.env.state, originator, U256(0))
 
@@ -497,80 +495,79 @@ but persisting the current values for sender.</p>
 </dl>
 </dd></dl>
 
-<pre class="literal-block">def delegatecall(evm: Evm) -&gt; None:
-    from ...vm.interpreter import STACK_DEPTH_LIMIT, process_message
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">delegatecall</span><span class="p">(</span><span class="n">evm</span><span class="p">:</span> <span class="n">Evm</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">...vm.interpreter</span> <span class="kn">import</span> <span class="n">STACK_DEPTH_LIMIT</span><span class="p">,</span> <span class="n">process_message</span>
 
-    evm.gas_left = subtract_gas(evm.gas_left, GAS_CALL)
+    <span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span> <span class="o">=</span> <span class="n">subtract_gas</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span><span class="p">,</span> <span class="n">GAS_CALL</span><span class="p">)</span>
 
-    gas = pop(evm.stack)
-    code_address = to_address(pop(evm.stack))
-    memory_input_start_position = Uint(pop(evm.stack))
-    memory_input_size = pop(evm.stack)
-    memory_output_start_position = Uint(pop(evm.stack))
-    memory_output_size = pop(evm.stack)
-    value = evm.message.value
-    to = evm.message.current_target
+    <span class="n">gas</span> <span class="o">=</span> <span class="n">pop</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">)</span>
+    <span class="n">code_address</span> <span class="o">=</span> <span class="n">to_address</span><span class="p">(</span><span class="n">pop</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">))</span>
+    <span class="n">memory_input_start_position</span> <span class="o">=</span> <span class="n">Uint</span><span class="p">(</span><span class="n">pop</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">))</span>
+    <span class="n">memory_input_size</span> <span class="o">=</span> <span class="n">pop</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">)</span>
+    <span class="n">memory_output_start_position</span> <span class="o">=</span> <span class="n">Uint</span><span class="p">(</span><span class="n">pop</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">))</span>
+    <span class="n">memory_output_size</span> <span class="o">=</span> <span class="n">pop</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">)</span>
+    <span class="n">value</span> <span class="o">=</span> <span class="n">evm</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">value</span>
+    <span class="n">to</span> <span class="o">=</span> <span class="n">evm</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">current_target</span>
 
-    gas_input_memory = calculate_gas_extend_memory(
-        evm.memory, memory_input_start_position, memory_input_size
-    )
-    evm.gas_left = subtract_gas(evm.gas_left, gas_input_memory)
-    extend_memory(evm.memory, memory_input_start_position, memory_input_size)
-    gas_output_memory = calculate_gas_extend_memory(
-        evm.memory, memory_output_start_position, memory_output_size
-    )
-    evm.gas_left = subtract_gas(evm.gas_left, gas_output_memory)
-    extend_memory(evm.memory, memory_output_start_position, memory_output_size)
-    call_data = memory_read_bytes(
-        evm.memory, memory_input_start_position, memory_input_size
-    )
+    <span class="n">gas_input_memory</span> <span class="o">=</span> <span class="n">calculate_gas_extend_memory</span><span class="p">(</span>
+        <span class="n">evm</span><span class="o">.</span><span class="n">memory</span><span class="p">,</span> <span class="n">memory_input_start_position</span><span class="p">,</span> <span class="n">memory_input_size</span>
+    <span class="p">)</span>
+    <span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span> <span class="o">=</span> <span class="n">subtract_gas</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span><span class="p">,</span> <span class="n">gas_input_memory</span><span class="p">)</span>
+    <span class="n">extend_memory</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">memory</span><span class="p">,</span> <span class="n">memory_input_start_position</span><span class="p">,</span> <span class="n">memory_input_size</span><span class="p">)</span>
+    <span class="n">gas_output_memory</span> <span class="o">=</span> <span class="n">calculate_gas_extend_memory</span><span class="p">(</span>
+        <span class="n">evm</span><span class="o">.</span><span class="n">memory</span><span class="p">,</span> <span class="n">memory_output_start_position</span><span class="p">,</span> <span class="n">memory_output_size</span>
+    <span class="p">)</span>
+    <span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span> <span class="o">=</span> <span class="n">subtract_gas</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span><span class="p">,</span> <span class="n">gas_output_memory</span><span class="p">)</span>
+    <span class="n">extend_memory</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">memory</span><span class="p">,</span> <span class="n">memory_output_start_position</span><span class="p">,</span> <span class="n">memory_output_size</span><span class="p">)</span>
+    <span class="n">call_data</span> <span class="o">=</span> <span class="n">memory_read_bytes</span><span class="p">(</span>
+        <span class="n">evm</span><span class="o">.</span><span class="n">memory</span><span class="p">,</span> <span class="n">memory_input_start_position</span><span class="p">,</span> <span class="n">memory_input_size</span>
+    <span class="p">)</span>
 
-    extra_gas = U256(0)
-    call_gas_fee = calculate_call_gas_cost(gas, evm.gas_left, extra_gas)
-    message_call_gas_fee = calculate_message_call_gas_stipend(
-        value, gas, evm.gas_left, extra_gas, call_stipend=U256(0)
-    )
+    <span class="n">extra_gas</span> <span class="o">=</span> <span class="n">U256</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">call_gas_fee</span> <span class="o">=</span> <span class="n">calculate_call_gas_cost</span><span class="p">(</span><span class="n">gas</span><span class="p">,</span> <span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span><span class="p">,</span> <span class="n">extra_gas</span><span class="p">)</span>
+    <span class="n">message_call_gas_fee</span> <span class="o">=</span> <span class="n">calculate_message_call_gas_stipend</span><span class="p">(</span>
+        <span class="n">value</span><span class="p">,</span> <span class="n">gas</span><span class="p">,</span> <span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span><span class="p">,</span> <span class="n">extra_gas</span><span class="p">,</span> <span class="n">call_stipend</span><span class="o">=</span><span class="n">U256</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="p">)</span>
 
-    evm.gas_left = subtract_gas(evm.gas_left, call_gas_fee)
+    <span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span> <span class="o">=</span> <span class="n">subtract_gas</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span><span class="p">,</span> <span class="n">call_gas_fee</span><span class="p">)</span>
 
-    evm.pc += 1
+    <span class="n">evm</span><span class="o">.</span><span class="n">pc</span> <span class="o">+=</span> <span class="mi">1</span>
 
-    if evm.message.depth + 1 &gt; STACK_DEPTH_LIMIT:
-        push(evm.stack, U256(0))
-        evm.gas_left += message_call_gas_fee
-        return None
+    <span class="k">if</span> <span class="n">evm</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">depth</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">&gt;</span> <span class="n">STACK_DEPTH_LIMIT</span><span class="p">:</span>
+        <span class="n">push</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">,</span> <span class="n">U256</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+        <span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span> <span class="o">+=</span> <span class="n">message_call_gas_fee</span>
+        <span class="k">return</span> <span class="kc">None</span>
 
-    code = get_account(evm.env.state, code_address).code
-    child_message = Message(
-        caller=evm.message.caller,
-        target=to,
-        gas=message_call_gas_fee,
-        value=value,
-        data=call_data,
-        code=code,
-        current_target=to,
-        depth=evm.message.depth + 1,
-        code_address=code_address,
-        should_transfer_value=False,
-    )
+    <span class="n">code</span> <span class="o">=</span> <span class="n">get_account</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">state</span><span class="p">,</span> <span class="n">code_address</span><span class="p">)</span><span class="o">.</span><span class="n">code</span>
+    <span class="n">child_message</span> <span class="o">=</span> <span class="n">Message</span><span class="p">(</span>
+        <span class="n">caller</span><span class="o">=</span><span class="n">evm</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">caller</span><span class="p">,</span>
+        <span class="n">target</span><span class="o">=</span><span class="n">to</span><span class="p">,</span>
+        <span class="n">gas</span><span class="o">=</span><span class="n">message_call_gas_fee</span><span class="p">,</span>
+        <span class="n">value</span><span class="o">=</span><span class="n">value</span><span class="p">,</span>
+        <span class="n">data</span><span class="o">=</span><span class="n">call_data</span><span class="p">,</span>
+        <span class="n">code</span><span class="o">=</span><span class="n">code</span><span class="p">,</span>
+        <span class="n">current_target</span><span class="o">=</span><span class="n">to</span><span class="p">,</span>
+        <span class="n">depth</span><span class="o">=</span><span class="n">evm</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">depth</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="n">code_address</span><span class="o">=</span><span class="n">code_address</span><span class="p">,</span>
+        <span class="n">should_transfer_value</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span>
 
-    child_evm = process_message(child_message, evm.env)
-    <span class="change-added">evm.children.append(child_evm)
-    </span>if child_evm.has_erred:
-        push(evm.stack, U256(0))
-    else:
-        push(evm.stack, U256(1))
-    actual_output_size = min(memory_output_size, U256(len(child_evm.output)))
-    memory_write(
-        evm.memory,
-        memory_output_start_position,
-        child_evm.output[:actual_output_size],
-    )
-    evm.gas_left += child_evm.gas_left
-    evm.refund_counter += child_evm.refund_counter
-    <span class="change-removed">evm.accounts_to_delete.update(child_evm.accounts_to_delete)
-    </span>evm.logs += child_evm.logs
-</pre>
+    <span class="n">child_evm</span> <span class="o">=</span> <span class="n">process_message</span><span class="p">(</span><span class="n">child_message</span><span class="p">,</span> <span class="n">evm</span><span class="o">.</span><span class="n">env</span><span class="p">)</span>
+    <span class="n">evm</span><span class="o">.</span><span class="n">children</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">child_evm</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">child_evm</span><span class="o">.</span><span class="n">has_erred</span><span class="p">:</span>
+        <span class="n">push</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">,</span> <span class="n">U256</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">push</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">,</span> <span class="n">U256</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+    <span class="n">actual_output_size</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">memory_output_size</span><span class="p">,</span> <span class="n">U256</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">child_evm</span><span class="o">.</span><span class="n">output</span><span class="p">)))</span>
+    <span class="n">memory_write</span><span class="p">(</span>
+        <span class="n">evm</span><span class="o">.</span><span class="n">memory</span><span class="p">,</span>
+        <span class="n">memory_output_start_position</span><span class="p">,</span>
+        <span class="n">child_evm</span><span class="o">.</span><span class="n">output</span><span class="p">[:</span><span class="n">actual_output_size</span><span class="p">],</span>
+    <span class="p">)</span>
+    <span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span> <span class="o">+=</span> <span class="n">child_evm</span><span class="o">.</span><span class="n">gas_left</span>
+    <span class="n">child_evm</span><span class="o">.</span><span class="n">gas_left</span> <span class="o">=</span> <span class="n">U256</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+</pre></div>
+</div>
 </section>
 </section>
 </section>
@@ -600,157 +597,157 @@ but persisting the current values for sender.</p>
 <p class="caption"><span class="caption-text">Comparisons:</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="../../../../index.html">Comparisons</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="../../../../frontier_homestead/vm/instructions/stack/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.frontier.vm.instructions.stack</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.vm.instructions.stack</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../frontier_homestead/vm/instructions/block/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.frontier.vm.instructions.block</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.vm.instructions.block</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../frontier_homestead/vm/precompiled_contracts/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.frontier.vm.precompiled_contracts</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.vm.precompiled_contracts</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../frontier_homestead/utils/message/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.frontier.utils.message</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.utils.message</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../frontier_homestead/vm/precompiled_contracts/mapping/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.frontier.vm.precompiled_contracts.mapping</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.vm.precompiled_contracts.mapping</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../frontier_homestead/vm/interpreter/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.frontier.vm.interpreter</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.vm.interpreter</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../frontier_homestead/vm/runtime/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.frontier.vm.runtime</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.vm.runtime</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../frontier_homestead/spec/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.frontier.spec</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.spec</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../frontier_homestead/genesis/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.frontier.genesis</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../frontier_homestead/bloom/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.frontier.bloom</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.bloom</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../frontier_homestead/vm/instructions/bitwise/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.frontier.vm.instructions.bitwise</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.vm.instructions.bitwise</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../frontier_homestead/vm/instructions/system/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.frontier.vm.instructions.system</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.vm.instructions.system</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../frontier_homestead/utils/address/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.frontier.utils.address</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.utils.address</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../frontier_homestead/vm/precompiled_contracts/ripemd160/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.frontier.vm.precompiled_contracts.ripemd160</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.vm.precompiled_contracts.ripemd160</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../frontier_homestead/vm/precompiled_contracts/ecrecover/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.frontier.vm.precompiled_contracts.ecrecover</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.vm.precompiled_contracts.ecrecover</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../frontier_homestead/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.frontier</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../frontier_homestead/utils/json/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.frontier.utils.json</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.utils.json</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../frontier_homestead/vm/instructions/comparison/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.frontier.vm.instructions.comparison</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.vm.instructions.comparison</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../frontier_homestead/utils/hexadecimal/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.frontier.utils.hexadecimal</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.utils.hexadecimal</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../frontier_homestead/vm/instructions/arithmetic/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.frontier.vm.instructions.arithmetic</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.vm.instructions.arithmetic</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../frontier_homestead/vm/instructions/log/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.frontier.vm.instructions.log</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.vm.instructions.log</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../frontier_homestead/vm/instructions/keccak/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.frontier.vm.instructions.keccak</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.vm.instructions.keccak</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../frontier_homestead/trie/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.frontier.trie</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.trie</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../frontier_homestead/vm/error/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.frontier.vm.error</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.vm.error</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../frontier_homestead/vm/precompiled_contracts/identity/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.frontier.vm.precompiled_contracts.identity</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.vm.precompiled_contracts.identity</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../frontier_homestead/vm/instructions/storage/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.frontier.vm.instructions.storage</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.vm.instructions.storage</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../frontier_homestead/utils/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.frontier.utils</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.utils</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../frontier_homestead/state/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.frontier.state</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.state</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../frontier_homestead/vm/memory/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.frontier.vm.memory</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.vm.memory</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../frontier_homestead/vm/instructions/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.frontier.vm.instructions</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.vm.instructions</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../frontier_homestead/vm/stack/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.frontier.vm.stack</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.vm.stack</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../frontier_homestead/eth_types/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.frontier.eth_types</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.eth_types</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../frontier_homestead/bloom/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.frontier.bloom</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.bloom</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../frontier_homestead/vm/instructions/log/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.frontier.vm.instructions.log</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.vm.instructions.log</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../frontier_homestead/vm/instructions/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.frontier.vm.instructions</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.vm.instructions</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../frontier_homestead/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.frontier</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../frontier_homestead/spec/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.frontier.spec</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.spec</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../frontier_homestead/vm/memory/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.frontier.vm.memory</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.vm.memory</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../frontier_homestead/vm/gas/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.frontier.vm.gas</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.vm.gas</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../frontier_homestead/vm/instructions/control_flow/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.frontier.vm.instructions.control_flow</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.vm.instructions.control_flow</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../frontier_homestead/vm/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.frontier.vm</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.vm</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../frontier_homestead/vm/instructions/block/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.frontier.vm.instructions.block</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.vm.instructions.block</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../frontier_homestead/vm/precompiled_contracts/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.frontier.vm.precompiled_contracts</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.vm.precompiled_contracts</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../frontier_homestead/vm/instructions/system/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.frontier.vm.instructions.system</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.vm.instructions.system</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../frontier_homestead/vm/precompiled_contracts/ripemd160/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.frontier.vm.precompiled_contracts.ripemd160</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.vm.precompiled_contracts.ripemd160</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../frontier_homestead/utils/message/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.frontier.utils.message</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.utils.message</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../frontier_homestead/vm/precompiled_contracts/sha256/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.frontier.vm.precompiled_contracts.sha256</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.vm.precompiled_contracts.sha256</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../frontier_homestead/vm/error/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.frontier.vm.error</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.vm.error</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../frontier_homestead/state/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.frontier.state</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.state</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../frontier_homestead/genesis/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.frontier.genesis</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../frontier_homestead/vm/instructions/memory/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.frontier.vm.instructions.memory</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.vm.instructions.memory</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../frontier_homestead/vm/instructions/bitwise/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.frontier.vm.instructions.bitwise</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.vm.instructions.bitwise</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../frontier_homestead/utils/json/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.frontier.utils.json</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.utils.json</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../frontier_homestead/utils/hexadecimal/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.frontier.utils.hexadecimal</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.utils.hexadecimal</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../frontier_homestead/utils/address/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.frontier.utils.address</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.utils.address</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../frontier_homestead/vm/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.frontier.vm</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.vm</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../frontier_homestead/vm/runtime/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.frontier.vm.runtime</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.vm.runtime</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../frontier_homestead/utils/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.frontier.utils</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.utils</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../frontier_homestead/trie/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.frontier.trie</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.trie</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../frontier_homestead/vm/precompiled_contracts/ecrecover/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.frontier.vm.precompiled_contracts.ecrecover</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.vm.precompiled_contracts.ecrecover</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../frontier_homestead/vm/instructions/comparison/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.frontier.vm.instructions.comparison</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.vm.instructions.comparison</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../frontier_homestead/vm/precompiled_contracts/identity/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.frontier.vm.precompiled_contracts.identity</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.vm.precompiled_contracts.identity</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../frontier_homestead/vm/instructions/keccak/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.frontier.vm.instructions.keccak</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.vm.instructions.keccak</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../frontier_homestead/vm/stack/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.frontier.vm.stack</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.vm.stack</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../frontier_homestead/vm/instructions/storage/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.frontier.vm.instructions.storage</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.vm.instructions.storage</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../frontier_homestead/vm/instructions/stack/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.frontier.vm.instructions.stack</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.vm.instructions.stack</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../frontier_homestead/vm/instructions/environment/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.frontier.vm.instructions.environment</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.vm.instructions.environment</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../homestead_dao_fork/vm/instructions/stack/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.vm.instructions.stack</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.vm.instructions.stack</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../homestead_dao_fork/vm/instructions/block/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.vm.instructions.block</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.vm.instructions.block</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../homestead_dao_fork/vm/precompiled_contracts/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.vm.precompiled_contracts</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.vm.precompiled_contracts</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../homestead_dao_fork/utils/message/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.utils.message</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.utils.message</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../homestead_dao_fork/vm/precompiled_contracts/mapping/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.vm.precompiled_contracts.mapping</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.vm.precompiled_contracts.mapping</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../homestead_dao_fork/vm/interpreter/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.vm.interpreter</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.vm.interpreter</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../homestead_dao_fork/vm/runtime/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.vm.runtime</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.vm.runtime</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../homestead_dao_fork/spec/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.spec</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.spec</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../homestead_dao_fork/bloom/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.bloom</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.bloom</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../homestead_dao_fork/vm/instructions/bitwise/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.vm.instructions.bitwise</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.vm.instructions.bitwise</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../homestead_dao_fork/vm/instructions/system/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.vm.instructions.system</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.vm.instructions.system</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../homestead_dao_fork/utils/address/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.utils.address</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.utils.address</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../homestead_dao_fork/dao/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.dao</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../homestead_dao_fork/vm/precompiled_contracts/ripemd160/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.vm.precompiled_contracts.ripemd160</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.vm.precompiled_contracts.ripemd160</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../homestead_dao_fork/vm/precompiled_contracts/ecrecover/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.vm.precompiled_contracts.ecrecover</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.vm.precompiled_contracts.ecrecover</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../homestead_dao_fork/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../homestead_dao_fork/utils/json/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.utils.json</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.utils.json</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../homestead_dao_fork/vm/instructions/comparison/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.vm.instructions.comparison</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.vm.instructions.comparison</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../homestead_dao_fork/utils/hexadecimal/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.utils.hexadecimal</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.utils.hexadecimal</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../homestead_dao_fork/vm/instructions/arithmetic/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.vm.instructions.arithmetic</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.vm.instructions.arithmetic</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../homestead_dao_fork/vm/instructions/log/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.vm.instructions.log</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.vm.instructions.log</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../homestead_dao_fork/vm/instructions/keccak/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.vm.instructions.keccak</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.vm.instructions.keccak</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../homestead_dao_fork/trie/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.trie</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.trie</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../homestead_dao_fork/vm/error/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.vm.error</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.vm.error</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../homestead_dao_fork/vm/precompiled_contracts/identity/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.vm.precompiled_contracts.identity</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.vm.precompiled_contracts.identity</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../homestead_dao_fork/vm/instructions/storage/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.vm.instructions.storage</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.vm.instructions.storage</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../homestead_dao_fork/utils/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.utils</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.utils</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../homestead_dao_fork/state/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.state</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.state</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../homestead_dao_fork/vm/memory/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.vm.memory</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.vm.memory</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../homestead_dao_fork/vm/instructions/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.vm.instructions</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.vm.instructions</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../homestead_dao_fork/vm/stack/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.vm.stack</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.vm.stack</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../frontier_homestead/vm/instructions/arithmetic/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.frontier.vm.instructions.arithmetic</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.vm.instructions.arithmetic</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../frontier_homestead/vm/precompiled_contracts/mapping/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.frontier.vm.precompiled_contracts.mapping</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.vm.precompiled_contracts.mapping</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../frontier_homestead/vm/interpreter/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.frontier.vm.interpreter</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.vm.interpreter</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../homestead_dao_fork/eth_types/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.eth_types</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.eth_types</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../homestead_dao_fork/bloom/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.bloom</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.bloom</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../homestead_dao_fork/vm/instructions/log/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.vm.instructions.log</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.vm.instructions.log</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../homestead_dao_fork/vm/instructions/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.vm.instructions</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.vm.instructions</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../homestead_dao_fork/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../homestead_dao_fork/spec/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.spec</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.spec</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../homestead_dao_fork/vm/memory/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.vm.memory</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.vm.memory</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../homestead_dao_fork/vm/gas/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.vm.gas</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.vm.gas</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../homestead_dao_fork/vm/instructions/control_flow/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.vm.instructions.control_flow</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.vm.instructions.control_flow</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../homestead_dao_fork/vm/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.vm</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.vm</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../homestead_dao_fork/vm/instructions/block/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.vm.instructions.block</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.vm.instructions.block</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../homestead_dao_fork/vm/precompiled_contracts/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.vm.precompiled_contracts</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.vm.precompiled_contracts</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../homestead_dao_fork/vm/instructions/system/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.vm.instructions.system</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.vm.instructions.system</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../homestead_dao_fork/vm/precompiled_contracts/ripemd160/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.vm.precompiled_contracts.ripemd160</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.vm.precompiled_contracts.ripemd160</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../homestead_dao_fork/utils/message/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.utils.message</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.utils.message</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../homestead_dao_fork/vm/precompiled_contracts/sha256/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.vm.precompiled_contracts.sha256</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.vm.precompiled_contracts.sha256</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../homestead_dao_fork/vm/error/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.vm.error</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.vm.error</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../homestead_dao_fork/dao/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.dao</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../homestead_dao_fork/state/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.state</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.state</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../homestead_dao_fork/vm/instructions/memory/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.vm.instructions.memory</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.vm.instructions.memory</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../homestead_dao_fork/vm/instructions/bitwise/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.vm.instructions.bitwise</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.vm.instructions.bitwise</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../homestead_dao_fork/utils/json/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.utils.json</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.utils.json</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../homestead_dao_fork/utils/hexadecimal/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.utils.hexadecimal</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.utils.hexadecimal</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../homestead_dao_fork/utils/address/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.utils.address</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.utils.address</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../homestead_dao_fork/vm/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.vm</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.vm</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../homestead_dao_fork/vm/runtime/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.vm.runtime</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.vm.runtime</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../homestead_dao_fork/utils/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.utils</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.utils</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../homestead_dao_fork/trie/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.trie</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.trie</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../homestead_dao_fork/vm/precompiled_contracts/ecrecover/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.vm.precompiled_contracts.ecrecover</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.vm.precompiled_contracts.ecrecover</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../homestead_dao_fork/vm/instructions/comparison/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.vm.instructions.comparison</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.vm.instructions.comparison</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../homestead_dao_fork/vm/precompiled_contracts/identity/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.vm.precompiled_contracts.identity</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.vm.precompiled_contracts.identity</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../homestead_dao_fork/vm/instructions/keccak/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.vm.instructions.keccak</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.vm.instructions.keccak</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../homestead_dao_fork/vm/stack/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.vm.stack</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.vm.stack</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../homestead_dao_fork/vm/instructions/storage/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.vm.instructions.storage</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.vm.instructions.storage</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../homestead_dao_fork/vm/instructions/stack/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.vm.instructions.stack</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.vm.instructions.stack</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../homestead_dao_fork/vm/instructions/environment/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.vm.instructions.environment</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.vm.instructions.environment</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../dao_fork_tangerine_whistle/vm/instructions/stack/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.vm.instructions.stack</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.vm.instructions.stack</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../dao_fork_tangerine_whistle/vm/instructions/block/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.vm.instructions.block</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.vm.instructions.block</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../dao_fork_tangerine_whistle/vm/precompiled_contracts/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.vm.precompiled_contracts</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.vm.precompiled_contracts</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../dao_fork_tangerine_whistle/utils/message/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.utils.message</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.utils.message</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../dao_fork_tangerine_whistle/vm/precompiled_contracts/mapping/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.vm.precompiled_contracts.mapping</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.vm.precompiled_contracts.mapping</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../dao_fork_tangerine_whistle/vm/interpreter/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.vm.interpreter</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.vm.interpreter</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../dao_fork_tangerine_whistle/vm/runtime/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.vm.runtime</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.vm.runtime</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../dao_fork_tangerine_whistle/spec/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.spec</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.spec</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../dao_fork_tangerine_whistle/bloom/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.bloom</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.bloom</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../dao_fork_tangerine_whistle/vm/instructions/bitwise/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.vm.instructions.bitwise</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.vm.instructions.bitwise</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../dao_fork_tangerine_whistle/vm/instructions/system/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.vm.instructions.system</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.vm.instructions.system</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../dao_fork_tangerine_whistle/utils/address/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.utils.address</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.utils.address</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../dao_fork_tangerine_whistle/dao/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.dao</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../dao_fork_tangerine_whistle/vm/precompiled_contracts/ripemd160/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.vm.precompiled_contracts.ripemd160</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.vm.precompiled_contracts.ripemd160</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../dao_fork_tangerine_whistle/vm/precompiled_contracts/ecrecover/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.vm.precompiled_contracts.ecrecover</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.vm.precompiled_contracts.ecrecover</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../dao_fork_tangerine_whistle/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../dao_fork_tangerine_whistle/utils/json/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.utils.json</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.utils.json</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../dao_fork_tangerine_whistle/vm/instructions/comparison/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.vm.instructions.comparison</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.vm.instructions.comparison</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../dao_fork_tangerine_whistle/utils/hexadecimal/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.utils.hexadecimal</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.utils.hexadecimal</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../dao_fork_tangerine_whistle/vm/instructions/arithmetic/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.vm.instructions.arithmetic</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.vm.instructions.arithmetic</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../dao_fork_tangerine_whistle/vm/instructions/log/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.vm.instructions.log</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.vm.instructions.log</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../dao_fork_tangerine_whistle/vm/instructions/keccak/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.vm.instructions.keccak</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.vm.instructions.keccak</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../dao_fork_tangerine_whistle/trie/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.trie</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.trie</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../dao_fork_tangerine_whistle/vm/error/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.vm.error</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.vm.error</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../dao_fork_tangerine_whistle/vm/precompiled_contracts/identity/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.vm.precompiled_contracts.identity</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.vm.precompiled_contracts.identity</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../dao_fork_tangerine_whistle/vm/instructions/storage/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.vm.instructions.storage</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.vm.instructions.storage</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../dao_fork_tangerine_whistle/utils/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.utils</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.utils</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../dao_fork_tangerine_whistle/state/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.state</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.state</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../dao_fork_tangerine_whistle/vm/memory/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.vm.memory</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.vm.memory</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../dao_fork_tangerine_whistle/vm/instructions/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.vm.instructions</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.vm.instructions</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../dao_fork_tangerine_whistle/vm/stack/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.vm.stack</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.vm.stack</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../homestead_dao_fork/vm/instructions/arithmetic/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.vm.instructions.arithmetic</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.vm.instructions.arithmetic</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../homestead_dao_fork/vm/precompiled_contracts/mapping/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.vm.precompiled_contracts.mapping</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.vm.precompiled_contracts.mapping</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../homestead_dao_fork/vm/interpreter/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.homestead.vm.interpreter</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.vm.interpreter</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../dao_fork_tangerine_whistle/eth_types/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.eth_types</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.eth_types</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../dao_fork_tangerine_whistle/bloom/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.bloom</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.bloom</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../dao_fork_tangerine_whistle/vm/instructions/log/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.vm.instructions.log</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.vm.instructions.log</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../dao_fork_tangerine_whistle/vm/instructions/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.vm.instructions</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.vm.instructions</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../dao_fork_tangerine_whistle/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../dao_fork_tangerine_whistle/spec/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.spec</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.spec</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../dao_fork_tangerine_whistle/vm/memory/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.vm.memory</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.vm.memory</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../dao_fork_tangerine_whistle/vm/gas/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.vm.gas</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.vm.gas</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../dao_fork_tangerine_whistle/vm/instructions/control_flow/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.vm.instructions.control_flow</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.vm.instructions.control_flow</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../dao_fork_tangerine_whistle/vm/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.vm</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.vm</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../dao_fork_tangerine_whistle/vm/instructions/block/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.vm.instructions.block</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.vm.instructions.block</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../dao_fork_tangerine_whistle/vm/precompiled_contracts/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.vm.precompiled_contracts</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.vm.precompiled_contracts</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../dao_fork_tangerine_whistle/vm/instructions/system/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.vm.instructions.system</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.vm.instructions.system</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../dao_fork_tangerine_whistle/vm/precompiled_contracts/ripemd160/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.vm.precompiled_contracts.ripemd160</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.vm.precompiled_contracts.ripemd160</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../dao_fork_tangerine_whistle/utils/message/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.utils.message</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.utils.message</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../dao_fork_tangerine_whistle/vm/precompiled_contracts/sha256/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.vm.precompiled_contracts.sha256</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.vm.precompiled_contracts.sha256</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../dao_fork_tangerine_whistle/vm/error/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.vm.error</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.vm.error</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../dao_fork_tangerine_whistle/dao/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.dao</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../dao_fork_tangerine_whistle/state/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.state</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.state</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../dao_fork_tangerine_whistle/vm/instructions/memory/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.vm.instructions.memory</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.vm.instructions.memory</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../dao_fork_tangerine_whistle/vm/instructions/bitwise/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.vm.instructions.bitwise</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.vm.instructions.bitwise</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../dao_fork_tangerine_whistle/utils/json/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.utils.json</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.utils.json</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../dao_fork_tangerine_whistle/utils/hexadecimal/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.utils.hexadecimal</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.utils.hexadecimal</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../dao_fork_tangerine_whistle/utils/address/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.utils.address</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.utils.address</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../dao_fork_tangerine_whistle/vm/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.vm</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.vm</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../dao_fork_tangerine_whistle/vm/runtime/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.vm.runtime</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.vm.runtime</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../dao_fork_tangerine_whistle/utils/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.utils</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.utils</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../dao_fork_tangerine_whistle/trie/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.trie</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.trie</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../dao_fork_tangerine_whistle/vm/precompiled_contracts/ecrecover/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.vm.precompiled_contracts.ecrecover</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.vm.precompiled_contracts.ecrecover</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../dao_fork_tangerine_whistle/vm/instructions/comparison/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.vm.instructions.comparison</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.vm.instructions.comparison</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../dao_fork_tangerine_whistle/vm/precompiled_contracts/identity/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.vm.precompiled_contracts.identity</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.vm.precompiled_contracts.identity</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../dao_fork_tangerine_whistle/vm/instructions/keccak/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.vm.instructions.keccak</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.vm.instructions.keccak</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../dao_fork_tangerine_whistle/vm/stack/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.vm.stack</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.vm.stack</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../dao_fork_tangerine_whistle/vm/instructions/storage/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.vm.instructions.storage</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.vm.instructions.storage</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../dao_fork_tangerine_whistle/vm/instructions/stack/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.vm.instructions.stack</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.vm.instructions.stack</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../dao_fork_tangerine_whistle/vm/instructions/environment/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.vm.instructions.environment</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.vm.instructions.environment</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../stack/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.vm.instructions.stack</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.spurious_dragon.vm.instructions.stack</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../block/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.vm.instructions.block</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.spurious_dragon.vm.instructions.block</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../precompiled_contracts/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.vm.precompiled_contracts</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.spurious_dragon.vm.precompiled_contracts</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../utils/message/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.utils.message</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.spurious_dragon.utils.message</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../precompiled_contracts/mapping/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.vm.precompiled_contracts.mapping</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.spurious_dragon.vm.precompiled_contracts.mapping</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../interpreter/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.vm.interpreter</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.spurious_dragon.vm.interpreter</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../runtime/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.vm.runtime</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.spurious_dragon.vm.runtime</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../spec/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.spec</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.spurious_dragon.spec</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../bloom/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.bloom</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.spurious_dragon.bloom</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../bitwise/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.vm.instructions.bitwise</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.spurious_dragon.vm.instructions.bitwise</span></code></a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.vm.instructions.system</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.spurious_dragon.vm.instructions.system</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../utils/address/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.utils.address</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.spurious_dragon.utils.address</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../precompiled_contracts/ripemd160/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.vm.precompiled_contracts.ripemd160</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.spurious_dragon.vm.precompiled_contracts.ripemd160</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../precompiled_contracts/ecrecover/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.vm.precompiled_contracts.ecrecover</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.spurious_dragon.vm.precompiled_contracts.ecrecover</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.spurious_dragon</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../utils/json/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.utils.json</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.spurious_dragon.utils.json</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../comparison/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.vm.instructions.comparison</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.spurious_dragon.vm.instructions.comparison</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../utils/hexadecimal/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.utils.hexadecimal</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.spurious_dragon.utils.hexadecimal</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../arithmetic/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.vm.instructions.arithmetic</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.spurious_dragon.vm.instructions.arithmetic</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../log/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.vm.instructions.log</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.spurious_dragon.vm.instructions.log</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../keccak/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.vm.instructions.keccak</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.spurious_dragon.vm.instructions.keccak</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../trie/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.trie</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.spurious_dragon.trie</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../error/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.vm.error</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.spurious_dragon.vm.error</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../precompiled_contracts/identity/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.vm.precompiled_contracts.identity</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.spurious_dragon.vm.precompiled_contracts.identity</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../storage/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.vm.instructions.storage</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.spurious_dragon.vm.instructions.storage</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../utils/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.utils</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.spurious_dragon.utils</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../state/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.state</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.spurious_dragon.state</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../memory/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.vm.memory</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.spurious_dragon.vm.memory</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.vm.instructions</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.spurious_dragon.vm.instructions</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../stack/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.vm.stack</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.spurious_dragon.vm.stack</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../dao_fork_tangerine_whistle/vm/instructions/arithmetic/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.vm.instructions.arithmetic</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.vm.instructions.arithmetic</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../dao_fork_tangerine_whistle/vm/precompiled_contracts/mapping/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.vm.precompiled_contracts.mapping</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.vm.precompiled_contracts.mapping</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../dao_fork_tangerine_whistle/vm/interpreter/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.dao_fork.vm.interpreter</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.vm.interpreter</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../eth_types/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.eth_types</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.spurious_dragon.eth_types</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../bloom/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.bloom</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.spurious_dragon.bloom</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../log/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.vm.instructions.log</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.spurious_dragon.vm.instructions.log</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.vm.instructions</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.spurious_dragon.vm.instructions</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.spurious_dragon</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../spec/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.spec</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.spurious_dragon.spec</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../memory/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.vm.memory</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.spurious_dragon.vm.memory</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../gas/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.vm.gas</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.spurious_dragon.vm.gas</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="../control_flow/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.vm.instructions.control_flow</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.spurious_dragon.vm.instructions.control_flow</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.vm</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.spurious_dragon.vm</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../block/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.vm.instructions.block</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.spurious_dragon.vm.instructions.block</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../precompiled_contracts/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.vm.precompiled_contracts</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.spurious_dragon.vm.precompiled_contracts</span></code></a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.vm.instructions.system</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.spurious_dragon.vm.instructions.system</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../precompiled_contracts/ripemd160/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.vm.precompiled_contracts.ripemd160</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.spurious_dragon.vm.precompiled_contracts.ripemd160</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../utils/message/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.utils.message</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.spurious_dragon.utils.message</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../precompiled_contracts/sha256/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.vm.precompiled_contracts.sha256</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.spurious_dragon.vm.precompiled_contracts.sha256</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../error/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.vm.error</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.spurious_dragon.vm.error</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../state/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.state</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.spurious_dragon.state</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="../memory/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.vm.instructions.memory</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.spurious_dragon.vm.instructions.memory</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../bitwise/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.vm.instructions.bitwise</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.spurious_dragon.vm.instructions.bitwise</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../utils/json/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.utils.json</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.spurious_dragon.utils.json</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../utils/hexadecimal/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.utils.hexadecimal</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.spurious_dragon.utils.hexadecimal</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../utils/address/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.utils.address</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.spurious_dragon.utils.address</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.vm</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.spurious_dragon.vm</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../runtime/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.vm.runtime</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.spurious_dragon.vm.runtime</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../utils/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.utils</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.spurious_dragon.utils</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../trie/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.trie</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.spurious_dragon.trie</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../precompiled_contracts/ecrecover/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.vm.precompiled_contracts.ecrecover</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.spurious_dragon.vm.precompiled_contracts.ecrecover</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../comparison/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.vm.instructions.comparison</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.spurious_dragon.vm.instructions.comparison</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../precompiled_contracts/identity/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.vm.precompiled_contracts.identity</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.spurious_dragon.vm.precompiled_contracts.identity</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../keccak/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.vm.instructions.keccak</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.spurious_dragon.vm.instructions.keccak</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../stack/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.vm.stack</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.spurious_dragon.vm.stack</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../storage/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.vm.instructions.storage</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.spurious_dragon.vm.instructions.storage</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../stack/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.vm.instructions.stack</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.spurious_dragon.vm.instructions.stack</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="../environment/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.vm.instructions.environment</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.spurious_dragon.vm.instructions.environment</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../arithmetic/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.vm.instructions.arithmetic</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.spurious_dragon.vm.instructions.arithmetic</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../precompiled_contracts/mapping/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.vm.precompiled_contracts.mapping</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.spurious_dragon.vm.precompiled_contracts.mapping</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../interpreter/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.vm.interpreter</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.spurious_dragon.vm.interpreter</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -760,8 +757,8 @@ but persisting the current values for sender.</p>
 <ul>
   <li><a href="../../../../../index.html">Documentation overview</a><ul>
   <li><a href="../../../../index.html">Comparisons</a><ul>
-      <li>Previous: <a href="../bitwise/index.html" title="previous chapter"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.vm.instructions.bitwise</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.spurious_dragon.vm.instructions.bitwise</span></code></a></li>
-      <li>Next: <a href="../../../utils/address/index.html" title="next chapter"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.utils.address</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.spurious_dragon.utils.address</span></code></a></li>
+      <li>Previous: <a href="../../precompiled_contracts/index.html" title="previous chapter"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.vm.precompiled_contracts</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.spurious_dragon.vm.precompiled_contracts</span></code></a></li>
+      <li>Next: <a href="../../precompiled_contracts/ripemd160/index.html" title="next chapter"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.tangerine_whistle.vm.precompiled_contracts.ripemd160</span></code><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.spurious_dragon.vm.precompiled_contracts.ripemd160</span></code></a></li>
   </ul></li>
   </ul></li>
 </ul>
