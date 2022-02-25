@@ -15,6 +15,7 @@ Subpackages
    :titlesonly:
    :maxdepth: 3
 
+   byzantium/index.rst
    dao_fork/index.rst
    frontier/index.rst
    homestead/index.rst

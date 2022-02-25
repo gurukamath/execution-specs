@@ -61,6 +61,10 @@
                     <a href="">Spurious_dragon</a>
                 </li>
                 
+                <li>
+                    <a href="../../../../byzantium/vm/precompiled_contracts/ecrecover/index.html">Byzantium</a>
+                </li>
+                
             </ol>
         </li>
     </ol>
@@ -137,14 +141,14 @@ the address to output.</p>
 
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">ecrecover</span><span class="p">(</span><span class="n">evm</span><span class="p">:</span> <span class="n">Evm</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
     <span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span> <span class="o">=</span> <span class="n">subtract_gas</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span><span class="p">,</span> <span class="n">GAS_ECRECOVER</span><span class="p">)</span>
-    <span class="n">data</span> <span class="o">=</span> <span class="n">evm</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">data</span>
-    <span class="n">message_hash_bytes</span> <span class="o">=</span> <span class="n">left_pad_zero_bytes</span><span class="p">(</span><span class="n">data</span><span class="p">[:</span><span class="mi">32</span><span class="p">],</span> <span class="mi">32</span><span class="p">)</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">right_pad_zero_bytes</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="mi">128</span><span class="p">)</span>
+    <span class="n">message_hash_bytes</span> <span class="o">=</span> <span class="n">data</span><span class="p">[:</span><span class="mi">32</span><span class="p">]</span>
     <span class="n">message_hash</span> <span class="o">=</span> <span class="n">Hash32</span><span class="p">(</span><span class="n">message_hash_bytes</span><span class="p">)</span>
-    <span class="n">v_bytes</span> <span class="o">=</span> <span class="n">left_pad_zero_bytes</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="mi">32</span><span class="p">:</span><span class="mi">64</span><span class="p">],</span> <span class="mi">32</span><span class="p">)</span>
+    <span class="n">v_bytes</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="mi">32</span><span class="p">:</span><span class="mi">64</span><span class="p">]</span>
     <span class="n">v</span> <span class="o">=</span> <span class="n">U256</span><span class="o">.</span><span class="n">from_be_bytes</span><span class="p">(</span><span class="n">v_bytes</span><span class="p">)</span>
-    <span class="n">r_bytes</span> <span class="o">=</span> <span class="n">left_pad_zero_bytes</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="mi">64</span><span class="p">:</span><span class="mi">96</span><span class="p">],</span> <span class="mi">32</span><span class="p">)</span>
+    <span class="n">r_bytes</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="mi">64</span><span class="p">:</span><span class="mi">96</span><span class="p">]</span>
     <span class="n">r</span> <span class="o">=</span> <span class="n">U256</span><span class="o">.</span><span class="n">from_be_bytes</span><span class="p">(</span><span class="n">r_bytes</span><span class="p">)</span>
-    <span class="n">s_bytes</span> <span class="o">=</span> <span class="n">left_pad_zero_bytes</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="mi">96</span><span class="p">:</span><span class="mi">128</span><span class="p">],</span> <span class="mi">32</span><span class="p">)</span>
+    <span class="n">s_bytes</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="mi">96</span><span class="p">:</span><span class="mi">128</span><span class="p">]</span>
     <span class="n">s</span> <span class="o">=</span> <span class="n">U256</span><span class="o">.</span><span class="n">from_be_bytes</span><span class="p">(</span><span class="n">s_bytes</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">v</span> <span class="o">!=</span> <span class="mi">27</span> <span class="ow">and</span> <span class="n">v</span> <span class="o">!=</span> <span class="mi">28</span><span class="p">:</span>
