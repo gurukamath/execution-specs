@@ -24,7 +24,6 @@ Submodules
 
    address/index.rst
    hexadecimal/index.rst
-   json/index.rst
    message/index.rst
 
 
