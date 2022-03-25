@@ -366,7 +366,7 @@ else it executes a call from the <cite>message.caller</cite> to the <cite>messag
         <span class="k">try</span><span class="p">:</span>
             <span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span> <span class="o">=</span> <span class="n">subtract_gas</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span><span class="p">,</span> <span class="n">contract_code_gas</span><span class="p">)</span>
             <span class="n">ensure</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">contract_code</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">MAX_CODE_SIZE</span><span class="p">,</span> <span class="n">OutOfGasError</span><span class="p">)</span>
-        <span class="k">except</span> <span class="n">OutOfGasError</span><span class="p">:</span>
+        <span class="k">except</span> <span class="n">ExceptionalHalt</span><span class="p">:</span>
             <span class="n">rollback_transaction</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">state</span><span class="p">)</span>
             <span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span> <span class="o">=</span> <span class="n">U256</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
             <span class="n">evm</span><span class="o">.</span><span class="n">has_erred</span> <span class="o">=</span> <span class="kc">True</span>
@@ -478,6 +478,7 @@ else it executes a call from the <cite>message.caller</cite> to the <cite>messag
     <span class="k">try</span><span class="p">:</span>
 
         <span class="k">if</span> <span class="n">evm</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">code_address</span> <span class="ow">in</span> <span class="n">PRE_COMPILED_CONTRACTS</span><span class="p">:</span>
+            <span class="n">evm_trace</span><span class="p">(</span><span class="n">evm</span><span class="p">,</span> <span class="n">evm</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">code_address</span><span class="p">)</span>
             <span class="n">PRE_COMPILED_CONTRACTS</span><span class="p">[</span><span class="n">evm</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">code_address</span><span class="p">](</span><span class="n">evm</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">evm</span>
 
@@ -487,23 +488,11 @@ else it executes a call from the <cite>message.caller</cite> to the <cite>messag
             <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="n">InvalidOpcode</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">code</span><span class="p">[</span><span class="n">evm</span><span class="o">.</span><span class="n">pc</span><span class="p">])</span>
 
+            <span class="n">evm_trace</span><span class="p">(</span><span class="n">evm</span><span class="p">,</span> <span class="n">op</span><span class="p">)</span>
             <span class="n">op_implementation</span><span class="p">[</span><span class="n">op</span><span class="p">](</span><span class="n">evm</span><span class="p">)</span>
 
-    <span class="k">except</span> <span class="p">(</span>
-        <span class="n">OutOfGasError</span><span class="p">,</span>
-        <span class="n">InvalidOpcode</span><span class="p">,</span>
-        <span class="n">InvalidJumpDestError</span><span class="p">,</span>
-        <span class="n">InsufficientFunds</span><span class="p">,</span>
-        <span class="n">StackOverflowError</span><span class="p">,</span>
-        <span class="n">StackUnderflowError</span><span class="p">,</span>
-        <span class="n">StackDepthLimitError</span><span class="p">,</span>
-    <span class="p">):</span>
+    <span class="k">except</span> <span class="n">ExceptionalHalt</span><span class="p">:</span>
         <span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span> <span class="o">=</span> <span class="n">U256</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
-        <span class="n">evm</span><span class="o">.</span><span class="n">has_erred</span> <span class="o">=</span> <span class="kc">True</span>
-    <span class="k">except</span> <span class="p">(</span>
-        <span class="n">EnsureError</span><span class="p">,</span>
-        <span class="ne">ValueError</span><span class="p">,</span>
-    <span class="p">):</span>
         <span class="n">evm</span><span class="o">.</span><span class="n">has_erred</span> <span class="o">=</span> <span class="kc">True</span>
     <span class="k">finally</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">evm</span>
@@ -700,6 +689,7 @@ message call.</p>
 <li class="toctree-l4 current"><a class="reference internal" href="../../../index.html#subpackages">Subpackages</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../index.html#submodules">Submodules</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../index.html#package-contents">Package Contents</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../index.html#package-details">Package Details</a></li>
 </ul>
 </li>
 </ul>

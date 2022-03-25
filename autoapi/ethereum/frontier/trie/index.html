@@ -388,13 +388,13 @@ which is encoded to <cite>b””</cite>.</p>
     <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">BranchNode</span><span class="p">):</span>
         <span class="n">unencoded</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">subnodes</span> <span class="o">+</span> <span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">value</span><span class="p">]</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid internal node type </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">node</span><span class="p">)</span><span class="si">}</span><span class="s2">!&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid internal node type </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">node</span><span class="p">)</span><span class="si">}</span><span class="s2">!&quot;</span><span class="p">)</span>
 
     <span class="n">encoded</span> <span class="o">=</span> <span class="n">rlp</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="n">unencoded</span><span class="p">)</span>
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">encoded</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">32</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">unencoded</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">crypto</span><span class="o">.</span><span class="n">keccak256</span><span class="p">(</span><span class="n">encoded</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">keccak256</span><span class="p">(</span><span class="n">encoded</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
@@ -416,7 +416,7 @@ which is encoded to <cite>b””</cite>.</p>
     <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">Bytes</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">node</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+        <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span>
             <span class="sa">f</span><span class="s2">&quot;encoding for </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">node</span><span class="p">)</span><span class="si">}</span><span class="s2"> is not currently implemented&quot;</span>
         <span class="p">)</span>
 </pre></div>
@@ -663,11 +663,11 @@ hashes the keys (if <cite>secured == True</cite>) and encodes all the nodes.</p>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">encoded_value</span> <span class="o">=</span> <span class="n">encode_node</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
         <span class="c1"># Empty values are represented by their absence</span>
-        <span class="n">ensure</span><span class="p">(</span><span class="n">encoded_value</span> <span class="o">!=</span> <span class="sa">b</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="n">ensure</span><span class="p">(</span><span class="n">encoded_value</span> <span class="o">!=</span> <span class="sa">b</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="ne">AssertionError</span><span class="p">)</span>
         <span class="n">key</span><span class="p">:</span> <span class="n">Bytes</span>
         <span class="k">if</span> <span class="n">trie</span><span class="o">.</span><span class="n">secured</span><span class="p">:</span>
             <span class="c1"># &quot;secure&quot; tries hash keys once before construction</span>
-            <span class="n">key</span> <span class="o">=</span> <span class="n">crypto</span><span class="o">.</span><span class="n">keccak256</span><span class="p">(</span><span class="n">preimage</span><span class="p">)</span>
+            <span class="n">key</span> <span class="o">=</span> <span class="n">keccak256</span><span class="p">(</span><span class="n">preimage</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">key</span> <span class="o">=</span> <span class="n">preimage</span>
         <span class="n">mapped</span><span class="p">[</span><span class="n">bytes_to_nibble_list</span><span class="p">(</span><span class="n">key</span><span class="p">)]</span> <span class="o">=</span> <span class="n">encoded_value</span>
@@ -707,7 +707,7 @@ hashes the keys (if <cite>secured == True</cite>) and encodes all the nodes.</p>
 
     <span class="n">root_node</span> <span class="o">=</span> <span class="n">encode_internal_node</span><span class="p">(</span><span class="n">patricialize</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">Uint</span><span class="p">(</span><span class="mi">0</span><span class="p">)))</span>
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">rlp</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="n">root_node</span><span class="p">))</span> <span class="o">&lt;</span> <span class="mi">32</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">crypto</span><span class="o">.</span><span class="n">keccak256</span><span class="p">(</span><span class="n">rlp</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="n">root_node</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">keccak256</span><span class="p">(</span><span class="n">rlp</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="n">root_node</span><span class="p">))</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">root_node</span><span class="p">,</span> <span class="n">Bytes</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">Root</span><span class="p">(</span><span class="n">root_node</span><span class="p">)</span>
@@ -780,7 +780,7 @@ memoization of the tree structure and hashes.</p>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="o">==</span> <span class="n">level</span><span class="p">:</span>
             <span class="c1"># shouldn&#39;t ever have an account or receipt in an internal node</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="p">(</span><span class="n">Account</span><span class="p">,</span> <span class="n">Receipt</span><span class="p">,</span> <span class="n">Uint</span><span class="p">)):</span>
-                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">()</span>
+                <span class="k">raise</span> <span class="ne">AssertionError</span>
             <span class="n">value</span> <span class="o">=</span> <span class="n">obj</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">branches</span><span class="p">[</span><span class="n">key</span><span class="p">[</span><span class="n">level</span><span class="p">]][</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">obj</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
@@ -824,6 +824,7 @@ memoization of the tree structure and hashes.</p>
 <li class="toctree-l4 current"><a class="reference internal" href="../../index.html#subpackages">Subpackages</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../index.html#submodules">Submodules</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../index.html#package-contents">Package Contents</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../index.html#package-details">Package Details</a></li>
 </ul>
 </li>
 </ul>
