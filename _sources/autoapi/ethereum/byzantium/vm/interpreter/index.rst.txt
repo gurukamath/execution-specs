@@ -40,7 +40,6 @@ Functions
    ethereum.byzantium.vm.interpreter.execute_code
    ethereum.byzantium.vm.interpreter.collect_touched_accounts
    ethereum.byzantium.vm.interpreter.collect_accounts_to_delete
-   ethereum.byzantium.vm.interpreter.collect_logs
    ethereum.byzantium.vm.interpreter.calculate_gas_refund
 
 
@@ -298,28 +297,6 @@ collect_accounts_to_delete
 .. undocinclude:: /../src/ethereum/byzantium/vm/interpreter.py
    :language: python
    :pyobject: collect_accounts_to_delete
-
-collect_logs
-~~~~~~~~~~~~
-
-
-.. function:: collect_logs(evm: ethereum.byzantium.vm.Evm) -> Tuple[ethereum.byzantium.eth_types.Log, Ellipsis]
-   :noindexentry:
-
-   Collects all the logs emitted while executing the message call.
-
-   :param evm: The current EVM frame.
-
-   :returns: **logs** -- returns all the logs that were emitted while executing the
-             message call.
-   :rtype: `tuple`
-
-
-
-
-.. undocinclude:: /../src/ethereum/byzantium/vm/interpreter.py
-   :language: python
-   :pyobject: collect_logs
 
 calculate_gas_refund
 ~~~~~~~~~~~~~~~~~~~~
