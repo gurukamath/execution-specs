@@ -497,8 +497,7 @@ else it executes a call from the <cite>message.caller</cite> to the <cite>messag
     <span class="k">except</span> <span class="n">Revert</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
         <span class="n">evm</span><span class="o">.</span><span class="n">error</span> <span class="o">=</span> <span class="n">e</span>
         <span class="n">evm</span><span class="o">.</span><span class="n">has_erred</span> <span class="o">=</span> <span class="kc">True</span>
-    <span class="k">finally</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">evm</span>
+    <span class="k">return</span> <span class="n">evm</span>
 </pre></div>
 </div>
 </section>

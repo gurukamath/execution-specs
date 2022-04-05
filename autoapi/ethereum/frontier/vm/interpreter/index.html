@@ -437,8 +437,7 @@ else it executes a call from the <cite>message.caller</cite> to the <cite>messag
     <span class="k">except</span> <span class="n">ExceptionalHalt</span><span class="p">:</span>
         <span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span> <span class="o">=</span> <span class="n">U256</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
         <span class="n">evm</span><span class="o">.</span><span class="n">has_erred</span> <span class="o">=</span> <span class="kc">True</span>
-    <span class="k">finally</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">evm</span>
+    <span class="k">return</span> <span class="n">evm</span>
 </pre></div>
 </div>
 </section>
