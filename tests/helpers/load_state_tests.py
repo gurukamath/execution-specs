@@ -220,9 +220,7 @@ class Load(BaseLoad):
         )
 
 
-def load_json_fixture(
-    test_dir: str, test_file: str, load: BaseLoad
-) -> Dict[str, Any]:
+def load_json_fixture(test_dir: str, test_file: str, load: BaseLoad) -> List:
     # Extract the pure basename of the file without the path to the file.
     # Ex: Extract "world.json" from "path/to/file/world.json"
     pure_test_file = os.path.basename(test_file)
@@ -230,6 +228,7 @@ def load_json_fixture(
     # "world.json"
     test_name = os.path.splitext(pure_test_file)[0]
     path = os.path.join(test_dir, test_file)
+    json_tests = []
     with open(path, "r") as fp:
         data = json.load(fp)
 
@@ -241,77 +240,82 @@ def load_json_fixture(
         found_keys = list(filter(keys_to_search.match, data.keys()))
 
         if len(found_keys) > 0:
-            json_data = data[found_keys[0]]
+            for _key in found_keys:
+                json_tests.append(data[_key])
         else:
             raise KeyError
-    return json_data
+    return json_tests
 
 
-def load_test(test_dir: str, test_file: str, load: BaseLoad) -> Dict[str, Any]:
-    json_data = load_json_fixture(test_dir, test_file, load)
+def load_test(test_dir: str, test_file: str, load: BaseLoad) -> Generator:
 
-    blocks, block_header_hashes, block_rlps = load.json_to_blocks(
-        json_data["blocks"]
-    )
+    for json_data in load_json_fixture(test_dir, test_file, load):
 
-    return {
-        "genesis_header": load.json_to_header(json_data["genesisBlockHeader"]),
-        "genesis_header_hash": hex_to_bytes(
-            json_data["genesisBlockHeader"]["hash"]
-        ),
-        "genesis_block_rlp": hex_to_bytes(json_data["genesisRLP"]),
-        "last_block_hash": hex_to_bytes(json_data["lastblockhash"]),
-        "pre_state": load.json_to_state(json_data["pre"]),
-        "expected_post_state": load.json_to_state(json_data["postState"]),
-        "blocks": blocks,
-        "block_header_hashes": block_header_hashes,
-        "block_rlps": block_rlps,
-        "ignore_pow_validation": json_data["sealEngine"] == "NoProof",
-    }
+        blocks, block_header_hashes, block_rlps = load.json_to_blocks(
+            json_data["blocks"]
+        )
+
+        yield {
+            "genesis_header": load.json_to_header(
+                json_data["genesisBlockHeader"]
+            ),
+            "genesis_header_hash": hex_to_bytes(
+                json_data["genesisBlockHeader"]["hash"]
+            ),
+            "genesis_block_rlp": hex_to_bytes(json_data["genesisRLP"]),
+            "last_block_hash": hex_to_bytes(json_data["lastblockhash"]),
+            "pre_state": load.json_to_state(json_data["pre"]),
+            "expected_post_state": load.json_to_state(json_data["postState"]),
+            "blocks": blocks,
+            "block_header_hashes": block_header_hashes,
+            "block_rlps": block_rlps,
+            "ignore_pow_validation": json_data["sealEngine"] == "NoProof",
+        }
 
 
 def run_blockchain_st_test(
     test_dir: str, test_file: str, load: BaseLoad
 ) -> None:
-    test_data = load_test(test_dir, test_file, load)
+    for test_data in load_test(test_dir, test_file, load):
 
-    genesis_header = test_data["genesis_header"]
-    genesis_block = load.Block(
-        genesis_header,
-        (),
-        (),
-    )
+        genesis_header = test_data["genesis_header"]
+        genesis_block = load.Block(
+            genesis_header,
+            (),
+            (),
+        )
 
-    assert rlp.rlp_hash(genesis_header) == test_data["genesis_header_hash"]
-    assert (
-        rlp.encode(cast(rlp.RLP, genesis_block))
-        == test_data["genesis_block_rlp"]
-    )
+        assert rlp.rlp_hash(genesis_header) == test_data["genesis_header_hash"]
+        assert (
+            rlp.encode(cast(rlp.RLP, genesis_block))
+            == test_data["genesis_block_rlp"]
+        )
 
-    chain = load.BlockChain(
-        blocks=[genesis_block],
-        state=test_data["pre_state"],
-    )
+        chain = load.BlockChain(
+            blocks=[genesis_block],
+            state=test_data["pre_state"],
+        )
 
-    if not test_data["ignore_pow_validation"]:
-        add_blocks_to_chain(chain, test_data, load)
-    else:
-        with patch(
-            f"ethereum.{load.fork_module}.spec.validate_proof_of_work",
-            autospec=True,
-        ) as mocked_pow_validator:
+        if not test_data["ignore_pow_validation"]:
             add_blocks_to_chain(chain, test_data, load)
-            mocked_pow_validator.assert_has_calls(
-                [call(block.header) for block in test_data["blocks"]],
-                any_order=False,
-            )
+        else:
+            with patch(
+                f"ethereum.{load.fork_module}.spec.validate_proof_of_work",
+                autospec=True,
+            ) as mocked_pow_validator:
+                add_blocks_to_chain(chain, test_data, load)
+                mocked_pow_validator.assert_has_calls(
+                    [call(block.header) for block in test_data["blocks"]],
+                    any_order=False,
+                )
 
-    assert (
-        rlp.rlp_hash(chain.blocks[-1].header) == test_data["last_block_hash"]
-    )
-    assert chain.state == test_data["expected_post_state"]
-    load.close_state(chain.state)
-    load.close_state(test_data["expected_post_state"])
+        assert (
+            rlp.rlp_hash(chain.blocks[-1].header)
+            == test_data["last_block_hash"]
+        )
+        assert chain.state == test_data["expected_post_state"]
+        load.close_state(chain.state)
+        load.close_state(test_data["expected_post_state"])
 
 
 def add_blocks_to_chain(
