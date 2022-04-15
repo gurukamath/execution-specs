@@ -26,7 +26,6 @@ test_dir = "tests/fixtures/BlockchainTests/GeneralStateTests/"
 # hence they've been marked as slow
 SLOW_TESTS = (
     "stTimeConsuming/CALLBlake2f_MaxRounds.json",
-    "stTimeConsuming/static_Call50000_sha256.json",
     "vmPerformance/loopExp.json",
     "vmPerformance/loopMul.json",
     "QuadraticComplexitySolidity_CallDataCopy_d0g1v0_Istanbul",
