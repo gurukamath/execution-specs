@@ -69,6 +69,10 @@
                     <a href="../../constantinople/spec/index.html">Constantinople</a>
                 </li>
                 
+                <li>
+                    <a href="../../istanbul/spec/index.html">Istanbul</a>
+                </li>
+                
             </ol>
         </li>
     </ol>
@@ -312,6 +316,11 @@
 <span class="sig-name descname"><span class="pre">state</span></span><em class="property"> <span class="pre">:ethereum.frontier.state.State</span></em><a class="headerlink" href="#ethereum.frontier.spec.BlockChain.state" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ethereum.frontier.spec.BlockChain.chain_id">
+<span class="sig-name descname"><span class="pre">chain_id</span></span><em class="property"> <span class="pre">:ethereum.base_types.Uint64</span></em><a class="headerlink" href="#ethereum.frontier.spec.BlockChain.chain_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 </dd></dl>
 
 </section>
@@ -366,6 +375,7 @@ chain object for this hard fork and returns it.</p>
     <span class="p">)</span>
 
     <span class="n">old</span><span class="o">.</span><span class="n">blocks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">genesis_block</span><span class="p">)</span>
+    <span class="n">old</span><span class="o">.</span><span class="n">chain_id</span> <span class="o">=</span> <span class="n">genesis</span><span class="o">.</span><span class="n">chain_id</span>
 
     <span class="k">return</span> <span class="n">old</span>
 </pre></div>

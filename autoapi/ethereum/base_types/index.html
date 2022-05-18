@@ -69,6 +69,10 @@
                     <a href="../constantinople/index.html">Constantinople</a>
                 </li>
                 
+                <li>
+                    <a href="../istanbul/index.html">Istanbul</a>
+                </li>
+                
             </ol>
         </li>
     </ol>
@@ -111,22 +115,23 @@
 <li><p><a class="reference internal" href="#fixeduint" id="id12">FixedUInt</a></p></li>
 <li><p><a class="reference internal" href="#u256" id="id13">U256</a></p></li>
 <li><p><a class="reference internal" href="#uint32" id="id14">Uint32</a></p></li>
-<li><p><a class="reference internal" href="#b" id="id15">B</a></p></li>
-<li><p><a class="reference internal" href="#fixedbytes" id="id16">FixedBytes</a></p></li>
-<li><p><a class="reference internal" href="#bytes0" id="id17">Bytes0</a></p></li>
-<li><p><a class="reference internal" href="#bytes4" id="id18">Bytes4</a></p></li>
-<li><p><a class="reference internal" href="#bytes8" id="id19">Bytes8</a></p></li>
-<li><p><a class="reference internal" href="#bytes20" id="id20">Bytes20</a></p></li>
-<li><p><a class="reference internal" href="#bytes32" id="id21">Bytes32</a></p></li>
-<li><p><a class="reference internal" href="#bytes64" id="id22">Bytes64</a></p></li>
-<li><p><a class="reference internal" href="#bytes256" id="id23">Bytes256</a></p></li>
-<li><p><a class="reference internal" href="#bytes" id="id24">Bytes</a></p></li>
-<li><p><a class="reference internal" href="#setattr-function" id="id25">_setattr_function</a></p></li>
-<li><p><a class="reference internal" href="#delattr-function" id="id26">_delattr_function</a></p></li>
-<li><p><a class="reference internal" href="#make-init-function" id="id27">_make_init_function</a></p></li>
-<li><p><a class="reference internal" href="#slotted-freezable" id="id28">slotted_freezable</a></p></li>
-<li><p><a class="reference internal" href="#s" id="id29">S</a></p></li>
-<li><p><a class="reference internal" href="#modify" id="id30">modify</a></p></li>
+<li><p><a class="reference internal" href="#uint64" id="id15">Uint64</a></p></li>
+<li><p><a class="reference internal" href="#b" id="id16">B</a></p></li>
+<li><p><a class="reference internal" href="#fixedbytes" id="id17">FixedBytes</a></p></li>
+<li><p><a class="reference internal" href="#bytes0" id="id18">Bytes0</a></p></li>
+<li><p><a class="reference internal" href="#bytes4" id="id19">Bytes4</a></p></li>
+<li><p><a class="reference internal" href="#bytes8" id="id20">Bytes8</a></p></li>
+<li><p><a class="reference internal" href="#bytes20" id="id21">Bytes20</a></p></li>
+<li><p><a class="reference internal" href="#bytes32" id="id22">Bytes32</a></p></li>
+<li><p><a class="reference internal" href="#bytes64" id="id23">Bytes64</a></p></li>
+<li><p><a class="reference internal" href="#bytes256" id="id24">Bytes256</a></p></li>
+<li><p><a class="reference internal" href="#bytes" id="id25">Bytes</a></p></li>
+<li><p><a class="reference internal" href="#setattr-function" id="id26">_setattr_function</a></p></li>
+<li><p><a class="reference internal" href="#delattr-function" id="id27">_delattr_function</a></p></li>
+<li><p><a class="reference internal" href="#make-init-function" id="id28">_make_init_function</a></p></li>
+<li><p><a class="reference internal" href="#slotted-freezable" id="id29">slotted_freezable</a></p></li>
+<li><p><a class="reference internal" href="#s" id="id30">S</a></p></li>
+<li><p><a class="reference internal" href="#modify" id="id31">modify</a></p></li>
 </ul>
 </li>
 </ul>
@@ -157,28 +162,31 @@
 <tr class="row-even"><td><p><a class="reference internal" href="#ethereum.base_types.Uint32" title="ethereum.base_types.Uint32"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Uint32</span></code></a></p></td>
 <td><p>Unsigned positive integer, which can represent <cite>0</cite> to <cite>2 ** 32 - 1</cite>,</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#ethereum.base_types.FixedBytes" title="ethereum.base_types.FixedBytes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FixedBytes</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ethereum.base_types.Uint64" title="ethereum.base_types.Uint64"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Uint64</span></code></a></p></td>
+<td><p>Unsigned positive integer, which can represent <cite>0</cite> to <cite>2 ** 64 - 1</cite>,</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ethereum.base_types.FixedBytes" title="ethereum.base_types.FixedBytes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FixedBytes</span></code></a></p></td>
 <td><p>Superclass for fixed sized byte arrays. Not intended to be used directly,</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#ethereum.base_types.Bytes0" title="ethereum.base_types.Bytes0"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Bytes0</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ethereum.base_types.Bytes0" title="ethereum.base_types.Bytes0"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Bytes0</span></code></a></p></td>
 <td><p>Byte array of exactly zero elements.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#ethereum.base_types.Bytes4" title="ethereum.base_types.Bytes4"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Bytes4</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#ethereum.base_types.Bytes4" title="ethereum.base_types.Bytes4"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Bytes4</span></code></a></p></td>
 <td><p>Byte array of exactly four elements.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#ethereum.base_types.Bytes8" title="ethereum.base_types.Bytes8"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Bytes8</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ethereum.base_types.Bytes8" title="ethereum.base_types.Bytes8"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Bytes8</span></code></a></p></td>
 <td><p>Byte array of exactly eight elements.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#ethereum.base_types.Bytes20" title="ethereum.base_types.Bytes20"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Bytes20</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#ethereum.base_types.Bytes20" title="ethereum.base_types.Bytes20"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Bytes20</span></code></a></p></td>
 <td><p>Byte array of exactly 20 elements.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#ethereum.base_types.Bytes32" title="ethereum.base_types.Bytes32"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Bytes32</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ethereum.base_types.Bytes32" title="ethereum.base_types.Bytes32"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Bytes32</span></code></a></p></td>
 <td><p>Byte array of exactly 32 elements.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#ethereum.base_types.Bytes64" title="ethereum.base_types.Bytes64"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Bytes64</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#ethereum.base_types.Bytes64" title="ethereum.base_types.Bytes64"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Bytes64</span></code></a></p></td>
 <td><p>Byte array of exactly 64 elements.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#ethereum.base_types.Bytes256" title="ethereum.base_types.Bytes256"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Bytes256</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ethereum.base_types.Bytes256" title="ethereum.base_types.Bytes256"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Bytes256</span></code></a></p></td>
 <td><p>Byte array of exactly 256 elements.</p></td>
 </tr>
 </tbody>
@@ -309,7 +317,8 @@ from its big endian representation.
 <dl class="py method">
 <dt class="sig sig-object py" id="ethereum.base_types.Uint.from_le_bytes">
 <em class="property"><span class="pre">classmethod</span> </em><span class="sig-name descname"><span class="pre">from_le_bytes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cls</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">buffer</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#ethereum.base_types.Bytes" title="ethereum.base_types.Bytes"><span class="pre">Bytes</span></a></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#ethereum.base_types.Uint" title="ethereum.base_types.Uint"><span class="pre">Uint</span></a><a class="headerlink" href="#ethereum.base_types.Uint.from_le_bytes" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Convert a series of little endian bytes to an unsigned integer.</p>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="ethereum.base_types.Uint.__radd__">
@@ -463,7 +472,21 @@ representation.
 <dl class="py method">
 <dt class="sig sig-object py" id="ethereum.base_types.Uint.to_le_bytes">
 <span class="sig-name descname"><span class="pre">to_le_bytes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">number_bytes</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#ethereum.base_types.Bytes" title="ethereum.base_types.Bytes"><span class="pre">Bytes</span></a><a class="headerlink" href="#ethereum.base_types.Uint.to_le_bytes" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Converts this arbitrarily sized unsigned integer into its little endian
+representation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>number_bytes</strong> – Exact number of bytes to return (defaults to the fewest that can
+represent this number.)</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>little_endian</strong> – Little endian (most significant bits last) representation.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><cite>Bytes</cite></p>
+</dd>
+</dl>
+</dd></dl>
 
 </dd></dl>
 
@@ -512,7 +535,19 @@ directly, but rather to be subclassed.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="ethereum.base_types.FixedUInt.wrapping_add">
 <span class="sig-name descname"><span class="pre">wrapping_add</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#ethereum.base_types.T" title="ethereum.base_types.T"><span class="pre">T</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">right</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#ethereum.base_types.T" title="ethereum.base_types.T"><span class="pre">T</span></a><a class="headerlink" href="#ethereum.base_types.FixedUInt.wrapping_add" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Return a new instance containing <cite>self + right (mod N)</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>right</strong> – Other operand for addition.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>sum</strong> – The result of adding <cite>self</cite> and <cite>right</cite>, wrapped.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>T</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="ethereum.base_types.FixedUInt.__iadd__">
@@ -528,7 +563,19 @@ directly, but rather to be subclassed.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="ethereum.base_types.FixedUInt.wrapping_sub">
 <span class="sig-name descname"><span class="pre">wrapping_sub</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#ethereum.base_types.T" title="ethereum.base_types.T"><span class="pre">T</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">right</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#ethereum.base_types.T" title="ethereum.base_types.T"><span class="pre">T</span></a><a class="headerlink" href="#ethereum.base_types.FixedUInt.wrapping_sub" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Return a new instance containing <cite>self - right (mod N)</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>right</strong> – Subtrahend operand for subtraction.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>difference</strong> – The result of subtracting <cite>right</cite> from <cite>self</cite>, wrapped.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>T</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="ethereum.base_types.FixedUInt.__rsub__">
@@ -550,7 +597,19 @@ directly, but rather to be subclassed.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="ethereum.base_types.FixedUInt.wrapping_mul">
 <span class="sig-name descname"><span class="pre">wrapping_mul</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#ethereum.base_types.T" title="ethereum.base_types.T"><span class="pre">T</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">right</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#ethereum.base_types.T" title="ethereum.base_types.T"><span class="pre">T</span></a><a class="headerlink" href="#ethereum.base_types.FixedUInt.wrapping_mul" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Return a new instance containing <cite>self * right (mod N)</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>right</strong> – Other operand for multiplication.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>product</strong> – The result of multiplying <cite>self</cite> by <cite>right</cite>, wrapped.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>T</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="ethereum.base_types.FixedUInt.__rmul__">
@@ -618,7 +677,22 @@ directly, but rather to be subclassed.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="ethereum.base_types.FixedUInt.wrapping_pow">
 <span class="sig-name descname"><span class="pre">wrapping_pow</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#ethereum.base_types.T" title="ethereum.base_types.T"><span class="pre">T</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">right</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">modulo</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#ethereum.base_types.T" title="ethereum.base_types.T"><span class="pre">T</span></a><a class="headerlink" href="#ethereum.base_types.FixedUInt.wrapping_pow" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Return a new instance containing <cite>self ** right (mod modulo)</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>right</strong> – Exponent operand.</p></li>
+<li><p><strong>modulo</strong> – Optional modulus (defaults to <cite>MAX_VALUE + 1</cite>.)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>power</strong> – The result of raising <cite>self</cite> to the power of <cite>right</cite>, wrapped.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>T</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="ethereum.base_types.FixedUInt.__rpow__">
@@ -776,12 +850,90 @@ from its little endian representation.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="ethereum.base_types.Uint32.to_le_bytes4">
 <span class="sig-name descname"><span class="pre">to_le_bytes4</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#ethereum.base_types.Bytes4" title="ethereum.base_types.Bytes4"><span class="pre">Bytes4</span></a><a class="headerlink" href="#ethereum.base_types.Uint32.to_le_bytes4" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Converts this fixed sized unsigned integer into its little endian
+representation, with exactly 4 bytes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>little_endian</strong> – Little endian (most significant bits last) representation.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><cite>Bytes4</cite></p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="ethereum.base_types.Uint32.to_le_bytes">
 <span class="sig-name descname"><span class="pre">to_le_bytes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#ethereum.base_types.Bytes" title="ethereum.base_types.Bytes"><span class="pre">Bytes</span></a><a class="headerlink" href="#ethereum.base_types.Uint32.to_le_bytes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts this fixed sized unsigned integer into its little endian
+representation, in the fewest bytes possible.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>little_endian</strong> – Little endian (most significant bits last) representation.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><cite>Bytes</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="uint64">
+<h4>Uint64<a class="headerlink" href="#uint64" title="Permalink to this headline">¶</a></h4>
+<p>Unsigned positive integer, which can represent <cite>0</cite> to <cite>2 ** 64 - 1</cite>,
+inclusive.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="ethereum.base_types.Uint64">
+<em class="property"><span class="pre">class</span> </em><span class="sig-name descname"><span class="pre">Uint64</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ethereum.base_types.Uint64" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#ethereum.base_types.FixedUInt" title="ethereum.base_types.FixedUInt"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FixedUInt</span></code></a></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ethereum.base_types.Uint64.MAX_VALUE">
+<span class="sig-name descname"><span class="pre">MAX_VALUE</span></span><em class="property"> <span class="pre">:Uint64</span></em><a class="headerlink" href="#ethereum.base_types.Uint64.MAX_VALUE" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ethereum.base_types.Uint64.__slots__">
+<span class="sig-name descname"><span class="pre">__slots__</span></span><em class="property"> <span class="pre">=</span> <span class="pre">[]</span></em><a class="headerlink" href="#ethereum.base_types.Uint64.__slots__" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ethereum.base_types.Uint64.from_le_bytes">
+<em class="property"><span class="pre">classmethod</span> </em><span class="sig-name descname"><span class="pre">from_le_bytes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cls</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">buffer</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#ethereum.base_types.Bytes" title="ethereum.base_types.Bytes"><span class="pre">Bytes</span></a></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#ethereum.base_types.Uint64" title="ethereum.base_types.Uint64"><span class="pre">Uint64</span></a><a class="headerlink" href="#ethereum.base_types.Uint64.from_le_bytes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts a sequence of bytes into an arbitrarily sized unsigned integer
+from its little endian representation.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ethereum.base_types.Uint64.to_le_bytes8">
+<span class="sig-name descname"><span class="pre">to_le_bytes8</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#ethereum.base_types.Bytes8" title="ethereum.base_types.Bytes8"><span class="pre">Bytes8</span></a><a class="headerlink" href="#ethereum.base_types.Uint64.to_le_bytes8" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts this fixed sized unsigned integer into its little endian
+representation, with exactly 8 bytes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>little_endian</strong> – Little endian (most significant bits last) representation.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><cite>Bytes8</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ethereum.base_types.Uint64.to_le_bytes">
+<span class="sig-name descname"><span class="pre">to_le_bytes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#ethereum.base_types.Bytes" title="ethereum.base_types.Bytes"><span class="pre">Bytes</span></a><a class="headerlink" href="#ethereum.base_types.Uint64.to_le_bytes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts this fixed sized unsigned integer into its little endian
+representation, in the fewest bytes possible.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>little_endian</strong> – Little endian (most significant bits last) representation.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><cite>Bytes</cite></p>
+</dd>
+</dl>
+</dd></dl>
 
 </dd></dl>
 

@@ -1,0 +1,407 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>ethereum.crypto.blake2 &#8212; Ethereum Specification  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/alabaster.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/css/dropdown.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/css/custom.css" />
+    <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
+    <script src="../../../../_static/jquery.js"></script>
+    <script src="../../../../_static/underscore.js"></script>
+    <script src="../../../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+    <link rel="next" title="ethereum.crypto.elliptic_curve" href="../elliptic_curve/index.html" />
+    <link rel="prev" title="ethereum.crypto.alt_bn128" href="../alt_bn128/index.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+<div id="disclaimer">
+    The documentation tools are undergoing heavy development and may introduce
+    subtle bugs while rendering, especially in hard fork comparisons. Until this
+    warning is removed, <em>always</em> double check against the
+    <a href="https://github.com/ethereum/execution-specs/">original source</a>.
+</div>
+
+
+
+
+
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="module-ethereum.crypto.blake2">
+<span id="ethereum-crypto-blake2"></span><h1><a class="reference internal" href="#module-ethereum.crypto.blake2" title="ethereum.crypto.blake2"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.crypto.blake2</span></code></a><a class="headerlink" href="#module-ethereum.crypto.blake2" title="Permalink to this headline">¶</a></h1>
+<section id="the-blake2-implementation">
+<h2>The Blake2 Implementation<a class="headerlink" href="#the-blake2-implementation" title="Permalink to this headline">¶</a></h2>
+<section id="module-contents">
+<h3>Module Contents<a class="headerlink" href="#module-contents" title="Permalink to this headline">¶</a></h3>
+<section id="classes">
+<h4>Classes<a class="headerlink" href="#classes" title="Permalink to this headline">¶</a></h4>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ethereum.crypto.blake2.Blake2" title="ethereum.crypto.blake2.Blake2"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Blake2</span></code></a></p></td>
+<td><p>Implementation of the BLAKE2 cryptographic hashing algorithm.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ethereum.crypto.blake2.Blake2b" title="ethereum.crypto.blake2.Blake2b"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Blake2b</span></code></a></p></td>
+<td><p>The Blake2b flavor (64-bits) of Blake2.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="functions">
+<h4>Functions<a class="headerlink" href="#functions" title="Permalink to this headline">¶</a></h4>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ethereum.crypto.blake2.spit_le_to_uint" title="ethereum.crypto.blake2.spit_le_to_uint"><code class="xref py py-obj docutils literal notranslate"><span class="pre">spit_le_to_uint</span></code></a></p></td>
+<td><p>Extracts 8 byte words from a given data.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+<section id="module-details">
+<h3>Module Details<a class="headerlink" href="#module-details" title="Permalink to this headline">¶</a></h3>
+<section id="spit-le-to-uint">
+<h4>spit_le_to_uint<a class="headerlink" href="#spit-le-to-uint" title="Permalink to this headline">¶</a></h4>
+<dl class="py function">
+<dt class="sig sig-object py" id="ethereum.crypto.blake2.spit_le_to_uint">
+<span class="sig-name descname"><span class="pre">spit_le_to_uint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bytes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_words</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../../base_types/index.html#ethereum.base_types.Uint" title="ethereum.base_types.Uint"><span class="pre">ethereum.base_types.Uint</span></a><span class="p"><span class="pre">]</span></span><a class="headerlink" href="#ethereum.crypto.blake2.spit_le_to_uint" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extracts 8 byte words from a given data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> – The data in bytes from which the words need to be extracted</p></li>
+<li><p><strong>start</strong> – Position to start the extraction</p></li>
+<li><p><strong>num_words</strong> – The number of words to be extracted</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">spit_le_to_uint</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">,</span> <span class="n">start</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">num_words</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Uint</span><span class="p">]:</span>
+    <span class="n">words</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_words</span><span class="p">):</span>
+        <span class="n">start_position</span> <span class="o">=</span> <span class="n">start</span> <span class="o">+</span> <span class="p">(</span><span class="n">i</span> <span class="o">*</span> <span class="mi">8</span><span class="p">)</span>
+        <span class="n">words</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="n">Uint</span><span class="o">.</span><span class="n">from_le_bytes</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">start_position</span> <span class="p">:</span> <span class="n">start_position</span> <span class="o">+</span> <span class="mi">8</span><span class="p">])</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">words</span>
+</pre></div>
+</div>
+</section>
+<section id="blake2">
+<h4>Blake2<a class="headerlink" href="#blake2" title="Permalink to this headline">¶</a></h4>
+<p>Implementation of the BLAKE2 cryptographic hashing algorithm.</p>
+<p>Please refer the following document for details:
+<a class="reference external" href="https://datatracker.ietf.org/doc/html/rfc7693">https://datatracker.ietf.org/doc/html/rfc7693</a></p>
+<dl class="py class">
+<dt class="sig sig-object py" id="ethereum.crypto.blake2.Blake2">
+<em class="property"><span class="pre">class</span> </em><span class="sig-name descname"><span class="pre">Blake2</span></span><a class="headerlink" href="#ethereum.crypto.blake2.Blake2" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py attribute">
+<dt class="sig sig-object py" id="ethereum.crypto.blake2.Blake2.w">
+<span class="sig-name descname"><span class="pre">w</span></span><em class="property"> <span class="pre">:int</span></em><a class="headerlink" href="#ethereum.crypto.blake2.Blake2.w" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ethereum.crypto.blake2.Blake2.mask_bits">
+<span class="sig-name descname"><span class="pre">mask_bits</span></span><em class="property"> <span class="pre">:int</span></em><a class="headerlink" href="#ethereum.crypto.blake2.Blake2.mask_bits" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ethereum.crypto.blake2.Blake2.word_format">
+<span class="sig-name descname"><span class="pre">word_format</span></span><em class="property"> <span class="pre">:str</span></em><a class="headerlink" href="#ethereum.crypto.blake2.Blake2.word_format" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ethereum.crypto.blake2.Blake2.R1">
+<span class="sig-name descname"><span class="pre">R1</span></span><em class="property"> <span class="pre">:int</span></em><a class="headerlink" href="#ethereum.crypto.blake2.Blake2.R1" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ethereum.crypto.blake2.Blake2.R2">
+<span class="sig-name descname"><span class="pre">R2</span></span><em class="property"> <span class="pre">:int</span></em><a class="headerlink" href="#ethereum.crypto.blake2.Blake2.R2" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ethereum.crypto.blake2.Blake2.R3">
+<span class="sig-name descname"><span class="pre">R3</span></span><em class="property"> <span class="pre">:int</span></em><a class="headerlink" href="#ethereum.crypto.blake2.Blake2.R3" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ethereum.crypto.blake2.Blake2.R4">
+<span class="sig-name descname"><span class="pre">R4</span></span><em class="property"> <span class="pre">:int</span></em><a class="headerlink" href="#ethereum.crypto.blake2.Blake2.R4" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ethereum.crypto.blake2.Blake2.sigma">
+<span class="sig-name descname"><span class="pre">sigma</span></span><em class="property"> <span class="pre">:Tuple</span> <span class="pre">=</span> <span class="pre">[[0,</span> <span class="pre">1,</span> <span class="pre">2,</span> <span class="pre">3,</span> <span class="pre">4,</span> <span class="pre">5,</span> <span class="pre">6,</span> <span class="pre">7,</span> <span class="pre">8,</span> <span class="pre">9,</span> <span class="pre">10,</span> <span class="pre">11,</span> <span class="pre">12,</span> <span class="pre">13,</span> <span class="pre">14,</span> <span class="pre">15],</span> <span class="pre">[14,</span> <span class="pre">10,</span> <span class="pre">4,</span> <span class="pre">8,</span> <span class="pre">9,</span> <span class="pre">15,</span> <span class="pre">13,</span> <span class="pre">6,</span> <span class="pre">1,</span> <span class="pre">12,</span> <span class="pre">0,...</span></em><a class="headerlink" href="#ethereum.crypto.blake2.Blake2.sigma" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ethereum.crypto.blake2.Blake2.IV">
+<span class="sig-name descname"><span class="pre">IV</span></span><em class="property"> <span class="pre">:Tuple</span> <span class="pre">=</span> <span class="pre">[7640891576956012808,</span> <span class="pre">13503953896175478587,</span> <span class="pre">4354685564936845355,</span> <span class="pre">11912009170470909681,...</span></em><a class="headerlink" href="#ethereum.crypto.blake2.Blake2.IV" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ethereum.crypto.blake2.Blake2.max_word">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">max_word</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">int</span><a class="headerlink" href="#ethereum.crypto.blake2.Blake2.max_word" title="Permalink to this definition">¶</a></dt>
+<dd><p>Largest value for a given Blake2 flavor.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ethereum.crypto.blake2.Blake2.w_R1">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">w_R1</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">int</span><a class="headerlink" href="#ethereum.crypto.blake2.Blake2.w_R1" title="Permalink to this definition">¶</a></dt>
+<dd><p>(w - R1) value for a given Blake2 flavor.
+Used in the function G</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ethereum.crypto.blake2.Blake2.w_R2">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">w_R2</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">int</span><a class="headerlink" href="#ethereum.crypto.blake2.Blake2.w_R2" title="Permalink to this definition">¶</a></dt>
+<dd><p>(w - R2) value for a given Blake2 flavor.
+Used in the function G</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ethereum.crypto.blake2.Blake2.w_R3">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">w_R3</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">int</span><a class="headerlink" href="#ethereum.crypto.blake2.Blake2.w_R3" title="Permalink to this definition">¶</a></dt>
+<dd><p>(w - R3) value for a given Blake2 flavor.
+Used in the function G</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ethereum.crypto.blake2.Blake2.w_R4">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">w_R4</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">int</span><a class="headerlink" href="#ethereum.crypto.blake2.Blake2.w_R4" title="Permalink to this definition">¶</a></dt>
+<dd><p>(w - R4) value for a given Blake2 flavor.
+Used in the function G</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ethereum.crypto.blake2.Blake2.sigma_len">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">sigma_len</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">int</span><a class="headerlink" href="#ethereum.crypto.blake2.Blake2.sigma_len" title="Permalink to this definition">¶</a></dt>
+<dd><p>Length of the sigma parameter.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ethereum.crypto.blake2.Blake2.get_blake2_parameters">
+<span class="sig-name descname"><span class="pre">get_blake2_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bytes</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">Tuple</span><a class="headerlink" href="#ethereum.crypto.blake2.Blake2.get_blake2_parameters" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extract the parameters required in the Blake2 compression function
+from the provided bytes data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>data</strong> – The bytes data that has been passed in the message.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ethereum.crypto.blake2.Blake2.G">
+<span class="sig-name descname"><span class="pre">G</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">List</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">d</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">List</span><a class="headerlink" href="#ethereum.crypto.blake2.Blake2.G" title="Permalink to this definition">¶</a></dt>
+<dd><p>The mixing function used in Blake2
+<a class="reference external" href="https://datatracker.ietf.org/doc/html/rfc7693#section-3.1">https://datatracker.ietf.org/doc/html/rfc7693#section-3.1</a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>v</strong> – The working vector to be mixed.</p></li>
+<li><p><strong>a</strong> – Indexes within v of the words to be mixed.</p></li>
+<li><p><strong>b</strong> – Indexes within v of the words to be mixed.</p></li>
+<li><p><strong>c</strong> – Indexes within v of the words to be mixed.</p></li>
+<li><p><strong>d</strong> – Indexes within v of the words to be mixed.</p></li>
+<li><p><strong>x</strong> – The two input words for the mixing.</p></li>
+<li><p><strong>y</strong> – The two input words for the mixing.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ethereum.crypto.blake2.Blake2.compress">
+<span class="sig-name descname"><span class="pre">compress</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_rounds</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="../../base_types/index.html#ethereum.base_types.Uint" title="ethereum.base_types.Uint"><span class="pre">ethereum.base_types.Uint</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">h</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../../base_types/index.html#ethereum.base_types.Uint" title="ethereum.base_types.Uint"><span class="pre">ethereum.base_types.Uint</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">m</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../../base_types/index.html#ethereum.base_types.Uint" title="ethereum.base_types.Uint"><span class="pre">ethereum.base_types.Uint</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t_0</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="../../base_types/index.html#ethereum.base_types.Uint" title="ethereum.base_types.Uint"><span class="pre">ethereum.base_types.Uint</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">t_1</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="../../base_types/index.html#ethereum.base_types.Uint" title="ethereum.base_types.Uint"><span class="pre">ethereum.base_types.Uint</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">f</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">bytes</span><a class="headerlink" href="#ethereum.crypto.blake2.Blake2.compress" title="Permalink to this definition">¶</a></dt>
+<dd><p>‘F Compression’ from section 3.2 of RFC 7693:
+<a class="reference external" href="https://tools.ietf.org/html/rfc7693#section-3.2">https://tools.ietf.org/html/rfc7693#section-3.2</a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>num_rounds</strong> – The number of rounds. A 32-bit unsigned big-endian word</p></li>
+<li><p><strong>h</strong> – The state vector. 8 unsigned 64-bit little-endian words</p></li>
+<li><p><strong>m</strong> – The message block vector. 16 unsigned 64-bit little-endian words</p></li>
+<li><p><strong>t_0</strong> – Offset counters. 2 unsigned 64-bit little-endian words</p></li>
+<li><p><strong>t_1</strong> – Offset counters. 2 unsigned 64-bit little-endian words</p></li>
+<li><p><strong>f</strong> – The final block indicator flag. An 8-bit word</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="blake2b">
+<h4>Blake2b<a class="headerlink" href="#blake2b" title="Permalink to this headline">¶</a></h4>
+<p>The Blake2b flavor (64-bits) of Blake2.
+This version is used in the pre-compiled contract.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="ethereum.crypto.blake2.Blake2b">
+<em class="property"><span class="pre">class</span> </em><span class="sig-name descname"><span class="pre">Blake2b</span></span><a class="headerlink" href="#ethereum.crypto.blake2.Blake2b" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#ethereum.crypto.blake2.Blake2" title="ethereum.crypto.blake2.Blake2"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Blake2</span></code></a></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ethereum.crypto.blake2.Blake2b.w">
+<span class="sig-name descname"><span class="pre">w</span></span><em class="property"> <span class="pre">:int</span> <span class="pre">=</span> <span class="pre">64</span></em><a class="headerlink" href="#ethereum.crypto.blake2.Blake2b.w" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ethereum.crypto.blake2.Blake2b.mask_bits">
+<span class="sig-name descname"><span class="pre">mask_bits</span></span><em class="property"> <span class="pre">:int</span> <span class="pre">=</span> <span class="pre">18446744073709551615</span></em><a class="headerlink" href="#ethereum.crypto.blake2.Blake2b.mask_bits" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ethereum.crypto.blake2.Blake2b.word_format">
+<span class="sig-name descname"><span class="pre">word_format</span></span><em class="property"> <span class="pre">:str</span> <span class="pre">=</span> <span class="pre">Q</span></em><a class="headerlink" href="#ethereum.crypto.blake2.Blake2b.word_format" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ethereum.crypto.blake2.Blake2b.R1">
+<span class="sig-name descname"><span class="pre">R1</span></span><em class="property"> <span class="pre">:int</span> <span class="pre">=</span> <span class="pre">32</span></em><a class="headerlink" href="#ethereum.crypto.blake2.Blake2b.R1" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ethereum.crypto.blake2.Blake2b.R2">
+<span class="sig-name descname"><span class="pre">R2</span></span><em class="property"> <span class="pre">:int</span> <span class="pre">=</span> <span class="pre">24</span></em><a class="headerlink" href="#ethereum.crypto.blake2.Blake2b.R2" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ethereum.crypto.blake2.Blake2b.R3">
+<span class="sig-name descname"><span class="pre">R3</span></span><em class="property"> <span class="pre">:int</span> <span class="pre">=</span> <span class="pre">16</span></em><a class="headerlink" href="#ethereum.crypto.blake2.Blake2b.R3" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ethereum.crypto.blake2.Blake2b.R4">
+<span class="sig-name descname"><span class="pre">R4</span></span><em class="property"> <span class="pre">:int</span> <span class="pre">=</span> <span class="pre">63</span></em><a class="headerlink" href="#ethereum.crypto.blake2.Blake2b.R4" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../index.html">Ethereum Specification</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../../index.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum</span></code></a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="../../index.html#ethereum-specification">Ethereum Specification</a><ul class="current">
+<li class="toctree-l4 current"><a class="reference internal" href="../../index.html#subpackages">Subpackages</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../index.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../index.html#package-contents">Package Contents</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../index.html#package-details">Package Details</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Comparisons:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../diffs/index.html">Comparisons</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">API Reference</a><ul>
+  <li><a href="../../index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum</span></code></a><ul>
+  <li><a href="../index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.crypto</span></code></a><ul>
+      <li>Previous: <a href="../alt_bn128/index.html" title="previous chapter"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.crypto.alt_bn128</span></code></a></li>
+      <li>Next: <a href="../elliptic_curve/index.html" title="next chapter"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ethereum.crypto.elliptic_curve</span></code></a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2021, Ethereum.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.0.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../../../../_sources/autoapi/ethereum/crypto/blake2/index.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
