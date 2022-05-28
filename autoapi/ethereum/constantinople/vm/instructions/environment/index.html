@@ -357,7 +357,7 @@ environment onto the stack.</p>
     <span class="n">start_index</span> <span class="o">=</span> <span class="n">Uint</span><span class="p">(</span><span class="n">pop</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">))</span>
     <span class="n">value</span> <span class="o">=</span> <span class="n">evm</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">start_index</span> <span class="p">:</span> <span class="n">start_index</span> <span class="o">+</span> <span class="mi">32</span><span class="p">]</span>
     <span class="c1"># Right pad with 0 so that there are overall 32 bytes.</span>
-    <span class="n">value</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">ljust</span><span class="p">(</span><span class="mi">32</span><span class="p">,</span> <span class="sa">b</span><span class="s2">&quot;</span><span class="se">\x00</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">value</span> <span class="o">=</span> <span class="n">right_pad_zero_bytes</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="mi">32</span><span class="p">)</span>
 
     <span class="n">push</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">,</span> <span class="n">U256</span><span class="o">.</span><span class="n">from_be_bytes</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
 
@@ -441,7 +441,7 @@ to store the data.</p>
     <span class="n">value</span> <span class="o">=</span> <span class="n">evm</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">data_start_index</span> <span class="p">:</span> <span class="n">data_start_index</span> <span class="o">+</span> <span class="n">size</span><span class="p">]</span>
     <span class="c1"># But it is possible that data_start_index + size won&#39;t exist in evm.data</span>
     <span class="c1"># in which case we need to right pad the above obtained bytes with 0.</span>
-    <span class="n">value</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">ljust</span><span class="p">(</span><span class="n">size</span><span class="p">,</span> <span class="sa">b</span><span class="s2">&quot;</span><span class="se">\x00</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">value</span> <span class="o">=</span> <span class="n">right_pad_zero_bytes</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">size</span><span class="p">)</span>
 
     <span class="n">memory_write</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">memory</span><span class="p">,</span> <span class="n">memory_start_index</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
 </pre></div>
@@ -524,7 +524,7 @@ to store the data.</p>
     <span class="c1"># But it is possible that code_start_index + size - 1 won&#39;t exist in</span>
     <span class="c1"># evm.code in which case we need to right pad the above obtained bytes</span>
     <span class="c1"># with 0.</span>
-    <span class="n">value</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">ljust</span><span class="p">(</span><span class="n">size</span><span class="p">,</span> <span class="sa">b</span><span class="s2">&quot;</span><span class="se">\x00</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">value</span> <span class="o">=</span> <span class="n">right_pad_zero_bytes</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">size</span><span class="p">)</span>
 
     <span class="n">memory_write</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">memory</span><span class="p">,</span> <span class="n">memory_start_index</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
 </pre></div>
@@ -645,7 +645,7 @@ to store the data.</p>
     <span class="n">value</span> <span class="o">=</span> <span class="n">code</span><span class="p">[</span><span class="n">code_start_index</span> <span class="p">:</span> <span class="n">code_start_index</span> <span class="o">+</span> <span class="n">size</span><span class="p">]</span>
     <span class="c1"># But it is possible that code_start_index + size won&#39;t exist in evm.code</span>
     <span class="c1"># in which case we need to right pad the above obtained bytes with 0.</span>
-    <span class="n">value</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">ljust</span><span class="p">(</span><span class="n">size</span><span class="p">,</span> <span class="sa">b</span><span class="s2">&quot;</span><span class="se">\x00</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">value</span> <span class="o">=</span> <span class="n">right_pad_zero_bytes</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">size</span><span class="p">)</span>
 
     <span class="n">memory_write</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">memory</span><span class="p">,</span> <span class="n">memory_start_index</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
 </pre></div>
