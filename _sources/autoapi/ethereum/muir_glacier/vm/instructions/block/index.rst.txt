@@ -51,8 +51,8 @@ block_hash
 
    :param evm: The current EVM frame.
 
-   :raises ~ethereum.muir_glacier.vm.error.StackUnderflowError: If `len(stack)` is less than `1`.
-   :raises ~ethereum.muir_glacier.vm.error.OutOfGasError: If `evm.gas_left` is less than `20`.
+   :raises ~ethereum.muir_glacier.vm.exceptions.StackUnderflowError: If `len(stack)` is less than `1`.
+   :raises ~ethereum.muir_glacier.vm.exceptions.OutOfGasError: If `evm.gas_left` is less than `20`.
 
 
 
@@ -76,8 +76,8 @@ coinbase
 
    :param evm: The current EVM frame.
 
-   :raises ~ethereum.muir_glacier.vm.error.StackOverflowError: If `len(stack)` is equal to `1024`.
-   :raises ~ethereum.muir_glacier.vm.error.OutOfGasError: If `evm.gas_left` is less than `2`.
+   :raises ~ethereum.muir_glacier.vm.exceptions.StackOverflowError: If `len(stack)` is equal to `1024`.
+   :raises ~ethereum.muir_glacier.vm.exceptions.OutOfGasError: If `evm.gas_left` is less than `2`.
 
 
 
@@ -101,8 +101,8 @@ timestamp
 
    :param evm: The current EVM frame.
 
-   :raises ~ethereum.muir_glacier.vm.error.StackOverflowError: If `len(stack)` is equal to `1024`.
-   :raises ~ethereum.muir_glacier.vm.error.OutOfGasError: If `evm.gas_left` is less than `2`.
+   :raises ~ethereum.muir_glacier.vm.exceptions.StackOverflowError: If `len(stack)` is equal to `1024`.
+   :raises ~ethereum.muir_glacier.vm.exceptions.OutOfGasError: If `evm.gas_left` is less than `2`.
 
 
 
@@ -125,8 +125,8 @@ number
 
    :param evm: The current EVM frame.
 
-   :raises ~ethereum.muir_glacier.vm.error.StackOverflowError: If `len(stack)` is equal to `1024`.
-   :raises ~ethereum.muir_glacier.vm.error.OutOfGasError: If `evm.gas_left` is less than `2`.
+   :raises ~ethereum.muir_glacier.vm.exceptions.StackOverflowError: If `len(stack)` is equal to `1024`.
+   :raises ~ethereum.muir_glacier.vm.exceptions.OutOfGasError: If `evm.gas_left` is less than `2`.
 
 
 
@@ -149,8 +149,8 @@ difficulty
 
    :param evm: The current EVM frame.
 
-   :raises ~ethereum.muir_glacier.vm.error.StackOverflowError: If `len(stack)` is equal to `1024`.
-   :raises ~ethereum.muir_glacier.vm.error.OutOfGasError: If `evm.gas_left` is less than `2`.
+   :raises ~ethereum.muir_glacier.vm.exceptions.StackOverflowError: If `len(stack)` is equal to `1024`.
+   :raises ~ethereum.muir_glacier.vm.exceptions.OutOfGasError: If `evm.gas_left` is less than `2`.
 
 
 
@@ -173,8 +173,8 @@ gas_limit
 
    :param evm: The current EVM frame.
 
-   :raises ~ethereum.muir_glacier.vm.error.StackOverflowError: If `len(stack)` is equal to `1024`.
-   :raises ~ethereum.muir_glacier.vm.error.OutOfGasError: If `evm.gas_left` is less than `2`.
+   :raises ~ethereum.muir_glacier.vm.exceptions.StackOverflowError: If `len(stack)` is equal to `1024`.
+   :raises ~ethereum.muir_glacier.vm.exceptions.OutOfGasError: If `evm.gas_left` is less than `2`.
 
 
 
@@ -194,8 +194,8 @@ chain_id
 
    :param evm: The current EVM frame.
 
-   :raises ~ethereum.muir_glacier.vm.error.StackOverflowError: If `len(stack)` is equal to `1024`.
-   :raises ~ethereum.muir_glacier.vm.error.OutOfGasError: If `evm.gas_left` is less than `2`.
+   :raises ~ethereum.muir_glacier.vm.exceptions.StackOverflowError: If `len(stack)` is equal to `1024`.
+   :raises ~ethereum.muir_glacier.vm.exceptions.OutOfGasError: If `evm.gas_left` is less than `2`.
 
 
 
