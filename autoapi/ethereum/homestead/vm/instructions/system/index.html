@@ -541,7 +541,7 @@ but persisting the current values for sender.</p>
         <span class="n">evm</span><span class="o">.</span><span class="n">memory</span><span class="p">,</span> <span class="n">memory_input_start_position</span><span class="p">,</span> <span class="n">memory_input_size</span>
     <span class="p">)</span>
 
-    <span class="n">call_gas_fee</span> <span class="o">=</span> <span class="n">GAS_CALL</span> <span class="o">+</span> <span class="n">gas</span>
+    <span class="n">call_gas_fee</span> <span class="o">=</span> <span class="n">u256_safe_add</span><span class="p">(</span><span class="n">GAS_CALL</span><span class="p">,</span> <span class="n">gas</span><span class="p">,</span> <span class="n">exception_type</span><span class="o">=</span><span class="n">OutOfGasError</span><span class="p">)</span>
     <span class="n">message_call_gas_fee</span> <span class="o">=</span> <span class="n">gas</span>
     <span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span> <span class="o">=</span> <span class="n">subtract_gas</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span><span class="p">,</span> <span class="n">call_gas_fee</span><span class="p">)</span>
 
