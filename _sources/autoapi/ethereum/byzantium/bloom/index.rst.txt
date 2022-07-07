@@ -1,6 +1,3 @@
-:mod:`ethereum.byzantium.bloom`
-===============================
-
 .. py:module:: ethereum.byzantium.bloom
 
 Ethereum Logs Bloom

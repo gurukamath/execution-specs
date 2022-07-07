@@ -1,6 +1,3 @@
-:mod:`ethereum.muir_glacier.bloom`
-==================================
-
 .. py:module:: ethereum.muir_glacier.bloom
 
 Ethereum Logs Bloom

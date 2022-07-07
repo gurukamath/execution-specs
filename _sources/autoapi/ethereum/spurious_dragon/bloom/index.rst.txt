@@ -1,6 +1,3 @@
-:mod:`ethereum.spurious_dragon.bloom`
-=====================================
-
 .. py:module:: ethereum.spurious_dragon.bloom
 
 Ethereum Logs Bloom

@@ -1,6 +1,3 @@
-:mod:`ethereum.frontier.bloom`
-==============================
-
 .. py:module:: ethereum.frontier.bloom
 
 Ethereum Logs Bloom

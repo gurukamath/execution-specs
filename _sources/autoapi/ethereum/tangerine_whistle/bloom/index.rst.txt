@@ -1,6 +1,3 @@
-:mod:`ethereum.tangerine_whistle.bloom`
-=======================================
-
 .. py:module:: ethereum.tangerine_whistle.bloom
 
 Ethereum Logs Bloom

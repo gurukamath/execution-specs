@@ -1,6 +1,3 @@
-:mod:`ethereum`
-===============
-
 .. py:module:: ethereum
 
 Ethereum Specification
@@ -15,16 +12,16 @@ Subpackages
    :titlesonly:
    :maxdepth: 3
 
-   byzantium/index.rst
-   constantinople/index.rst
-   crypto/index.rst
-   dao_fork/index.rst
    frontier/index.rst
    homestead/index.rst
+   dao_fork/index.rst
+   tangerine_whistle/index.rst
+   spurious_dragon/index.rst
+   byzantium/index.rst
+   constantinople/index.rst
    istanbul/index.rst
    muir_glacier/index.rst
-   spurious_dragon/index.rst
-   tangerine_whistle/index.rst
+   crypto/index.rst
    utils/index.rst
 
 
@@ -72,7 +69,7 @@ __version__
 
 
 .. py:data:: __version__
-
+   
    
 
 .. undocinclude:: /../src/ethereum/__init__.py
@@ -86,7 +83,7 @@ EVM_RECURSION_LIMIT
 
 
 .. py:data:: EVM_RECURSION_LIMIT
-
+   
    
 
 .. undocinclude:: /../src/ethereum/__init__.py

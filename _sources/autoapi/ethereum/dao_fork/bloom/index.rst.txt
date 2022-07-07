@@ -1,6 +1,3 @@
-:mod:`ethereum.dao_fork.bloom`
-==============================
-
 .. py:module:: ethereum.dao_fork.bloom
 
 Ethereum Logs Bloom

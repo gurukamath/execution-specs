@@ -1,6 +1,3 @@
-:mod:`ethereum.constantinople.bloom`
-====================================
-
 .. py:module:: ethereum.constantinople.bloom
 
 Ethereum Logs Bloom

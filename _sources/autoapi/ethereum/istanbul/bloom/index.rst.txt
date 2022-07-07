@@ -1,6 +1,3 @@
-:mod:`ethereum.istanbul.bloom`
-==============================
-
 .. py:module:: ethereum.istanbul.bloom
 
 Ethereum Logs Bloom
