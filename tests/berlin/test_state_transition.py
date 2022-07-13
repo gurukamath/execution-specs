@@ -61,6 +61,8 @@ BIG_MEMORY_TESTS = (
     "static_Call50000_rip160_d1g0v0_Berlin",
     "static_Call50000_rip160_d0g0v0_Berlin",
     "static_Call50000_ecrec_d0g0v0_Berlin",
+    "static_Call50000_identity_d1g0v0_Berlin",
+    "static_Call50000_identity_d0g0v0_Berlin",
 )
 
 
