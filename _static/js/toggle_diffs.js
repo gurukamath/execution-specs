@@ -1,4 +1,17 @@
+// All diffs will have one of the below classes
 const changeClasses = ["change-replaced", "change-replacement", "change-added", "change-removed"];
+// The list of components to be scanned for diffs - selected by ID
+const componentsList = [
+    '#module-details > *',
+    '#module-contents > *',
+    '#package-details > *',
+    '#package-contents > *', 
+    '#subpackages',
+    '#submodules',
+    '#table-of-contents',
+    '#introduction'
+];
+const components = componentsList.join(", ")
 
 function toggleElements() {
 
@@ -13,7 +26,7 @@ function toggleElements() {
     if (!fullPageReplaced){
         // Examine the contents of the individual sections
         // Hide sections that do not have diffs in any of the children
-        const all = document.querySelectorAll('#module-details > *, #module-contents > *, #table-of-contents, #introduction');
+        const all = document.querySelectorAll(components);
 
         for (i=0; i < all.length; i++){
     
