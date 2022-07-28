@@ -1,7 +1,7 @@
 .. py:module:: ethereum.byzantium.utils
 
-Hardfork Utility Functions
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+Byzantium Utility Functions
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. contents:: Table of Contents
     :backlinks: none

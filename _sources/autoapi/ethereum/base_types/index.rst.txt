@@ -757,6 +757,27 @@ inclusive.
       :rtype: `Bytes`
 
 
+   .. py:method:: to_be_bytes() -> Bytes
+
+      Converts this unsigned 64 bit integer into its big endian
+      representation.
+
+      :returns: **big_endian** -- Big endian (most significant bits first) representation.
+      :rtype: `Bytes`
+
+
+   .. py:method:: from_be_bytes(buffer: Bytes) -> Uint64
+      :classmethod:
+
+      Converts a sequence of bytes into an unsigned 64 bit integer from its
+      big endian representation.
+
+      :param buffer: Bytes to decode.
+
+      :returns: **self** -- Unsigned integer decoded from `buffer`.
+      :rtype: `Uint64`
+
+
 
 
 MAX_VALUE
@@ -770,7 +791,7 @@ MAX_VALUE
    
 .. undocinclude:: /../src/ethereum/base_types.py
    :language: python
-   :lines: 835-835
+   :lines: 869-869
 
 
 B
@@ -784,7 +805,7 @@ B
 
 .. undocinclude:: /../src/ethereum/base_types.py
    :language: python
-   :lines: 839-839
+   :lines: 873-873
 
 
 FixedBytes
@@ -974,7 +995,7 @@ Bytes
 
 .. undocinclude:: /../src/ethereum/base_types.py
    :language: python
-   :lines: 920-920
+   :lines: 954-954
 
 
 _setattr_function
@@ -1050,7 +1071,7 @@ S
 
 .. undocinclude:: /../src/ethereum/base_types.py
    :language: python
-   :lines: 962-962
+   :lines: 996-996
 
 
 modify

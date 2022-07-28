@@ -1,6 +1,6 @@
 .. py:module:: ethereum.frontier.utils
 
-Hardfork Utility Functions
+Frontier Utility Functions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. contents:: Table of Contents

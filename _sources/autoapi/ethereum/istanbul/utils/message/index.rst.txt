@@ -1,6 +1,6 @@
 .. py:module:: ethereum.istanbul.utils.message
 
-Hardfork Utility Functions For The Message Data-structure
+Istanbul Utility Functions For The Message Data-structure
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. contents:: Table of Contents

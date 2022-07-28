@@ -33,6 +33,7 @@ Subpackages
    constantinople/index.rst
    istanbul/index.rst
    muir_glacier/index.rst
+   berlin/index.rst
    crypto/index.rst
    utils/index.rst
 

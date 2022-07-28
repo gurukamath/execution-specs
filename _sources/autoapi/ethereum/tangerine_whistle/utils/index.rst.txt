@@ -1,7 +1,7 @@
 .. py:module:: ethereum.tangerine_whistle.utils
 
-Hardfork Utility Functions
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+Tangerine Whistle Utility Functions
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. contents:: Table of Contents
     :backlinks: none

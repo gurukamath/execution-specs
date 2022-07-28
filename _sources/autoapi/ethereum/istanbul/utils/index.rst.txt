@@ -1,6 +1,6 @@
 .. py:module:: ethereum.istanbul.utils
 
-Hardfork Utility Functions
+Istanbul Utility Functions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. contents:: Table of Contents

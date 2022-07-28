@@ -1,6 +1,6 @@
 .. py:module:: ethereum.frontier.utils.message
 
-Hardfork Utility Functions For The Message Data-structure
+Frontier Utility Functions For The Message Data-structure
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. contents:: Table of Contents

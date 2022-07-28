@@ -1,6 +1,6 @@
 .. py:module:: ethereum.istanbul.utils.address
 
-Hardfork Utility Functions For Addresses
+Istanbul Utility Functions For Addresses
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. contents:: Table of Contents
