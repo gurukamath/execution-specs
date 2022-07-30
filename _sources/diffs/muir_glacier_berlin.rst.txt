@@ -5,15 +5,15 @@ Muir Glacier → Berlin
 .. toctree::
    :maxdepth: 1
 
-   trie <muir_glacier_berlin/trie/index.pickle64>
-   spec <muir_glacier_berlin/spec/index.pickle64>
-   vm.precompiled_contracts.modexp <muir_glacier_berlin/vm/precompiled_contracts/modexp/index.pickle64>
-   vm <muir_glacier_berlin/vm/index.pickle64>
-   vm.interpreter <muir_glacier_berlin/vm/interpreter/index.pickle64>
-   vm.instructions.system <muir_glacier_berlin/vm/instructions/system/index.pickle64>
    vm.instructions.environment <muir_glacier_berlin/vm/instructions/environment/index.pickle64>
-   utils.message <muir_glacier_berlin/utils/message/index.pickle64>
-   __init__ <muir_glacier_berlin/index.pickle64>
    vm.instructions.storage <muir_glacier_berlin/vm/instructions/storage/index.pickle64>
+   utils.message <muir_glacier_berlin/utils/message/index.pickle64>
+   vm.interpreter <muir_glacier_berlin/vm/interpreter/index.pickle64>
+   vm <muir_glacier_berlin/vm/index.pickle64>
+   vm.instructions.system <muir_glacier_berlin/vm/instructions/system/index.pickle64>
+   spec <muir_glacier_berlin/spec/index.pickle64>
+   __init__ <muir_glacier_berlin/index.pickle64>
+   trie <muir_glacier_berlin/trie/index.pickle64>
+   vm.precompiled_contracts.modexp <muir_glacier_berlin/vm/precompiled_contracts/modexp/index.pickle64>
    vm.gas <muir_glacier_berlin/vm/gas/index.pickle64>
    eth_types <muir_glacier_berlin/eth_types/index.pickle64>
