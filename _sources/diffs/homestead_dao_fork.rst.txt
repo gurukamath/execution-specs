@@ -6,9 +6,6 @@ Homestead → Dao Fork
    :maxdepth: 1
 
    homestead_dao_fork/spec/index.pickle64
-   homestead_dao_fork/utils/index.pickle64
-   homestead_dao_fork/bloom/index.pickle64
-   homestead_dao_fork/utils/message/index.pickle64
-   homestead_dao_fork/utils/address/index.pickle64
-   homestead_dao_fork/dao/index.pickle64
    homestead_dao_fork/index.pickle64
+   homestead_dao_fork/dao/index.pickle64
+   homestead_dao_fork/bloom/index.pickle64
