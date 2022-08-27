@@ -6,8 +6,8 @@ Frontier → Homestead
    :maxdepth: 1
 
    frontier_homestead/bloom/index.pickle64
-   frontier_homestead/trie/index.pickle64
    frontier_homestead/eth_types/index.pickle64
+   frontier_homestead/trie/index.pickle64
    frontier_homestead/genesis/index.pickle64
    frontier_homestead/index.pickle64
    frontier_homestead/spec/index.pickle64
