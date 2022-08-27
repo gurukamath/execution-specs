@@ -137,8 +137,8 @@
 <li class="toctree-l3"><a class="reference internal" href="../../spurious_dragon_byzantium/vm/instructions/system/index.html">Ethereum Virtual Machine (EVM) System Instructions</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../spurious_dragon_byzantium/vm/instructions/storage/index.html">Ethereum Virtual Machine (EVM) Storage Instructions</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../spurious_dragon_byzantium/vm/interpreter/index.html">Ethereum Virtual Machine (EVM) Interpreter</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../spurious_dragon_byzantium/vm/precompiled_contracts/alt_bn128/index.html">Ethereum Virtual Machine (EVM) ALT_BN128 CONTRACTS</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../spurious_dragon_byzantium/vm/precompiled_contracts/index.html">Precompiled Contract Addresses</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../spurious_dragon_byzantium/vm/precompiled_contracts/alt_bn128/index.html">Ethereum Virtual Machine (EVM) ALT_BN128 CONTRACTS</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../spurious_dragon_byzantium/vm/precompiled_contracts/mapping/index.html">Precompiled Contract Addresses</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../spurious_dragon_byzantium/vm/precompiled_contracts/modexp/index.html">Ethereum Virtual Machine (EVM) MODEXP PRECOMPILED CONTRACT</a></li>
 </ul>
@@ -168,11 +168,11 @@
 <li class="toctree-l3"><a class="reference internal" href="../../constantinople_istanbul/vm/index.html">Ethereum Virtual Machine (EVM)</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../constantinople_istanbul/vm/instructions/environment/index.html">Ethereum Virtual Machine (EVM) Environmental Instructions</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../constantinople_istanbul/vm/instructions/index.html">EVM Instruction Encoding (Opcodes)</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../constantinople_istanbul/vm/interpreter/index.html">Ethereum Virtual Machine (EVM) Interpreter</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../constantinople_istanbul/vm/instructions/storage/index.html">Ethereum Virtual Machine (EVM) Storage Instructions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../constantinople_istanbul/vm/interpreter/index.html">Ethereum Virtual Machine (EVM) Interpreter</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../constantinople_istanbul/vm/precompiled_contracts/alt_bn128/index.html">Ethereum Virtual Machine (EVM) ALT_BN128 CONTRACTS</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../constantinople_istanbul/vm/precompiled_contracts/blake2f/index.html">Ethereum Virtual Machine (EVM) Blake2 PRECOMPILED CONTRACT</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../constantinople_istanbul/vm/precompiled_contracts/index.html">Precompiled Contract Addresses</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../constantinople_istanbul/vm/precompiled_contracts/blake2f/index.html">Ethereum Virtual Machine (EVM) Blake2 PRECOMPILED CONTRACT</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../constantinople_istanbul/vm/precompiled_contracts/mapping/index.html">Precompiled Contract Addresses</a></li>
 </ul>
 </li>
@@ -487,12 +487,13 @@ Ethereum network.</p>
 </dl>
 </dd></dl>
 
-<pre class="literal-block">def apply_fork(old: BlockChain) -&gt; BlockChain:
-    <span class="change-removed">for address in DAO_ACCOUNTS:
-        balance = get_account(old.state, address).balance
-        move_ether(old.state, address, DAO_RECOVERY, balance)
-    </span>return old
-</pre>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">apply_fork</span><span class="p">(</span><span class="n">old</span><span class="p">:</span> <span class="n">BlockChain</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">BlockChain</span><span class="p">:</span>
+    <span class="k">for</span> <span class="n">address</span> <span class="ow">in</span> <span class="n">DAO_ACCOUNTS</span><span class="p">:</span>
+        <span class="n">balance</span> <span class="o">=</span> <span class="n">get_account</span><span class="p">(</span><span class="n">old</span><span class="o">.</span><span class="n">state</span><span class="p">,</span> <span class="n">address</span><span class="p">)</span><span class="o">.</span><span class="n">balance</span>
+        <span class="n">move_ether</span><span class="p">(</span><span class="n">old</span><span class="o">.</span><span class="n">state</span><span class="p">,</span> <span class="n">address</span><span class="p">,</span> <span class="n">DAO_RECOVERY</span><span class="p">,</span> <span class="n">balance</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">old</span>
+</pre></div>
+</div>
 </section>
 <section id="get-last-256-block-hashes">
 <h3>get_last_256_block_hashes<a class="headerlink" href="#get-last-256-block-hashes" title="Permalink to this headline"></a></h3>
@@ -621,34 +622,35 @@ block’s number since it is the next block in the sequence.</p>
 </dl>
 </dd></dl>
 
-<pre class="literal-block">def validate_header(header: Header, parent_header: Header) -&gt; None:
-    ensure(header.timestamp &gt; parent_header.timestamp, InvalidBlock)
-    ensure(header.number == parent_header.number + 1, InvalidBlock)
-    ensure(
-        check_gas_limit(header.gas_limit, parent_header.gas_limit),
-        InvalidBlock,
-    )
-    ensure(len(header.extra_data) &lt;= 32, InvalidBlock)
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">validate_header</span><span class="p">(</span><span class="n">header</span><span class="p">:</span> <span class="n">Header</span><span class="p">,</span> <span class="n">parent_header</span><span class="p">:</span> <span class="n">Header</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">ensure</span><span class="p">(</span><span class="n">header</span><span class="o">.</span><span class="n">timestamp</span> <span class="o">&gt;</span> <span class="n">parent_header</span><span class="o">.</span><span class="n">timestamp</span><span class="p">,</span> <span class="n">InvalidBlock</span><span class="p">)</span>
+    <span class="n">ensure</span><span class="p">(</span><span class="n">header</span><span class="o">.</span><span class="n">number</span> <span class="o">==</span> <span class="n">parent_header</span><span class="o">.</span><span class="n">number</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">InvalidBlock</span><span class="p">)</span>
+    <span class="n">ensure</span><span class="p">(</span>
+        <span class="n">check_gas_limit</span><span class="p">(</span><span class="n">header</span><span class="o">.</span><span class="n">gas_limit</span><span class="p">,</span> <span class="n">parent_header</span><span class="o">.</span><span class="n">gas_limit</span><span class="p">),</span>
+        <span class="n">InvalidBlock</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">ensure</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">header</span><span class="o">.</span><span class="n">extra_data</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">32</span><span class="p">,</span> <span class="n">InvalidBlock</span><span class="p">)</span>
 
-    block_difficulty = calculate_block_difficulty(
-        header.number,
-        header.timestamp,
-        parent_header.timestamp,
-        parent_header.difficulty,
-    )
-    ensure(header.difficulty == block_difficulty, InvalidBlock)
+    <span class="n">block_difficulty</span> <span class="o">=</span> <span class="n">calculate_block_difficulty</span><span class="p">(</span>
+        <span class="n">header</span><span class="o">.</span><span class="n">number</span><span class="p">,</span>
+        <span class="n">header</span><span class="o">.</span><span class="n">timestamp</span><span class="p">,</span>
+        <span class="n">parent_header</span><span class="o">.</span><span class="n">timestamp</span><span class="p">,</span>
+        <span class="n">parent_header</span><span class="o">.</span><span class="n">difficulty</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">ensure</span><span class="p">(</span><span class="n">header</span><span class="o">.</span><span class="n">difficulty</span> <span class="o">==</span> <span class="n">block_difficulty</span><span class="p">,</span> <span class="n">InvalidBlock</span><span class="p">)</span>
 
-    block_parent_hash = keccak256(rlp.encode(parent_header))
-    ensure(header.parent_hash == block_parent_hash, InvalidBlock)
+    <span class="n">block_parent_hash</span> <span class="o">=</span> <span class="n">keccak256</span><span class="p">(</span><span class="n">rlp</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="n">parent_header</span><span class="p">))</span>
+    <span class="n">ensure</span><span class="p">(</span><span class="n">header</span><span class="o">.</span><span class="n">parent_hash</span> <span class="o">==</span> <span class="n">block_parent_hash</span><span class="p">,</span> <span class="n">InvalidBlock</span><span class="p">)</span>
 
-    <span class="change-removed">if (
-        header.number &gt;= MAINNET_FORK_BLOCK
-        and header.number &lt; MAINNET_FORK_BLOCK + 10
-    ):
-        ensure(header.extra_data == b&quot;dao-hard-fork&quot;, InvalidBlock)
+    <span class="k">if</span> <span class="p">(</span>
+        <span class="n">header</span><span class="o">.</span><span class="n">number</span> <span class="o">&gt;=</span> <span class="n">MAINNET_FORK_BLOCK</span>
+        <span class="ow">and</span> <span class="n">header</span><span class="o">.</span><span class="n">number</span> <span class="o">&lt;</span> <span class="n">MAINNET_FORK_BLOCK</span> <span class="o">+</span> <span class="mi">10</span>
+    <span class="p">):</span>
+        <span class="n">ensure</span><span class="p">(</span><span class="n">header</span><span class="o">.</span><span class="n">extra_data</span> <span class="o">==</span> <span class="sa">b</span><span class="s2">&quot;dao-hard-fork&quot;</span><span class="p">,</span> <span class="n">InvalidBlock</span><span class="p">)</span>
 
-    </span>validate_proof_of_work(header)
-</pre>
+    <span class="n">validate_proof_of_work</span><span class="p">(</span><span class="n">header</span><span class="p">)</span>
+</pre></div>
+</div>
 </section>
 <section id="generate-header-hash-for-pow">
 <h3>generate_header_hash_for_pow<a class="headerlink" href="#generate-header-hash-for-pow" title="Permalink to this headline"></a></h3>
