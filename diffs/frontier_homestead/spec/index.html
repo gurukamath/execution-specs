@@ -481,42 +481,41 @@ an example.</p>
 </dl>
 </dd></dl>
 
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">apply_fork</span><span class="p">(</span><span class="n">old</span><span class="p">:</span> <span class="n">BlockChain</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">BlockChain</span><span class="p">:</span>
-    <span class="n">genesis</span> <span class="o">=</span> <span class="n">genesis_configuration</span><span class="p">(</span><span class="s2">&quot;mainnet.json&quot;</span><span class="p">)</span>
+<pre class="literal-block">def apply_fork(old: BlockChain) -&gt; BlockChain:
+    <span class="change-removed">genesis = genesis_configuration(&quot;mainnet.json&quot;)
 
-    <span class="k">for</span> <span class="n">account</span><span class="p">,</span> <span class="n">balance</span> <span class="ow">in</span> <span class="n">genesis</span><span class="o">.</span><span class="n">initial_balances</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-        <span class="n">create_ether</span><span class="p">(</span><span class="n">old</span><span class="o">.</span><span class="n">state</span><span class="p">,</span> <span class="n">account</span><span class="p">,</span> <span class="n">balance</span><span class="p">)</span>
+    for account, balance in genesis.initial_balances.items():
+        create_ether(old.state, account, balance)
 
-    <span class="n">genesis_header</span> <span class="o">=</span> <span class="n">Header</span><span class="p">(</span>
-        <span class="n">parent_hash</span><span class="o">=</span><span class="n">Hash32</span><span class="p">(</span><span class="sa">b</span><span class="s2">&quot;</span><span class="se">\0</span><span class="s2">&quot;</span> <span class="o">*</span> <span class="mi">32</span><span class="p">),</span>
-        <span class="n">ommers_hash</span><span class="o">=</span><span class="n">rlp</span><span class="o">.</span><span class="n">rlp_hash</span><span class="p">(()),</span>
-        <span class="n">coinbase</span><span class="o">=</span><span class="n">Address</span><span class="p">(</span><span class="sa">b</span><span class="s2">&quot;</span><span class="se">\0</span><span class="s2">&quot;</span> <span class="o">*</span> <span class="mi">20</span><span class="p">),</span>
-        <span class="n">state_root</span><span class="o">=</span><span class="n">state_root</span><span class="p">(</span><span class="n">old</span><span class="o">.</span><span class="n">state</span><span class="p">),</span>
-        <span class="n">transactions_root</span><span class="o">=</span><span class="n">root</span><span class="p">(</span><span class="n">Trie</span><span class="p">(</span><span class="kc">False</span><span class="p">,</span> <span class="kc">None</span><span class="p">)),</span>
-        <span class="n">receipt_root</span><span class="o">=</span><span class="n">root</span><span class="p">(</span><span class="n">Trie</span><span class="p">(</span><span class="kc">False</span><span class="p">,</span> <span class="kc">None</span><span class="p">)),</span>
-        <span class="n">bloom</span><span class="o">=</span><span class="n">Bloom</span><span class="p">(</span><span class="sa">b</span><span class="s2">&quot;</span><span class="se">\0</span><span class="s2">&quot;</span> <span class="o">*</span> <span class="mi">256</span><span class="p">),</span>
-        <span class="n">difficulty</span><span class="o">=</span><span class="n">genesis</span><span class="o">.</span><span class="n">difficulty</span><span class="p">,</span>
-        <span class="n">number</span><span class="o">=</span><span class="n">Uint</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span>
-        <span class="n">gas_limit</span><span class="o">=</span><span class="n">genesis</span><span class="o">.</span><span class="n">gas_limit</span><span class="p">,</span>
-        <span class="n">gas_used</span><span class="o">=</span><span class="n">Uint</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span>
-        <span class="n">timestamp</span><span class="o">=</span><span class="n">genesis</span><span class="o">.</span><span class="n">timestamp</span><span class="p">,</span>
-        <span class="n">extra_data</span><span class="o">=</span><span class="n">genesis</span><span class="o">.</span><span class="n">extra_data</span><span class="p">,</span>
-        <span class="n">mix_digest</span><span class="o">=</span><span class="n">Hash32</span><span class="p">(</span><span class="sa">b</span><span class="s2">&quot;</span><span class="se">\0</span><span class="s2">&quot;</span> <span class="o">*</span> <span class="mi">32</span><span class="p">),</span>
-        <span class="n">nonce</span><span class="o">=</span><span class="n">genesis</span><span class="o">.</span><span class="n">nonce</span><span class="p">,</span>
-    <span class="p">)</span>
+    genesis_header = Header(
+        parent_hash=Hash32(b&quot;\0&quot; * 32),
+        ommers_hash=rlp.rlp_hash(()),
+        coinbase=Address(b&quot;\0&quot; * 20),
+        state_root=state_root(old.state),
+        transactions_root=root(Trie(False, None)),
+        receipt_root=root(Trie(False, None)),
+        bloom=Bloom(b&quot;\0&quot; * 256),
+        difficulty=genesis.difficulty,
+        number=Uint(0),
+        gas_limit=genesis.gas_limit,
+        gas_used=Uint(0),
+        timestamp=genesis.timestamp,
+        extra_data=genesis.extra_data,
+        mix_digest=Hash32(b&quot;\0&quot; * 32),
+        nonce=genesis.nonce,
+    )
 
-    <span class="n">genesis_block</span> <span class="o">=</span> <span class="n">Block</span><span class="p">(</span>
-        <span class="n">header</span><span class="o">=</span><span class="n">genesis_header</span><span class="p">,</span>
-        <span class="n">transactions</span><span class="o">=</span><span class="p">(),</span>
-        <span class="n">ommers</span><span class="o">=</span><span class="p">(),</span>
-    <span class="p">)</span>
+    genesis_block = Block(
+        header=genesis_header,
+        transactions=(),
+        ommers=(),
+    )
 
-    <span class="n">old</span><span class="o">.</span><span class="n">blocks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">genesis_block</span><span class="p">)</span>
-    <span class="n">old</span><span class="o">.</span><span class="n">chain_id</span> <span class="o">=</span> <span class="n">genesis</span><span class="o">.</span><span class="n">chain_id</span>
+    old.blocks.append(genesis_block)
+    old.chain_id = genesis.chain_id
 
-    <span class="k">return</span> <span class="n">old</span>
-</pre></div>
-</div>
+    </span>return old
+</pre>
 </section>
 <section id="get-last-256-block-hashes">
 <h3>get_last_256_block_hashes<a class="headerlink" href="#get-last-256-block-hashes" title="Permalink to this headline"></a></h3>
