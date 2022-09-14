@@ -502,7 +502,7 @@ else it executes a call from the <cite>message.caller</cite> to the <cite>messag
         contract_code = evm.output
         contract_code_gas = len(contract_code) * GAS_CODE_DEPOSIT
         try:
-            evm.gas_left = subtract_gas(evm.gas_left, contract_code_gas)
+            charge_gas(evm, contract_code_gas)
             ensure(len(contract_code) &lt;= MAX_CODE_SIZE, OutOfGasError)
         except ExceptionalHalt:
             rollback_transaction(env.state)

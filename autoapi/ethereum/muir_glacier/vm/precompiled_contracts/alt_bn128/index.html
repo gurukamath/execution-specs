@@ -319,13 +319,19 @@
 </dd></dl>
 
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">alt_bn128_add</span><span class="p">(</span><span class="n">evm</span><span class="p">:</span> <span class="n">Evm</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="n">x0_bytes</span> <span class="o">=</span> <span class="n">right_pad_zero_bytes</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">data</span><span class="p">[:</span><span class="mi">32</span><span class="p">],</span> <span class="mi">32</span><span class="p">)</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">evm</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">data</span>
+
+    <span class="c1"># GAS</span>
+    <span class="n">charge_gas</span><span class="p">(</span><span class="n">evm</span><span class="p">,</span> <span class="n">Uint</span><span class="p">(</span><span class="mi">150</span><span class="p">))</span>
+
+    <span class="c1"># OPERATION</span>
+    <span class="n">x0_bytes</span> <span class="o">=</span> <span class="n">buffer_read</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">U256</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="n">U256</span><span class="p">(</span><span class="mi">32</span><span class="p">))</span>
     <span class="n">x0_value</span> <span class="o">=</span> <span class="n">U256</span><span class="o">.</span><span class="n">from_be_bytes</span><span class="p">(</span><span class="n">x0_bytes</span><span class="p">)</span>
-    <span class="n">y0_bytes</span> <span class="o">=</span> <span class="n">right_pad_zero_bytes</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">32</span><span class="p">:</span><span class="mi">64</span><span class="p">],</span> <span class="mi">32</span><span class="p">)</span>
+    <span class="n">y0_bytes</span> <span class="o">=</span> <span class="n">buffer_read</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">U256</span><span class="p">(</span><span class="mi">32</span><span class="p">),</span> <span class="n">U256</span><span class="p">(</span><span class="mi">32</span><span class="p">))</span>
     <span class="n">y0_value</span> <span class="o">=</span> <span class="n">U256</span><span class="o">.</span><span class="n">from_be_bytes</span><span class="p">(</span><span class="n">y0_bytes</span><span class="p">)</span>
-    <span class="n">x1_bytes</span> <span class="o">=</span> <span class="n">right_pad_zero_bytes</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">64</span><span class="p">:</span><span class="mi">96</span><span class="p">],</span> <span class="mi">32</span><span class="p">)</span>
+    <span class="n">x1_bytes</span> <span class="o">=</span> <span class="n">buffer_read</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">U256</span><span class="p">(</span><span class="mi">64</span><span class="p">),</span> <span class="n">U256</span><span class="p">(</span><span class="mi">32</span><span class="p">))</span>
     <span class="n">x1_value</span> <span class="o">=</span> <span class="n">U256</span><span class="o">.</span><span class="n">from_be_bytes</span><span class="p">(</span><span class="n">x1_bytes</span><span class="p">)</span>
-    <span class="n">y1_bytes</span> <span class="o">=</span> <span class="n">right_pad_zero_bytes</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">96</span><span class="p">:</span><span class="mi">128</span><span class="p">],</span> <span class="mi">32</span><span class="p">)</span>
+    <span class="n">y1_bytes</span> <span class="o">=</span> <span class="n">buffer_read</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">U256</span><span class="p">(</span><span class="mi">96</span><span class="p">),</span> <span class="n">U256</span><span class="p">(</span><span class="mi">32</span><span class="p">))</span>
     <span class="n">y1_value</span> <span class="o">=</span> <span class="n">U256</span><span class="o">.</span><span class="n">from_be_bytes</span><span class="p">(</span><span class="n">y1_bytes</span><span class="p">)</span>
 
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="p">(</span><span class="n">x0_value</span><span class="p">,</span> <span class="n">y0_value</span><span class="p">,</span> <span class="n">x1_value</span><span class="p">,</span> <span class="n">y1_value</span><span class="p">):</span>
@@ -340,7 +346,6 @@
 
     <span class="n">p</span> <span class="o">=</span> <span class="n">p0</span> <span class="o">+</span> <span class="n">p1</span>
 
-    <span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span> <span class="o">=</span> <span class="n">subtract_gas</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span><span class="p">,</span> <span class="n">U256</span><span class="p">(</span><span class="mi">150</span><span class="p">))</span>
     <span class="n">evm</span><span class="o">.</span><span class="n">output</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">to_be_bytes32</span><span class="p">()</span> <span class="o">+</span> <span class="n">p</span><span class="o">.</span><span class="n">y</span><span class="o">.</span><span class="n">to_be_bytes32</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -359,11 +364,17 @@
 </dd></dl>
 
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">alt_bn128_mul</span><span class="p">(</span><span class="n">evm</span><span class="p">:</span> <span class="n">Evm</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="n">x0_bytes</span> <span class="o">=</span> <span class="n">right_pad_zero_bytes</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">data</span><span class="p">[:</span><span class="mi">32</span><span class="p">],</span> <span class="mi">32</span><span class="p">)</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">evm</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">data</span>
+
+    <span class="c1"># GAS</span>
+    <span class="n">charge_gas</span><span class="p">(</span><span class="n">evm</span><span class="p">,</span> <span class="n">Uint</span><span class="p">(</span><span class="mi">6000</span><span class="p">))</span>
+
+    <span class="c1"># OPERATION</span>
+    <span class="n">x0_bytes</span> <span class="o">=</span> <span class="n">buffer_read</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">U256</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="n">U256</span><span class="p">(</span><span class="mi">32</span><span class="p">))</span>
     <span class="n">x0_value</span> <span class="o">=</span> <span class="n">U256</span><span class="o">.</span><span class="n">from_be_bytes</span><span class="p">(</span><span class="n">x0_bytes</span><span class="p">)</span>
-    <span class="n">y0_bytes</span> <span class="o">=</span> <span class="n">right_pad_zero_bytes</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">32</span><span class="p">:</span><span class="mi">64</span><span class="p">],</span> <span class="mi">32</span><span class="p">)</span>
+    <span class="n">y0_bytes</span> <span class="o">=</span> <span class="n">buffer_read</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">U256</span><span class="p">(</span><span class="mi">32</span><span class="p">),</span> <span class="n">U256</span><span class="p">(</span><span class="mi">32</span><span class="p">))</span>
     <span class="n">y0_value</span> <span class="o">=</span> <span class="n">U256</span><span class="o">.</span><span class="n">from_be_bytes</span><span class="p">(</span><span class="n">y0_bytes</span><span class="p">)</span>
-    <span class="n">n</span> <span class="o">=</span> <span class="n">U256</span><span class="o">.</span><span class="n">from_be_bytes</span><span class="p">(</span><span class="n">right_pad_zero_bytes</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">64</span><span class="p">:</span><span class="mi">96</span><span class="p">],</span> <span class="mi">32</span><span class="p">))</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="n">U256</span><span class="o">.</span><span class="n">from_be_bytes</span><span class="p">(</span><span class="n">buffer_read</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">U256</span><span class="p">(</span><span class="mi">64</span><span class="p">),</span> <span class="n">U256</span><span class="p">(</span><span class="mi">32</span><span class="p">)))</span>
 
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="p">(</span><span class="n">x0_value</span><span class="p">,</span> <span class="n">y0_value</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">i</span> <span class="o">&gt;=</span> <span class="n">ALT_BN128_PRIME</span><span class="p">:</span>
@@ -376,7 +387,6 @@
 
     <span class="n">p</span> <span class="o">=</span> <span class="n">p0</span><span class="o">.</span><span class="n">mul_by</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
 
-    <span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span> <span class="o">=</span> <span class="n">subtract_gas</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span><span class="p">,</span> <span class="n">U256</span><span class="p">(</span><span class="mi">6000</span><span class="p">))</span>
     <span class="n">evm</span><span class="o">.</span><span class="n">output</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">to_be_bytes32</span><span class="p">()</span> <span class="o">+</span> <span class="n">p</span><span class="o">.</span><span class="n">y</span><span class="o">.</span><span class="n">to_be_bytes32</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -395,17 +405,20 @@
 </dd></dl>
 
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">alt_bn128_pairing_check</span><span class="p">(</span><span class="n">evm</span><span class="p">:</span> <span class="n">Evm</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">data</span><span class="p">)</span> <span class="o">%</span> <span class="mi">192</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">evm</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">data</span>
+
+    <span class="c1"># GAS</span>
+    <span class="n">charge_gas</span><span class="p">(</span><span class="n">evm</span><span class="p">,</span> <span class="n">Uint</span><span class="p">(</span><span class="mi">34000</span> <span class="o">*</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">//</span> <span class="mi">192</span><span class="p">)</span> <span class="o">+</span> <span class="mi">45000</span><span class="p">))</span>
+
+    <span class="c1"># OPERATION</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">%</span> <span class="mi">192</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
         <span class="k">raise</span> <span class="n">OutOfGasError</span>
-    <span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span> <span class="o">=</span> <span class="n">subtract_gas</span><span class="p">(</span>
-        <span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span><span class="p">,</span> <span class="n">U256</span><span class="p">(</span><span class="mi">34000</span> <span class="o">*</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">data</span><span class="p">)</span> <span class="o">//</span> <span class="mi">192</span><span class="p">)</span> <span class="o">+</span> <span class="mi">45000</span><span class="p">)</span>
-    <span class="p">)</span>
     <span class="n">result</span> <span class="o">=</span> <span class="n">BNF12</span><span class="o">.</span><span class="n">from_int</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">data</span><span class="p">)</span> <span class="o">//</span> <span class="mi">192</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">//</span> <span class="mi">192</span><span class="p">):</span>
         <span class="n">values</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">6</span><span class="p">):</span>
             <span class="n">value</span> <span class="o">=</span> <span class="n">U256</span><span class="o">.</span><span class="n">from_be_bytes</span><span class="p">(</span>
-                <span class="n">evm</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="mi">192</span> <span class="o">+</span> <span class="mi">32</span> <span class="o">*</span> <span class="n">j</span> <span class="p">:</span> <span class="n">i</span> <span class="o">*</span> <span class="mi">192</span> <span class="o">+</span> <span class="mi">32</span> <span class="o">*</span> <span class="p">(</span><span class="n">j</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)]</span>
+                <span class="n">data</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="mi">192</span> <span class="o">+</span> <span class="mi">32</span> <span class="o">*</span> <span class="n">j</span> <span class="p">:</span> <span class="n">i</span> <span class="o">*</span> <span class="mi">192</span> <span class="o">+</span> <span class="mi">32</span> <span class="o">*</span> <span class="p">(</span><span class="n">j</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)]</span>
             <span class="p">)</span>
             <span class="k">if</span> <span class="n">value</span> <span class="o">&gt;=</span> <span class="n">ALT_BN128_PRIME</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="n">OutOfGasError</span>

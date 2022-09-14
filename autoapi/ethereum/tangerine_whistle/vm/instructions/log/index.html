@@ -371,36 +371,20 @@ corresponding to the memory is not accessible.</p>
 </dd></dl>
 
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">log_n</span><span class="p">(</span><span class="n">evm</span><span class="p">:</span> <span class="n">Evm</span><span class="p">,</span> <span class="n">num_topics</span><span class="p">:</span> <span class="n">U256</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="c1"># Converting memory_start_index to Uint as memory_start_index + size - 1</span>
-    <span class="c1"># can overflow U256.</span>
-    <span class="n">memory_start_index</span> <span class="o">=</span> <span class="n">Uint</span><span class="p">(</span><span class="n">pop</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">))</span>
+    <span class="c1"># STACK</span>
+    <span class="n">memory_start_index</span> <span class="o">=</span> <span class="n">pop</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">)</span>
     <span class="n">size</span> <span class="o">=</span> <span class="n">pop</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">)</span>
-
-    <span class="n">gas_cost_log_data</span> <span class="o">=</span> <span class="n">u256_safe_multiply</span><span class="p">(</span>
-        <span class="n">GAS_LOG_DATA</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">exception_type</span><span class="o">=</span><span class="n">OutOfGasError</span>
-    <span class="p">)</span>
-    <span class="n">gas_cost_log_topic</span> <span class="o">=</span> <span class="n">u256_safe_multiply</span><span class="p">(</span>
-        <span class="n">GAS_LOG_TOPIC</span><span class="p">,</span> <span class="n">num_topics</span><span class="p">,</span> <span class="n">exception_type</span><span class="o">=</span><span class="n">OutOfGasError</span>
-    <span class="p">)</span>
-    <span class="n">gas_cost_memory_extend</span> <span class="o">=</span> <span class="n">calculate_gas_extend_memory</span><span class="p">(</span>
-        <span class="n">evm</span><span class="o">.</span><span class="n">memory</span><span class="p">,</span> <span class="n">memory_start_index</span><span class="p">,</span> <span class="n">size</span>
-    <span class="p">)</span>
-    <span class="n">gas_cost</span> <span class="o">=</span> <span class="n">u256_safe_add</span><span class="p">(</span>
-        <span class="n">GAS_LOG</span><span class="p">,</span>
-        <span class="n">gas_cost_log_data</span><span class="p">,</span>
-        <span class="n">gas_cost_log_topic</span><span class="p">,</span>
-        <span class="n">gas_cost_memory_extend</span><span class="p">,</span>
-        <span class="n">exception_type</span><span class="o">=</span><span class="n">OutOfGasError</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span> <span class="o">=</span> <span class="n">subtract_gas</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span><span class="p">,</span> <span class="n">gas_cost</span><span class="p">)</span>
-
-    <span class="n">extend_memory</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">memory</span><span class="p">,</span> <span class="n">memory_start_index</span><span class="p">,</span> <span class="n">size</span><span class="p">)</span>
 
     <span class="n">topics</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_topics</span><span class="p">):</span>
         <span class="n">topic</span> <span class="o">=</span> <span class="n">pop</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">)</span><span class="o">.</span><span class="n">to_be_bytes32</span><span class="p">()</span>
         <span class="n">topics</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">topic</span><span class="p">)</span>
 
+    <span class="c1"># GAS</span>
+    <span class="n">extend_memory</span><span class="p">(</span><span class="n">evm</span><span class="p">,</span> <span class="n">memory_start_index</span><span class="p">,</span> <span class="n">size</span><span class="p">)</span>
+    <span class="n">charge_gas</span><span class="p">(</span><span class="n">evm</span><span class="p">,</span> <span class="n">GAS_LOG</span> <span class="o">+</span> <span class="n">GAS_LOG_DATA</span> <span class="o">*</span> <span class="n">size</span> <span class="o">+</span> <span class="n">GAS_LOG_TOPIC</span> <span class="o">*</span> <span class="n">num_topics</span><span class="p">)</span>
+
+    <span class="c1"># OPERATION</span>
     <span class="n">log_entry</span> <span class="o">=</span> <span class="n">Log</span><span class="p">(</span>
         <span class="n">address</span><span class="o">=</span><span class="n">evm</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">current_target</span><span class="p">,</span>
         <span class="n">topics</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">topics</span><span class="p">),</span>
@@ -409,6 +393,7 @@ corresponding to the memory is not accessible.</p>
 
     <span class="n">evm</span><span class="o">.</span><span class="n">logs</span> <span class="o">=</span> <span class="n">evm</span><span class="o">.</span><span class="n">logs</span> <span class="o">+</span> <span class="p">(</span><span class="n">log_entry</span><span class="p">,)</span>
 
+    <span class="c1"># PROGRAM COUNTER</span>
     <span class="n">evm</span><span class="o">.</span><span class="n">pc</span> <span class="o">+=</span> <span class="mi">1</span>
 </pre></div>
 </div>

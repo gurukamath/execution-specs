@@ -617,9 +617,16 @@
 </dd></dl>
 
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">pop</span><span class="p">(</span><span class="n">evm</span><span class="p">:</span> <span class="n">Evm</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span> <span class="o">=</span> <span class="n">subtract_gas</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span><span class="p">,</span> <span class="n">GAS_BASE</span><span class="p">)</span>
+    <span class="c1"># STACK</span>
     <span class="n">stack</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">)</span>
 
+    <span class="c1"># GAS</span>
+    <span class="n">charge_gas</span><span class="p">(</span><span class="n">evm</span><span class="p">,</span> <span class="n">GAS_BASE</span><span class="p">)</span>
+
+    <span class="c1"># OPERATION</span>
+    <span class="k">pass</span>
+
+    <span class="c1"># PROGRAM COUNTER</span>
     <span class="n">evm</span><span class="o">.</span><span class="n">pc</span> <span class="o">+=</span> <span class="mi">1</span>
 </pre></div>
 </div>
@@ -648,13 +655,19 @@ the stack.</p></li>
 </dd></dl>
 
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">push_n</span><span class="p">(</span><span class="n">evm</span><span class="p">:</span> <span class="n">Evm</span><span class="p">,</span> <span class="n">num_bytes</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span> <span class="o">=</span> <span class="n">subtract_gas</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span><span class="p">,</span> <span class="n">GAS_VERY_LOW</span><span class="p">)</span>
+    <span class="c1"># STACK</span>
+    <span class="k">pass</span>
 
+    <span class="c1"># GAS</span>
+    <span class="n">charge_gas</span><span class="p">(</span><span class="n">evm</span><span class="p">,</span> <span class="n">GAS_VERY_LOW</span><span class="p">)</span>
+
+    <span class="c1"># OPERATION</span>
     <span class="n">data_to_push</span> <span class="o">=</span> <span class="n">U256</span><span class="o">.</span><span class="n">from_be_bytes</span><span class="p">(</span>
-        <span class="n">evm</span><span class="o">.</span><span class="n">code</span><span class="p">[</span><span class="n">evm</span><span class="o">.</span><span class="n">pc</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">:</span> <span class="n">evm</span><span class="o">.</span><span class="n">pc</span> <span class="o">+</span> <span class="n">num_bytes</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+        <span class="n">buffer_read</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">code</span><span class="p">,</span> <span class="n">U256</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">pc</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span> <span class="n">U256</span><span class="p">(</span><span class="n">num_bytes</span><span class="p">))</span>
     <span class="p">)</span>
     <span class="n">stack</span><span class="o">.</span><span class="n">push</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">,</span> <span class="n">data_to_push</span><span class="p">)</span>
 
+    <span class="c1"># PROGRAM COUNTER</span>
     <span class="n">evm</span><span class="o">.</span><span class="n">pc</span> <span class="o">+=</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">num_bytes</span>
 </pre></div>
 </div>
@@ -680,12 +693,18 @@ to the top of stack.</p></li>
 </dd></dl>
 
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">dup_n</span><span class="p">(</span><span class="n">evm</span><span class="p">:</span> <span class="n">Evm</span><span class="p">,</span> <span class="n">item_number</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span> <span class="o">=</span> <span class="n">subtract_gas</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span><span class="p">,</span> <span class="n">GAS_VERY_LOW</span><span class="p">)</span>
-    <span class="n">ensure</span><span class="p">(</span><span class="n">item_number</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">),</span> <span class="n">StackUnderflowError</span><span class="p">)</span>
+    <span class="c1"># STACK</span>
+    <span class="k">pass</span>
 
+    <span class="c1"># GAS</span>
+    <span class="n">charge_gas</span><span class="p">(</span><span class="n">evm</span><span class="p">,</span> <span class="n">GAS_VERY_LOW</span><span class="p">)</span>
+
+    <span class="c1"># OPERATION</span>
+    <span class="n">ensure</span><span class="p">(</span><span class="n">item_number</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">),</span> <span class="n">StackUnderflowError</span><span class="p">)</span>
     <span class="n">data_to_duplicate</span> <span class="o">=</span> <span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">item_number</span><span class="p">]</span>
     <span class="n">stack</span><span class="o">.</span><span class="n">push</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">,</span> <span class="n">data_to_duplicate</span><span class="p">)</span>
 
+    <span class="c1"># PROGRAM COUNTER</span>
     <span class="n">evm</span><span class="o">.</span><span class="n">pc</span> <span class="o">+=</span> <span class="mi">1</span>
 </pre></div>
 </div>
@@ -714,16 +733,20 @@ with the top of stack element.</p></li>
 </dd></dl>
 
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">swap_n</span><span class="p">(</span><span class="n">evm</span><span class="p">:</span> <span class="n">Evm</span><span class="p">,</span> <span class="n">item_number</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span> <span class="o">=</span> <span class="n">subtract_gas</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span><span class="p">,</span> <span class="n">GAS_VERY_LOW</span><span class="p">)</span>
-    <span class="n">ensure</span><span class="p">(</span><span class="n">item_number</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">),</span> <span class="n">StackUnderflowError</span><span class="p">)</span>
+    <span class="c1"># STACK</span>
+    <span class="k">pass</span>
 
-    <span class="n">top_element_idx</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
-    <span class="n">nth_element_idx</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">item_number</span>
-    <span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">[</span><span class="n">top_element_idx</span><span class="p">],</span> <span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">[</span><span class="n">nth_element_idx</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
-        <span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">[</span><span class="n">nth_element_idx</span><span class="p">],</span>
-        <span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">[</span><span class="n">top_element_idx</span><span class="p">],</span>
+    <span class="c1"># GAS</span>
+    <span class="n">charge_gas</span><span class="p">(</span><span class="n">evm</span><span class="p">,</span> <span class="n">GAS_VERY_LOW</span><span class="p">)</span>
+
+    <span class="c1"># OPERATION</span>
+    <span class="n">ensure</span><span class="p">(</span><span class="n">item_number</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">),</span> <span class="n">StackUnderflowError</span><span class="p">)</span>
+    <span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span> <span class="o">-</span> <span class="n">item_number</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span> <span class="o">-</span> <span class="n">item_number</span><span class="p">],</span>
+        <span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
     <span class="p">)</span>
 
+    <span class="c1"># PROGRAM COUNTER</span>
     <span class="n">evm</span><span class="o">.</span><span class="n">pc</span> <span class="o">+=</span> <span class="mi">1</span>
 </pre></div>
 </div>

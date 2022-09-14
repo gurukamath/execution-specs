@@ -304,7 +304,7 @@
 <span class="sig-name descname"><span class="pre">GQUADDIVISOR</span></span><a class="headerlink" href="#ethereum.muir_glacier.vm.precompiled_contracts.modexp.GQUADDIVISOR" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
-<pre class="literal-block">GQUADDIVISOR = <span class="change-replaced">20</span><span class="change-replacement">3</span>
+<pre class="literal-block">GQUADDIVISOR = <span class="change-replaced">Uint(20)</span><span class="change-replacement">3</span>
 </pre>
 </section>
 <section id="modexp">
@@ -318,89 +318,70 @@
 
 <pre class="literal-block">def modexp(evm: Evm) -&gt; None:
     data = evm.message.data
-    base_length = U256.from_be_bytes(right_pad_zero_bytes(data[:32], 32))
-    exp_length = U256.from_be_bytes(right_pad_zero_bytes(data[32:64], 32))
-    modulus_length = U256.from_be_bytes(right_pad_zero_bytes(data[64:96], 32))
 
-    <span class="change-added">exponent_head_start = 96 + base_length
-    exponent_head_end = exponent_head_start + min(32, exp_length)
+    # GAS
+    base_length = U256.from_be_bytes(buffer_read(data, U256(0), U256(32)))
+    exp_length = U256.from_be_bytes(buffer_read(data, U256(32), U256(32)))
+    modulus_length = U256.from_be_bytes(buffer_read(data, U256(64), U256(32)))
 
-    exponent_head_bytes = data[exponent_head_start:exponent_head_end]
-    exponent_head = Uint.from_be_bytes(exponent_head_bytes)
+    exp_start = U256(96) + base_length
+    modulus_start = exp_start + exp_length
 
-    gas_used = gas_cost(base_length, modulus_length, exp_length, exponent_head)
+    exp_head = <span class="change-replaced">U256.from_be_bytes(</span><span class="change-replacement">Uint.from_be_bytes(</span>
+        buffer_read(data, exp_start, min(U256(32), exp_length))
+    )
+    <span class="change-added">charge_gas(
+        evm,
+        gas_cost(base_length, modulus_length, exp_length, exp_head),
+    )
 
-    </span>if <span class="change-added">gas_used &gt; U256.MAX_VALUE:
-        gas_used = Uint(U256.MAX_VALUE)
+    # OPERATION
+    </span>if <span class="change-replaced">exp_length &lt; 32:
+        adjusted_exp_length</span><span class="change-replacement">base_length == 0 and modulus_length == 0:
+        evm.output</span> = <span class="change-replaced">Uint(max(0, exp_head.bit_length() - 1))</span><span class="change-replacement">Bytes()
+        return
 
-    evm.gas_left = subtract_gas(evm.gas_left, U256(gas_used))
+    base = Uint.from_be_bytes(buffer_read(data, U256(96), base_length))
+    exp = Uint.from_be_bytes(buffer_read(data, exp_start, exp_length))
+    modulus = Uint.from_be_bytes(
+        buffer_read(data, modulus_start, modulus_length)
+    )
 
-    if </span>base_length == 0 and modulus_length == 0:
+    if modulus == 0:
+        evm.output = Bytes(b&quot;\x00&quot;) * modulus_length</span>
+    else:
+        <span class="change-replaced">adjusted_exp_length</span><span class="change-replacement">evm.output</span> = <span class="change-replaced">Uint(
+            8 * (int(exp_length) - 32) + max(0, exp_head.bit_length() - 1)</span><span class="change-replacement">Uint(pow(base, exp, modulus)).to_bytes(
+            modulus_length, &quot;big&quot;</span>
+        )
+
+    <span class="change-removed">charge_gas(
+        evm,
+        (
+            get_mult_complexity(Uint(max(base_length, modulus_length)))
+            * max(adjusted_exp_length, Uint(1))
+        )
+        // GQUADDIVISOR,
+    )
+
+    # OPERATION
+    if base_length == 0 and modulus_length == 0:
         evm.output = Bytes()
         return
 
-    <span class="change-replaced">mult_complexity</span><span class="change-replacement">pointer</span> = <span class="change-replaced">get_mult_complexity(
-        Uint(max(base_length, modulus_length))</span><span class="change-replacement">96
-    base_data = right_pad_zero_bytes(
-        data[pointer : pointer + base_length], base_length</span>
+    base = Uint.from_be_bytes(buffer_read(data, U256(96), base_length))
+    exp = Uint.from_be_bytes(buffer_read(data, exp_start, exp_length))
+    modulus = Uint.from_be_bytes(
+        buffer_read(data, modulus_start, modulus_length)
     )
-    <span class="change-replaced"># This is an estimate of the bit length of</span><span class="change-replacement">base = Uint.from_be_bytes(base_data)
-    pointer += base_length
-    exp_data = right_pad_zero_bytes(
-        data[pointer : pointer + exp_length], exp_length
-    )</span> exp
-    <span class="change-removed">adjusted_exp_length </span>= <span class="change-replaced">Uint(8</span><span class="change-replacement">Uint.from_be_bytes(exp_data)
-    pointer += exp_length
-    modulus_data = right_pad_zero_bytes(
-        data[pointer : pointer + modulus_length], modulus_length
-    )
-    modulus = Uint.from_be_bytes(modulus_data)
 
     if modulus == 0:
-        evm.output = Bytes(b&quot;\x00&quot;)</span> * <span class="change-removed">max(0, int(exp_length) - 32))
-
-    if (
-        evm.gas_left
-        &lt; mult_complexity * max(1, adjusted_exp_length) // GQUADDIVISOR
-    ):
-        # This check must be done now to prevent loading of absurdly long
-        # arguments. It is an underestimate, because adjusted_exp_length may
-        # increase later.
-        raise OutOfGasError()
-
-    pointer = 96
-    base_data = right_pad_zero_bytes(
-        data[pointer : pointer + base_length], base_length
-    )
-    base = Uint.from_be_bytes(base_data)
-    pointer += base_length
-    exp_data = right_pad_zero_bytes(
-        data[pointer : pointer + exp_length], exp_length
-    )
-    exp = Uint.from_be_bytes(exp_data)
-    pointer += exp_length
-    modulus_data = right_pad_zero_bytes(
-        data[pointer : pointer + modulus_length], </span>modulus_length
-    <span class="change-replaced">)
-    modulus = Uint.from_be_bytes(modulus_data)
-
-    adjusted_exp_length = Uint(
-        max(adjusted_exp_length, int(exp.bit_length()) - 1)
-    )
-    gas_used = mult_complexity * max(1, adjusted_exp_length) // GQUADDIVISOR
-
-    # NOTE: It is in principle possible for the conversion to U256 to overflow
-    # here. However, for this to happen without triggering the earlier check
-    # would require providing more than 2**250 gas, which is obviously
-    # not realistic.
-    evm.gas_left = subtract_gas(evm.gas_left, U256(gas_used))
-    if modulus == 0:</span><span class="change-replacement">else:</span>
-        evm.output =<span class="change-removed"> Bytes(b&quot;\x00&quot;) * modulus_length
+        evm.output = Bytes(b&quot;\x00&quot;) * modulus_length
     else:
-        evm.output =</span> Uint(pow(base, exp, modulus)).to_bytes(
+        evm.output = Uint(pow(base, exp, modulus)).to_bytes(
             modulus_length, &quot;big&quot;
         )
-</pre>
+</span></pre>
 </section>
 <section id="get-mult-complexity">
 <h3><span class="change-replaced">get_mult_complexity</span><span class="change-replacement">complexity</span><a class="headerlink" href="#get-mult-complexity" title="Permalink to this headline"></a></h3>

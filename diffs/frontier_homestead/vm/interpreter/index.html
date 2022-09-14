@@ -458,7 +458,7 @@ else it executes a call from the <cite>message.caller</cite> to the <cite>messag
         contract_code = evm.output
         contract_code_gas = len(contract_code) * GAS_CODE_DEPOSIT
         try:
-            evm.gas_left = subtract_gas(evm.gas_left, contract_code_gas)
+            charge_gas(evm, contract_code_gas)
         except ExceptionalHalt:
             <span class="change-replaced">evm.output</span><span class="change-replacement">rollback_transaction(env.state)
             evm.gas_left</span> = <span class="change-replaced">b&quot;&quot;</span><span class="change-replacement">U256(0)

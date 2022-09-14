@@ -351,7 +351,17 @@
 </dd></dl>
 
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">stop</span><span class="p">(</span><span class="n">evm</span><span class="p">:</span> <span class="n">Evm</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="c1"># STACK</span>
+    <span class="k">pass</span>
+
+    <span class="c1"># GAS</span>
+    <span class="k">pass</span>
+
+    <span class="c1"># OPERATION</span>
     <span class="n">evm</span><span class="o">.</span><span class="n">running</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="c1"># PROGRAM COUNTER</span>
+    <span class="n">evm</span><span class="o">.</span><span class="n">pc</span> <span class="o">+=</span> <span class="mi">1</span>
 </pre></div>
 </div>
 </section>
@@ -381,12 +391,17 @@ to <cite>PUSH-N</cite> opcodes.</p></li>
 </dd></dl>
 
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">jump</span><span class="p">(</span><span class="n">evm</span><span class="p">:</span> <span class="n">Evm</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span> <span class="o">=</span> <span class="n">subtract_gas</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span><span class="p">,</span> <span class="n">GAS_MID</span><span class="p">)</span>
-    <span class="n">jump_dest</span> <span class="o">=</span> <span class="n">pop</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">)</span>
+    <span class="c1"># STACK</span>
+    <span class="n">jump_dest</span> <span class="o">=</span> <span class="n">Uint</span><span class="p">(</span><span class="n">pop</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">))</span>
 
+    <span class="c1"># GAS</span>
+    <span class="n">charge_gas</span><span class="p">(</span><span class="n">evm</span><span class="p">,</span> <span class="n">GAS_MID</span><span class="p">)</span>
+
+    <span class="c1"># OPERATION</span>
     <span class="k">if</span> <span class="n">jump_dest</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">evm</span><span class="o">.</span><span class="n">valid_jump_destinations</span><span class="p">:</span>
         <span class="k">raise</span> <span class="n">InvalidJumpDestError</span>
 
+    <span class="c1"># PROGRAM COUNTER</span>
     <span class="n">evm</span><span class="o">.</span><span class="n">pc</span> <span class="o">=</span> <span class="n">Uint</span><span class="p">(</span><span class="n">jump_dest</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -418,19 +433,23 @@ to <cite>PUSH-N</cite> opcodes.</p></li>
 </dd></dl>
 
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">jumpi</span><span class="p">(</span><span class="n">evm</span><span class="p">:</span> <span class="n">Evm</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span> <span class="o">=</span> <span class="n">subtract_gas</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span><span class="p">,</span> <span class="n">GAS_HIGH</span><span class="p">)</span>
-
-    <span class="n">jump_dest</span> <span class="o">=</span> <span class="n">pop</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">)</span>
+    <span class="c1"># STACK</span>
+    <span class="n">jump_dest</span> <span class="o">=</span> <span class="n">Uint</span><span class="p">(</span><span class="n">pop</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">))</span>
     <span class="n">conditional_value</span> <span class="o">=</span> <span class="n">pop</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">)</span>
 
+    <span class="c1"># GAS</span>
+    <span class="n">charge_gas</span><span class="p">(</span><span class="n">evm</span><span class="p">,</span> <span class="n">GAS_HIGH</span><span class="p">)</span>
+
+    <span class="c1"># OPERATION</span>
     <span class="k">if</span> <span class="n">conditional_value</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="n">evm</span><span class="o">.</span><span class="n">pc</span> <span class="o">+=</span> <span class="mi">1</span>
-        <span class="k">return</span>
-
-    <span class="k">if</span> <span class="n">jump_dest</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">evm</span><span class="o">.</span><span class="n">valid_jump_destinations</span><span class="p">:</span>
+        <span class="n">destination</span> <span class="o">=</span> <span class="n">evm</span><span class="o">.</span><span class="n">pc</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="k">elif</span> <span class="n">jump_dest</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">evm</span><span class="o">.</span><span class="n">valid_jump_destinations</span><span class="p">:</span>
         <span class="k">raise</span> <span class="n">InvalidJumpDestError</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">destination</span> <span class="o">=</span> <span class="n">jump_dest</span>
 
-    <span class="n">evm</span><span class="o">.</span><span class="n">pc</span> <span class="o">=</span> <span class="n">Uint</span><span class="p">(</span><span class="n">jump_dest</span><span class="p">)</span>
+    <span class="c1"># PROGRAM COUNTER</span>
+    <span class="n">evm</span><span class="o">.</span><span class="n">pc</span> <span class="o">=</span> <span class="n">Uint</span><span class="p">(</span><span class="n">destination</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
@@ -455,8 +474,16 @@ current instruction and without increasing it for the next instruction.</p>
 </dd></dl>
 
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">pc</span><span class="p">(</span><span class="n">evm</span><span class="p">:</span> <span class="n">Evm</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span> <span class="o">=</span> <span class="n">subtract_gas</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span><span class="p">,</span> <span class="n">GAS_BASE</span><span class="p">)</span>
+    <span class="c1"># STACK</span>
+    <span class="k">pass</span>
+
+    <span class="c1"># GAS</span>
+    <span class="n">charge_gas</span><span class="p">(</span><span class="n">evm</span><span class="p">,</span> <span class="n">GAS_BASE</span><span class="p">)</span>
+
+    <span class="c1"># OPERATION</span>
     <span class="n">push</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">,</span> <span class="n">U256</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">pc</span><span class="p">))</span>
+
+    <span class="c1"># PROGRAM COUNTER</span>
     <span class="n">evm</span><span class="o">.</span><span class="n">pc</span> <span class="o">+=</span> <span class="mi">1</span>
 </pre></div>
 </div>
@@ -482,8 +509,16 @@ for the cost of this instruction) onto the stack.</p>
 </dd></dl>
 
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">gas_left</span><span class="p">(</span><span class="n">evm</span><span class="p">:</span> <span class="n">Evm</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span> <span class="o">=</span> <span class="n">subtract_gas</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span><span class="p">,</span> <span class="n">GAS_BASE</span><span class="p">)</span>
-    <span class="n">push</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">,</span> <span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span><span class="p">)</span>
+    <span class="c1"># STACK</span>
+    <span class="k">pass</span>
+
+    <span class="c1"># GAS</span>
+    <span class="n">charge_gas</span><span class="p">(</span><span class="n">evm</span><span class="p">,</span> <span class="n">GAS_BASE</span><span class="p">)</span>
+
+    <span class="c1"># OPERATION</span>
+    <span class="n">push</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">,</span> <span class="n">U256</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span><span class="p">))</span>
+
+    <span class="c1"># PROGRAM COUNTER</span>
     <span class="n">evm</span><span class="o">.</span><span class="n">pc</span> <span class="o">+=</span> <span class="mi">1</span>
 </pre></div>
 </div>
@@ -507,7 +542,16 @@ valid.</p>
 </dd></dl>
 
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">jumpdest</span><span class="p">(</span><span class="n">evm</span><span class="p">:</span> <span class="n">Evm</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span> <span class="o">=</span> <span class="n">subtract_gas</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span><span class="p">,</span> <span class="n">GAS_JUMPDEST</span><span class="p">)</span>
+    <span class="c1"># STACK</span>
+    <span class="k">pass</span>
+
+    <span class="c1"># GAS</span>
+    <span class="n">charge_gas</span><span class="p">(</span><span class="n">evm</span><span class="p">,</span> <span class="n">GAS_JUMPDEST</span><span class="p">)</span>
+
+    <span class="c1"># OPERATION</span>
+    <span class="k">pass</span>
+
+    <span class="c1"># PROGRAM COUNTER</span>
     <span class="n">evm</span><span class="o">.</span><span class="n">pc</span> <span class="o">+=</span> <span class="mi">1</span>
 </pre></div>
 </div>

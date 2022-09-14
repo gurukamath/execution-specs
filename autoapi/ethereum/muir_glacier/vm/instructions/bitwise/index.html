@@ -366,11 +366,17 @@ result back on the stack.</p>
 </dd></dl>
 
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">bitwise_and</span><span class="p">(</span><span class="n">evm</span><span class="p">:</span> <span class="n">Evm</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span> <span class="o">=</span> <span class="n">subtract_gas</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span><span class="p">,</span> <span class="n">GAS_VERY_LOW</span><span class="p">)</span>
+    <span class="c1"># STACK</span>
     <span class="n">x</span> <span class="o">=</span> <span class="n">pop</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">)</span>
     <span class="n">y</span> <span class="o">=</span> <span class="n">pop</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">)</span>
+
+    <span class="c1"># GAS</span>
+    <span class="n">charge_gas</span><span class="p">(</span><span class="n">evm</span><span class="p">,</span> <span class="n">GAS_VERY_LOW</span><span class="p">)</span>
+
+    <span class="c1"># OPERATION</span>
     <span class="n">push</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">,</span> <span class="n">x</span> <span class="o">&amp;</span> <span class="n">y</span><span class="p">)</span>
 
+    <span class="c1"># PROGRAM COUNTER</span>
     <span class="n">evm</span><span class="o">.</span><span class="n">pc</span> <span class="o">+=</span> <span class="mi">1</span>
 </pre></div>
 </div>
@@ -396,11 +402,17 @@ result back on the stack.</p>
 </dd></dl>
 
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">bitwise_or</span><span class="p">(</span><span class="n">evm</span><span class="p">:</span> <span class="n">Evm</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span> <span class="o">=</span> <span class="n">subtract_gas</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span><span class="p">,</span> <span class="n">GAS_VERY_LOW</span><span class="p">)</span>
+    <span class="c1"># STACK</span>
     <span class="n">x</span> <span class="o">=</span> <span class="n">pop</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">)</span>
     <span class="n">y</span> <span class="o">=</span> <span class="n">pop</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">)</span>
+
+    <span class="c1"># GAS</span>
+    <span class="n">charge_gas</span><span class="p">(</span><span class="n">evm</span><span class="p">,</span> <span class="n">GAS_VERY_LOW</span><span class="p">)</span>
+
+    <span class="c1"># OPERATION</span>
     <span class="n">push</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">,</span> <span class="n">x</span> <span class="o">|</span> <span class="n">y</span><span class="p">)</span>
 
+    <span class="c1"># PROGRAM COUNTER</span>
     <span class="n">evm</span><span class="o">.</span><span class="n">pc</span> <span class="o">+=</span> <span class="mi">1</span>
 </pre></div>
 </div>
@@ -426,11 +438,17 @@ result back on the stack.</p>
 </dd></dl>
 
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">bitwise_xor</span><span class="p">(</span><span class="n">evm</span><span class="p">:</span> <span class="n">Evm</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span> <span class="o">=</span> <span class="n">subtract_gas</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span><span class="p">,</span> <span class="n">GAS_VERY_LOW</span><span class="p">)</span>
+    <span class="c1"># STACK</span>
     <span class="n">x</span> <span class="o">=</span> <span class="n">pop</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">)</span>
     <span class="n">y</span> <span class="o">=</span> <span class="n">pop</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">)</span>
+
+    <span class="c1"># GAS</span>
+    <span class="n">charge_gas</span><span class="p">(</span><span class="n">evm</span><span class="p">,</span> <span class="n">GAS_VERY_LOW</span><span class="p">)</span>
+
+    <span class="c1"># OPERATION</span>
     <span class="n">push</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">,</span> <span class="n">x</span> <span class="o">^</span> <span class="n">y</span><span class="p">)</span>
 
+    <span class="c1"># PROGRAM COUNTER</span>
     <span class="n">evm</span><span class="o">.</span><span class="n">pc</span> <span class="o">+=</span> <span class="mi">1</span>
 </pre></div>
 </div>
@@ -456,10 +474,16 @@ result back on the stack.</p>
 </dd></dl>
 
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">bitwise_not</span><span class="p">(</span><span class="n">evm</span><span class="p">:</span> <span class="n">Evm</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span> <span class="o">=</span> <span class="n">subtract_gas</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span><span class="p">,</span> <span class="n">GAS_VERY_LOW</span><span class="p">)</span>
+    <span class="c1"># STACK</span>
     <span class="n">x</span> <span class="o">=</span> <span class="n">pop</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">)</span>
+
+    <span class="c1"># GAS</span>
+    <span class="n">charge_gas</span><span class="p">(</span><span class="n">evm</span><span class="p">,</span> <span class="n">GAS_VERY_LOW</span><span class="p">)</span>
+
+    <span class="c1"># OPERATION</span>
     <span class="n">push</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">,</span> <span class="o">~</span><span class="n">x</span><span class="p">)</span>
 
+    <span class="c1"># PROGRAM COUNTER</span>
     <span class="n">evm</span><span class="o">.</span><span class="n">pc</span> <span class="o">+=</span> <span class="mi">1</span>
 </pre></div>
 </div>
@@ -486,12 +510,14 @@ left (most significant) to right (least significant).</p>
 </dd></dl>
 
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">get_byte</span><span class="p">(</span><span class="n">evm</span><span class="p">:</span> <span class="n">Evm</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span> <span class="o">=</span> <span class="n">subtract_gas</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span><span class="p">,</span> <span class="n">GAS_VERY_LOW</span><span class="p">)</span>
-    <span class="c1"># 0-indexed from left (most significant) to right (least significant)</span>
-    <span class="c1"># in &quot;Big Endian&quot; representation.</span>
+    <span class="c1"># STACK</span>
     <span class="n">byte_index</span> <span class="o">=</span> <span class="n">pop</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">)</span>
     <span class="n">word</span> <span class="o">=</span> <span class="n">pop</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">)</span>
 
+    <span class="c1"># GAS</span>
+    <span class="n">charge_gas</span><span class="p">(</span><span class="n">evm</span><span class="p">,</span> <span class="n">GAS_VERY_LOW</span><span class="p">)</span>
+
+    <span class="c1"># OPERATION</span>
     <span class="k">if</span> <span class="n">byte_index</span> <span class="o">&gt;=</span> <span class="mi">32</span><span class="p">:</span>
         <span class="n">result</span> <span class="o">=</span> <span class="n">U256</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
@@ -504,6 +530,7 @@ left (most significant) to right (least significant).</p>
 
     <span class="n">push</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
 
+    <span class="c1"># PROGRAM COUNTER</span>
     <span class="n">evm</span><span class="o">.</span><span class="n">pc</span> <span class="o">+=</span> <span class="mi">1</span>
 </pre></div>
 </div>
@@ -514,25 +541,28 @@ left (most significant) to right (least significant).</p>
 <dt class="sig sig-object py" id="ethereum.muir_glacier.vm.instructions.bitwise.bitwise_shl">
 <span class="sig-name descname"><span class="pre">bitwise_shl</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">evm</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="../../index.html#ethereum.muir_glacier.vm.Evm" title="ethereum.muir_glacier.vm.Evm"><span class="pre">ethereum.muir_glacier.vm.Evm</span></a></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">None</span><a class="headerlink" href="#ethereum.muir_glacier.vm.instructions.bitwise.bitwise_shl" title="Permalink to this definition"></a></dt>
 <dd><p>Logical shift left (SHL) operation of the top 2 elements of the stack.
-Pushes the result back on the stack.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>evm</strong> – The current EVM frame.</p>
-</dd>
-</dl>
+Pushes the result back on the stack.
+:param evm: The current EVM frame.</p>
 </dd></dl>
 
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">bitwise_shl</span><span class="p">(</span><span class="n">evm</span><span class="p">:</span> <span class="n">Evm</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span> <span class="o">=</span> <span class="n">subtract_gas</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span><span class="p">,</span> <span class="n">GAS_VERY_LOW</span><span class="p">)</span>
+    <span class="c1"># STACK</span>
     <span class="n">shift</span> <span class="o">=</span> <span class="n">pop</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">)</span>
     <span class="n">value</span> <span class="o">=</span> <span class="n">pop</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">)</span>
 
-    <span class="n">evm</span><span class="o">.</span><span class="n">pc</span> <span class="o">+=</span> <span class="mi">1</span>
-    <span class="n">shifted_value</span> <span class="o">=</span> <span class="mi">0</span>
-    <span class="k">if</span> <span class="n">shift</span> <span class="o">&lt;</span> <span class="mi">256</span><span class="p">:</span>
-        <span class="n">shifted_value</span> <span class="o">=</span> <span class="p">(</span><span class="n">value</span> <span class="o">&lt;&lt;</span> <span class="n">shift</span><span class="p">)</span> <span class="o">%</span> <span class="n">U256_CEIL_VALUE</span>
+    <span class="c1"># GAS</span>
+    <span class="n">charge_gas</span><span class="p">(</span><span class="n">evm</span><span class="p">,</span> <span class="n">GAS_VERY_LOW</span><span class="p">)</span>
 
-    <span class="n">push</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">,</span> <span class="n">U256</span><span class="p">(</span><span class="n">shifted_value</span><span class="p">))</span>
+    <span class="c1"># OPERATION</span>
+    <span class="k">if</span> <span class="n">shift</span> <span class="o">&lt;</span> <span class="mi">256</span><span class="p">:</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">U256</span><span class="p">((</span><span class="n">value</span> <span class="o">&lt;&lt;</span> <span class="n">shift</span><span class="p">)</span> <span class="o">%</span> <span class="n">U256_CEIL_VALUE</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">U256</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="n">push</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
+
+    <span class="c1"># PROGRAM COUNTER</span>
+    <span class="n">evm</span><span class="o">.</span><span class="n">pc</span> <span class="o">+=</span> <span class="mi">1</span>
 </pre></div>
 </div>
 </section>
@@ -542,25 +572,28 @@ Pushes the result back on the stack.</p>
 <dt class="sig sig-object py" id="ethereum.muir_glacier.vm.instructions.bitwise.bitwise_shr">
 <span class="sig-name descname"><span class="pre">bitwise_shr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">evm</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="../../index.html#ethereum.muir_glacier.vm.Evm" title="ethereum.muir_glacier.vm.Evm"><span class="pre">ethereum.muir_glacier.vm.Evm</span></a></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">None</span><a class="headerlink" href="#ethereum.muir_glacier.vm.instructions.bitwise.bitwise_shr" title="Permalink to this definition"></a></dt>
 <dd><p>Logical shift right (SHR) operation of the top 2 elements of the stack.
-Pushes the result back on the stack.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>evm</strong> – The current EVM frame.</p>
-</dd>
-</dl>
+Pushes the result back on the stack.
+:param evm: The current EVM frame.</p>
 </dd></dl>
 
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">bitwise_shr</span><span class="p">(</span><span class="n">evm</span><span class="p">:</span> <span class="n">Evm</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span> <span class="o">=</span> <span class="n">subtract_gas</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span><span class="p">,</span> <span class="n">GAS_VERY_LOW</span><span class="p">)</span>
+    <span class="c1"># STACK</span>
     <span class="n">shift</span> <span class="o">=</span> <span class="n">pop</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">)</span>
     <span class="n">value</span> <span class="o">=</span> <span class="n">pop</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">)</span>
 
-    <span class="n">evm</span><span class="o">.</span><span class="n">pc</span> <span class="o">+=</span> <span class="mi">1</span>
-    <span class="n">shifted_value</span> <span class="o">=</span> <span class="n">U256</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">shift</span> <span class="o">&lt;</span> <span class="mi">256</span><span class="p">:</span>
-        <span class="n">shifted_value</span> <span class="o">=</span> <span class="n">value</span> <span class="o">&gt;&gt;</span> <span class="n">shift</span>
+    <span class="c1"># GAS</span>
+    <span class="n">charge_gas</span><span class="p">(</span><span class="n">evm</span><span class="p">,</span> <span class="n">GAS_VERY_LOW</span><span class="p">)</span>
 
-    <span class="n">push</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">,</span> <span class="n">shifted_value</span><span class="p">)</span>
+    <span class="c1"># OPERATION</span>
+    <span class="k">if</span> <span class="n">shift</span> <span class="o">&lt;</span> <span class="mi">256</span><span class="p">:</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">value</span> <span class="o">&gt;&gt;</span> <span class="n">shift</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">U256</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="n">push</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
+
+    <span class="c1"># PROGRAM COUNTER</span>
+    <span class="n">evm</span><span class="o">.</span><span class="n">pc</span> <span class="o">+=</span> <span class="mi">1</span>
 </pre></div>
 </div>
 </section>
@@ -570,30 +603,30 @@ Pushes the result back on the stack.</p>
 <dt class="sig sig-object py" id="ethereum.muir_glacier.vm.instructions.bitwise.bitwise_sar">
 <span class="sig-name descname"><span class="pre">bitwise_sar</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">evm</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="../../index.html#ethereum.muir_glacier.vm.Evm" title="ethereum.muir_glacier.vm.Evm"><span class="pre">ethereum.muir_glacier.vm.Evm</span></a></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">None</span><a class="headerlink" href="#ethereum.muir_glacier.vm.instructions.bitwise.bitwise_sar" title="Permalink to this definition"></a></dt>
 <dd><p>Arithmetic shift right (SAR) operation of the top 2 elements of the stack.
-Pushes the result back on the stack.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>evm</strong> – The current EVM frame.</p>
-</dd>
-</dl>
+Pushes the result back on the stack.
+:param evm: The current EVM frame.</p>
 </dd></dl>
 
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">bitwise_sar</span><span class="p">(</span><span class="n">evm</span><span class="p">:</span> <span class="n">Evm</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span> <span class="o">=</span> <span class="n">subtract_gas</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span><span class="p">,</span> <span class="n">GAS_VERY_LOW</span><span class="p">)</span>
+    <span class="c1"># STACK</span>
     <span class="n">shift</span> <span class="o">=</span> <span class="n">pop</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">)</span>
-    <span class="n">value</span> <span class="o">=</span> <span class="n">pop</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">)</span>
+    <span class="n">signed_value</span> <span class="o">=</span> <span class="n">pop</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">)</span><span class="o">.</span><span class="n">to_signed</span><span class="p">()</span>
 
-    <span class="n">signed_value</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">to_signed</span><span class="p">()</span>
+    <span class="c1"># GAS</span>
+    <span class="n">charge_gas</span><span class="p">(</span><span class="n">evm</span><span class="p">,</span> <span class="n">GAS_VERY_LOW</span><span class="p">)</span>
 
-    <span class="n">evm</span><span class="o">.</span><span class="n">pc</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="c1"># OPERATION</span>
     <span class="k">if</span> <span class="n">shift</span> <span class="o">&lt;</span> <span class="mi">256</span><span class="p">:</span>
-        <span class="n">shifted_value</span> <span class="o">=</span> <span class="n">signed_value</span> <span class="o">&gt;&gt;</span> <span class="n">shift</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">U256</span><span class="o">.</span><span class="n">from_signed</span><span class="p">(</span><span class="n">signed_value</span> <span class="o">&gt;&gt;</span> <span class="n">shift</span><span class="p">)</span>
     <span class="k">elif</span> <span class="n">signed_value</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="n">shifted_value</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">U256</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">shifted_value</span> <span class="o">=</span> <span class="n">U256</span><span class="o">.</span><span class="n">MAX_VALUE</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">U256</span><span class="o">.</span><span class="n">MAX_VALUE</span>
 
-    <span class="n">push</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">,</span> <span class="n">U256</span><span class="o">.</span><span class="n">from_signed</span><span class="p">(</span><span class="n">shifted_value</span><span class="p">))</span>
+    <span class="n">push</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
+
+    <span class="c1"># PROGRAM COUNTER</span>
+    <span class="n">evm</span><span class="o">.</span><span class="n">pc</span> <span class="o">+=</span> <span class="mi">1</span>
 </pre></div>
 </div>
 </section>

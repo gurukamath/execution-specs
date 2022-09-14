@@ -241,10 +241,11 @@
 <ul>
 <li><p><a class="reference internal" href="#create" id="id5">create</a></p></li>
 <li><p><a class="reference internal" href="#return" id="id6">return</a></p></li>
-<li><p><a class="reference internal" href="#call" id="id7">call</a></p></li>
-<li><p><a class="reference internal" href="#callcode" id="id8">callcode</a></p></li>
-<li><p><a class="reference internal" href="#selfdestruct" id="id9">selfdestruct</a></p></li>
-<li><p><a class="reference internal" href="#delegatecall" id="id10">delegatecall</a></p></li>
+<li><p><a class="reference internal" href="#generic-call" id="id7">generic_call</a></p></li>
+<li><p><a class="reference internal" href="#call" id="id8">call</a></p></li>
+<li><p><a class="reference internal" href="#callcode" id="id9">callcode</a></p></li>
+<li><p><a class="reference internal" href="#selfdestruct" id="id10">selfdestruct</a></p></li>
+<li><p><a class="reference internal" href="#delegatecall" id="id11">delegatecall</a></p></li>
 </ul>
 </li>
 </ul>
@@ -269,17 +270,20 @@
 <tr class="row-even"><td><p><a class="reference internal" href="#ethereum.dao_fork.vm.instructions.system.return_" title="ethereum.dao_fork.vm.instructions.system.return_"><code class="xref py py-obj docutils literal notranslate"><span class="pre">return_</span></code></a></p></td>
 <td><p>Halts execution returning output data.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#ethereum.dao_fork.vm.instructions.system.call" title="ethereum.dao_fork.vm.instructions.system.call"><code class="xref py py-obj docutils literal notranslate"><span class="pre">call</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ethereum.dao_fork.vm.instructions.system.generic_call" title="ethereum.dao_fork.vm.instructions.system.generic_call"><code class="xref py py-obj docutils literal notranslate"><span class="pre">generic_call</span></code></a></p></td>
+<td><p>Perform the core logic of the <cite>CALL*</cite> family of opcodes.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ethereum.dao_fork.vm.instructions.system.call" title="ethereum.dao_fork.vm.instructions.system.call"><code class="xref py py-obj docutils literal notranslate"><span class="pre">call</span></code></a></p></td>
 <td><p>Message-call into an account.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#ethereum.dao_fork.vm.instructions.system.callcode" title="ethereum.dao_fork.vm.instructions.system.callcode"><code class="xref py py-obj docutils literal notranslate"><span class="pre">callcode</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ethereum.dao_fork.vm.instructions.system.callcode" title="ethereum.dao_fork.vm.instructions.system.callcode"><code class="xref py py-obj docutils literal notranslate"><span class="pre">callcode</span></code></a></p></td>
 <td><p>Message-call into this account with alternative account’s code.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#ethereum.dao_fork.vm.instructions.system.selfdestruct" title="ethereum.dao_fork.vm.instructions.system.selfdestruct"><code class="xref py py-obj docutils literal notranslate"><span class="pre">selfdestruct</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#ethereum.dao_fork.vm.instructions.system.selfdestruct" title="ethereum.dao_fork.vm.instructions.system.selfdestruct"><code class="xref py py-obj docutils literal notranslate"><span class="pre">selfdestruct</span></code></a></p></td>
 <td><p>Halt execution and register account for later deletion.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#ethereum.dao_fork.vm.instructions.system.delegatecall" title="ethereum.dao_fork.vm.instructions.system.delegatecall"><code class="xref py py-obj docutils literal notranslate"><span class="pre">delegatecall</span></code></a></p></td>
-<td><p>Message-call into this account with an alternative account’s code,</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ethereum.dao_fork.vm.instructions.system.delegatecall" title="ethereum.dao_fork.vm.instructions.system.delegatecall"><code class="xref py py-obj docutils literal notranslate"><span class="pre">delegatecall</span></code></a></p></td>
+<td><p>Message-call into an account.</p></td>
 </tr>
 </tbody>
 </table>
@@ -305,107 +309,122 @@
     # if it's not moved inside this method
     from ...vm.interpreter import STACK_DEPTH_LIMIT, process_create_message
 
+    # STACK
     endowment = pop(evm.stack)
-    memory_start_position = Uint(pop(evm.stack))
+    memory_start_position = pop(evm.stack)
     memory_size = pop(evm.stack)
 
-    extend_memory_gas_cost = calculate_gas_extend_memory(
-        evm.memory, memory_start_position, memory_size
-    )
-    total_gas_cost = u256_safe_add(
-        GAS_CREATE,
-        extend_memory_gas_cost,
-        exception_type=OutOfGasError,
-    )
-    evm.gas_left = subtract_gas(evm.gas_left, total_gas_cost)
-    extend_memory(evm.memory, memory_start_position, memory_size)
+    # GAS
+    extend_memory(evm, memory_start_position, memory_size)
+    charge_gas(evm, GAS_CREATE)
+
+    create_message_gas =<span class="change-added"> max_message_call_gas(Uint(evm.gas_left))</span> evm.gas_left
+    <span class="change-added">-= U256(create_message_gas)
+
+    # OPERATION
     sender_address = evm.message.current_target
     sender = get_account(evm.env.state, sender_address)
 
+    contract_address = compute_contract_address(
+        evm.message.current_target,
+        get_account(evm.env.state, evm.message.current_target).nonce,
+    )
+
+    if (
+        sender.balance &lt; endowment
+        or sender.nonce == Uint(2**64 - 1)
+        or evm.message.depth + 1 &gt; STACK_DEPTH_LIMIT
+    ):
+        push(evm.stack, U256(0))
+        </span>evm.gas_left <span class="change-added">+= create_message_gas
+    elif account_has_code_or_nonce(evm.env.state, contract_address):
+        increment_nonce(evm.env.state, evm.message.current_target)
+        push(evm.stack, U256(0))
+    else:
+        call_data </span>=<span class="change-added"> memory_read_bytes(
+            evm.memory, memory_start_position, memory_size
+        )
+
+        increment_nonce(evm.env.state, evm.message.current_target)
+
+        child_message = Message(
+            caller=evm.message.current_target,
+            target=Bytes0(),
+            gas=U256(create_message_gas),
+            value=endowment,
+            data=b&quot;&quot;,
+            code=call_data,
+            current_target=contract_address,
+            depth=evm.message.depth + 1,
+            code_address=None,
+            should_transfer_value=True,
+        )
+        child_evm = process_create_message(child_message, evm.env)
+        evm.children.append(child_evm)
+        if child_evm.has_erred:
+            push(evm.stack, U256(0))
+        else:
+            evm.logs += child_evm.logs
+            push(
+                evm.stack, U256.from_be_bytes(child_evm.message.current_target)
+            )
+        evm.gas_left += child_evm.gas_left
+        child_evm.gas_left =</span> U256(0)
+
+    # <span class="change-replaced">OPERATION
+    sender_address = evm.message.current_target
+    sender = get_account(evm.env.state, sender_address)
+
+    contract_address = compute_contract_address(
+        evm.message.current_target,
+        get_account(evm.env.state, evm.message.current_target).nonce,
+    )
+
+    if (
+        sender.balance &lt; endowment
+        or sender.nonce == Uint(2**64 - 1)
+        or evm.message.depth +</span><span class="change-replacement">PROGRAM COUNTER
+    evm.pc +=</span> 1 <span class="change-removed">&gt; STACK_DEPTH_LIMIT
+    ):
+        push(evm.stack, U256(0))
+        evm.gas_left += create_message_gas
+    elif account_has_code_or_nonce(evm.env.state, contract_address):
+        increment_nonce(evm.env.state, evm.message.current_target)
+        push(evm.stack, U256(0))
+    else:
+        call_data = memory_read_bytes(
+            evm.memory, memory_start_position, memory_size
+        )
+
+        increment_nonce(evm.env.state, evm.message.current_target)
+
+        child_message = Message(
+            caller=evm.message.current_target,
+            target=Bytes0(),
+            gas=create_message_gas,
+            value=endowment,
+            data=b&quot;&quot;,
+            code=call_data,
+            current_target=contract_address,
+            depth=evm.message.depth + 1,
+            code_address=None,
+            should_transfer_value=True,
+        )
+        child_evm = process_create_message(child_message, evm.env)
+        evm.children.append(child_evm)
+        if child_evm.has_erred:
+            push(evm.stack, U256(0))
+        else:
+            evm.logs += child_evm.logs
+            push(
+                evm.stack, U256.from_be_bytes(child_evm.message.current_target)
+            )
+        evm.gas_left = child_evm.gas_left
+        child_evm.gas_left = U256(0)
+
+    # PROGRAM COUNTER
     evm.pc += 1
-
-    if sender.balance &lt; endowment:
-        push(evm.stack, U256(0))
-        return None
-
-    if sender.nonce == Uint(2**64 - 1):
-        push(evm.stack, U256(0))
-        return None
-
-    if evm.message.depth + 1 &gt; STACK_DEPTH_LIMIT:
-        push(evm.stack, U256(0))
-        return None
-
-    call_data = memory_read_bytes(
-        evm.memory, memory_start_position, memory_size
-    )
-
-    increment_nonce(evm.env.state, evm.message.current_target)
-
-    create_message_gas =<span class="change-added"> max_message_call_gas(evm.gas_left)</span> evm.gas_left
-    <span class="change-added">= subtract_gas(evm.gas_left, create_message_gas)
-
-    contract_address = compute_contract_address(
-        evm.message.current_target,
-        get_account(evm.env.state, evm.message.current_target).nonce - U256(1),
-    )
-    is_collision = account_has_code_or_nonce(evm.env.state, contract_address)
-    if is_collision:
-        push(evm.stack, U256(0))
-        return
-
-    child_message = Message(
-        caller=evm.message.current_target,
-        target=Bytes0(),
-        gas=create_message_gas,
-        value=endowment,
-        data=b&quot;&quot;,
-        code=call_data,
-        current_target=contract_address,
-        depth=evm.message.depth + 1,
-        code_address=None,
-        should_transfer_value=True,
-    )
-    child_evm = process_create_message(child_message, evm.env)
-    evm.children.append(child_evm)
-    if child_evm.has_erred:
-        push(evm.stack, U256(0))
-    else:
-        evm.logs += child_evm.logs
-        push(evm.stack, U256.from_be_bytes(child_evm.message.current_target))
-    </span>evm.gas_left <span class="change-removed">= subtract_gas(evm.gas_left, create_message_gas)
-
-    contract_address = compute_contract_address(
-        evm.message.current_target,
-        get_account(evm.env.state, evm.message.current_target).nonce - U256(1),
-    )
-    is_collision = account_has_code_or_nonce(evm.env.state, contract_address)
-    if is_collision:
-        push(evm.stack, U256(0))
-        return
-
-    child_message = Message(
-        caller=evm.message.current_target,
-        target=Bytes0(),
-        gas=create_message_gas,
-        value=endowment,
-        data=b&quot;&quot;,
-        code=call_data,
-        current_target=contract_address,
-        depth=evm.message.depth + 1,
-        code_address=None,
-        should_transfer_value=True,
-    )
-    child_evm = process_create_message(child_message, evm.env)
-    evm.children.append(child_evm)
-    if child_evm.has_erred:
-        push(evm.stack, U256(0))
-    else:
-        evm.logs </span>+= <span class="change-removed">child_evm.logs
-        push(evm.stack, U256.from_be_bytes(child_evm.message.current_target))
-    evm.gas_left = </span>child_evm.gas_left
-    child_evm.gas_left = U256(0)
-</pre>
+</span></pre>
 </section>
 <section id="return">
 <h3><a class="reference internal" href="#return">return</a><a class="headerlink" href="#return" title="Permalink to this headline"></a></h3>
@@ -421,18 +440,87 @@
 </dd></dl>
 
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">return_</span><span class="p">(</span><span class="n">evm</span><span class="p">:</span> <span class="n">Evm</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="n">memory_start_position</span> <span class="o">=</span> <span class="n">Uint</span><span class="p">(</span><span class="n">pop</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">))</span>
+    <span class="c1"># STACK</span>
+    <span class="n">memory_start_position</span> <span class="o">=</span> <span class="n">pop</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">)</span>
     <span class="n">memory_size</span> <span class="o">=</span> <span class="n">pop</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">)</span>
-    <span class="n">gas_cost</span> <span class="o">=</span> <span class="n">GAS_ZERO</span> <span class="o">+</span> <span class="n">calculate_gas_extend_memory</span><span class="p">(</span>
-        <span class="n">evm</span><span class="o">.</span><span class="n">memory</span><span class="p">,</span> <span class="n">memory_start_position</span><span class="p">,</span> <span class="n">memory_size</span>
-    <span class="p">)</span>
-    <span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span> <span class="o">=</span> <span class="n">subtract_gas</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span><span class="p">,</span> <span class="n">gas_cost</span><span class="p">)</span>
-    <span class="n">extend_memory</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">memory</span><span class="p">,</span> <span class="n">memory_start_position</span><span class="p">,</span> <span class="n">memory_size</span><span class="p">)</span>
+
+    <span class="c1"># GAS</span>
+    <span class="n">extend_memory</span><span class="p">(</span><span class="n">evm</span><span class="p">,</span> <span class="n">memory_start_position</span><span class="p">,</span> <span class="n">memory_size</span><span class="p">)</span>
+    <span class="n">charge_gas</span><span class="p">(</span><span class="n">evm</span><span class="p">,</span> <span class="n">GAS_ZERO</span><span class="p">)</span>
+
+    <span class="c1"># OPERATION</span>
     <span class="n">evm</span><span class="o">.</span><span class="n">output</span> <span class="o">=</span> <span class="n">memory_read_bytes</span><span class="p">(</span>
         <span class="n">evm</span><span class="o">.</span><span class="n">memory</span><span class="p">,</span> <span class="n">memory_start_position</span><span class="p">,</span> <span class="n">memory_size</span>
     <span class="p">)</span>
-    <span class="c1"># HALT the execution</span>
+
     <span class="n">evm</span><span class="o">.</span><span class="n">running</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="c1"># PROGRAM COUNTER</span>
+    <span class="k">pass</span>
+</pre></div>
+</div>
+</section>
+<section id="generic-call">
+<h3>generic_call<a class="headerlink" href="#generic-call" title="Permalink to this headline"></a></h3>
+<dl class="py function">
+<dt class="sig sig-object py" id="ethereum.dao_fork.vm.instructions.system.generic_call">
+<span class="sig-name descname"><span class="pre">generic_call</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">evm</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gas</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">caller</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">to</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">code_address</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">should_transfer_value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">memory_input_start_position</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">memory_input_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">memory_output_start_position</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">memory_output_size</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ethereum.dao_fork.vm.instructions.system.generic_call" title="Permalink to this definition"></a></dt>
+<dd><p>Perform the core logic of the <cite>CALL*</cite> family of opcodes.</p>
+</dd></dl>
+
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">generic_call</span><span class="p">(</span>
+    <span class="n">evm</span><span class="p">:</span> <span class="n">Evm</span><span class="p">,</span>
+    <span class="n">gas</span><span class="p">:</span> <span class="n">Uint</span><span class="p">,</span>
+    <span class="n">value</span><span class="p">:</span> <span class="n">U256</span><span class="p">,</span>
+    <span class="n">caller</span><span class="p">:</span> <span class="n">Address</span><span class="p">,</span>
+    <span class="n">to</span><span class="p">:</span> <span class="n">Address</span><span class="p">,</span>
+    <span class="n">code_address</span><span class="p">:</span> <span class="n">Address</span><span class="p">,</span>
+    <span class="n">should_transfer_value</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+    <span class="n">memory_input_start_position</span><span class="p">:</span> <span class="n">U256</span><span class="p">,</span>
+    <span class="n">memory_input_size</span><span class="p">:</span> <span class="n">U256</span><span class="p">,</span>
+    <span class="n">memory_output_start_position</span><span class="p">:</span> <span class="n">U256</span><span class="p">,</span>
+    <span class="n">memory_output_size</span><span class="p">:</span> <span class="n">U256</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">...vm.interpreter</span> <span class="kn">import</span> <span class="n">STACK_DEPTH_LIMIT</span><span class="p">,</span> <span class="n">process_message</span>
+
+    <span class="k">if</span> <span class="n">evm</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">depth</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">&gt;</span> <span class="n">STACK_DEPTH_LIMIT</span><span class="p">:</span>
+        <span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span> <span class="o">+=</span> <span class="n">gas</span>
+        <span class="n">push</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">,</span> <span class="n">U256</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+        <span class="k">return</span>
+
+    <span class="n">call_data</span> <span class="o">=</span> <span class="n">memory_read_bytes</span><span class="p">(</span>
+        <span class="n">evm</span><span class="o">.</span><span class="n">memory</span><span class="p">,</span> <span class="n">memory_input_start_position</span><span class="p">,</span> <span class="n">memory_input_size</span>
+    <span class="p">)</span>
+    <span class="n">code</span> <span class="o">=</span> <span class="n">get_account</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">state</span><span class="p">,</span> <span class="n">code_address</span><span class="p">)</span><span class="o">.</span><span class="n">code</span>
+    <span class="n">child_message</span> <span class="o">=</span> <span class="n">Message</span><span class="p">(</span>
+        <span class="n">caller</span><span class="o">=</span><span class="n">caller</span><span class="p">,</span>
+        <span class="n">target</span><span class="o">=</span><span class="n">to</span><span class="p">,</span>
+        <span class="n">gas</span><span class="o">=</span><span class="n">U256</span><span class="p">(</span><span class="n">gas</span><span class="p">),</span>
+        <span class="n">value</span><span class="o">=</span><span class="n">value</span><span class="p">,</span>
+        <span class="n">data</span><span class="o">=</span><span class="n">call_data</span><span class="p">,</span>
+        <span class="n">code</span><span class="o">=</span><span class="n">code</span><span class="p">,</span>
+        <span class="n">current_target</span><span class="o">=</span><span class="n">to</span><span class="p">,</span>
+        <span class="n">depth</span><span class="o">=</span><span class="n">evm</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">depth</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="n">code_address</span><span class="o">=</span><span class="n">code_address</span><span class="p">,</span>
+        <span class="n">should_transfer_value</span><span class="o">=</span><span class="n">should_transfer_value</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">child_evm</span> <span class="o">=</span> <span class="n">process_message</span><span class="p">(</span><span class="n">child_message</span><span class="p">,</span> <span class="n">evm</span><span class="o">.</span><span class="n">env</span><span class="p">)</span>
+    <span class="n">evm</span><span class="o">.</span><span class="n">children</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">child_evm</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">child_evm</span><span class="o">.</span><span class="n">has_erred</span><span class="p">:</span>
+        <span class="n">push</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">,</span> <span class="n">U256</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">evm</span><span class="o">.</span><span class="n">logs</span> <span class="o">+=</span> <span class="n">child_evm</span><span class="o">.</span><span class="n">logs</span>
+        <span class="n">push</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">,</span> <span class="n">U256</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+
+    <span class="n">actual_output_size</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">memory_output_size</span><span class="p">,</span> <span class="n">U256</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">child_evm</span><span class="o">.</span><span class="n">output</span><span class="p">)))</span>
+    <span class="n">memory_write</span><span class="p">(</span>
+        <span class="n">evm</span><span class="o">.</span><span class="n">memory</span><span class="p">,</span>
+        <span class="n">memory_output_start_position</span><span class="p">,</span>
+        <span class="n">child_evm</span><span class="o">.</span><span class="n">output</span><span class="p">[:</span><span class="n">actual_output_size</span><span class="p">],</span>
+    <span class="p">)</span>
+    <span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span> <span class="o">+=</span> <span class="n">child_evm</span><span class="o">.</span><span class="n">gas_left</span>
+    <span class="n">child_evm</span><span class="o">.</span><span class="n">gas_left</span> <span class="o">=</span> <span class="n">U256</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
@@ -450,126 +538,79 @@
 </dd></dl>
 
 <pre class="literal-block">def call(evm: Evm) -&gt; None:
-    from ...vm.interpreter import STACK_DEPTH_LIMIT, process_message
-
-    <span class="change-added">evm.gas_left = subtract_gas(evm.gas_left, GAS_CALL)
-
-    </span>gas = pop(evm.stack)
+    # STACK
+    gas = Uint(pop(evm.stack))
     to = to_address(pop(evm.stack))
     value = pop(evm.stack)
-    memory_input_start_position = Uint(pop(evm.stack))
+    memory_input_start_position = pop(evm.stack)
     memory_input_size = pop(evm.stack)
-    memory_output_start_position = Uint(pop(evm.stack))
+    memory_output_start_position = pop(evm.stack)
     memory_output_size = pop(evm.stack)
 
-    gas_input_memory = calculate_gas_extend_memory(
-        evm.memory, memory_input_start_position, memory_input_size
+    # GAS
+    extend_memory(evm, memory_input_start_position, memory_input_size)
+    extend_memory(evm, memory_output_start_position, memory_output_size)
+    <span class="change-added">_account_exists = account_exists(evm.env.state, to)
+    create_gas_cost = Uint(0) if _account_exists else GAS_NEW_ACCOUNT
+    transfer_gas_cost = Uint(0) if value == 0 else GAS_CALL_VALUE
+    </span>call_gas_fee = <span class="change-replaced">calculate_call_gas_cost(evm.env.state,</span><span class="change-replacement">calculate_call_gas_cost(</span> gas, <span class="change-added">Uint(evm.gas_left), GAS_CALL + create_gas_cost + transfer_gas_cost
     )
-    evm.gas_left = subtract_gas(evm.gas_left, gas_input_memory)
-    extend_memory(evm.memory, memory_input_start_position, memory_input_size)
-    gas_output_memory = calculate_gas_extend_memory(
-        evm.memory, memory_output_start_position, memory_output_size
+    message_call_gas = calculate_message_call_gas_stipend(
+        value,
+        gas,
+        Uint(evm.gas_left),
+        GAS_CALL + create_gas_cost + transfer_gas_cost,
     )
-    evm.gas_left = subtract_gas(evm.gas_left, gas_output_memory)
-    extend_memory(evm.memory, memory_output_start_position, memory_output_size)
-    call_data = memory_read_bytes(
-        evm.memory, memory_input_start_position, memory_input_size
-    )<span class="change-added">
+    charge_gas(evm, call_gas_fee)
 
-    _account_exists = account_exists(evm.env.state, to)
-    create_gas_cost = U256(0) if _account_exists else GAS_NEW_ACCOUNT
-    transfer_gas_cost = U256(0) if value == 0 else GAS_CALL_VALUE
-    extra_gas = u256_safe_add(
-        create_gas_cost,
-        transfer_gas_cost,
-        exception_type=OutOfGasError,
-    )</span>
-
-    call_gas_fee = <span class="change-replaced">calculate_call_gas_cost(evm.env.state,</span><span class="change-replacement">calculate_call_gas_cost(gas, evm.gas_left, extra_gas)
-    message_call_gas_fee = calculate_message_call_gas_stipend(
-        value,</span> gas, <span class="change-replaced">to, value)</span><span class="change-replacement">evm.gas_left, extra_gas
-    )
-
-    evm.gas_left = subtract_gas(evm.gas_left, call_gas_fee)
+    # OPERATION
     sender_balance = get_account(
         evm.env.state, evm.message.current_target
     ).balance
-
-    evm.pc += 1
-
     if sender_balance &lt; value:
         push(evm.stack, U256(0))
-        evm.gas_left +=</span>
-    message_call_gas_fee <span class="change-replaced">= u256_safe_add(
-        gas,
-        calculate_message_call_gas_stipend(value),
-        exception_type=OutOfGasError,
-    )
-    evm.gas_left = subtract_gas(evm.gas_left, call_gas_fee)
+        evm.gas_left += message_call_gas
+    else:
+        generic_call(
+            evm,
+            message_call_gas,
+            value,
+            evm.message.current_target,
+            </span>to, <span class="change-replaced">value)
+    charge_gas(evm, call_gas_fee)</span><span class="change-replacement">to,
+            True,
+            memory_input_start_position,
+            memory_input_size,
+            memory_output_start_position,
+            memory_output_size,
+        )</span>
 
+    # <span class="change-replaced">OPERATION
     sender_balance = get_account(
         evm.env.state, evm.message.current_target
     ).balance
-
-    evm.pc +=</span><span class="change-replacement">return None
-    if evm.message.depth +</span> 1
-
-    <span class="change-replaced">if sender_balance &lt; value:</span><span class="change-replacement">&gt; STACK_DEPTH_LIMIT:</span>
+    message_call_gas = gas + calculate_message_call_gas_stipend(value)
+    if sender_balance &lt; value:
         push(evm.stack, U256(0))
-        evm.gas_left += message_call_gas_fee
-        return None
-    <span class="change-replaced">if evm.message.depth</span><span class="change-replacement">code = get_account(evm.env.state, to).code
-    child_message = Message(
-        caller=evm.message.current_target,
-        target=to,
-        gas=message_call_gas_fee,
-        value=value,
-        data=call_data,
-        code=code,
-        current_target=to,
-        depth=evm.message.depth</span> + <span class="change-replaced">1 &gt; STACK_DEPTH_LIMIT:</span><span class="change-replacement">1,
-        code_address=to,
-        should_transfer_value=True,
-    )
-    child_evm = process_message(child_message, evm.env)
-    evm.children.append(child_evm)
-
-    if child_evm.has_erred:</span>
-        push(evm.stack, U256(0))
-        <span class="change-replaced">evm.gas_left</span><span class="change-replacement">else:
-        evm.logs</span> += <span class="change-replaced">message_call_gas_fee
-        return None
-
-    code = get_account(evm.env.state, to).code
-    child_message = Message(
-        caller=evm.message.current_target,
-        target=to,
-        gas=message_call_gas_fee,
-        value=value,
-        data=call_data,
-        code=code,
-        current_target=to,
-        depth=evm.message.depth + 1,
-        code_address=to,
-        should_transfer_value=True,
-    )
-    child_evm = process_message(child_message, evm.env)
-    evm.children.append(child_evm)
-
-    if child_evm.has_erred:</span><span class="change-replacement">child_evm.logs</span>
-        push(evm.stack, <span class="change-removed">U256(0))
+        evm.gas_left</span><span class="change-replacement">PROGRAM COUNTER
+    evm.pc</span> += <span class="change-removed">message_call_gas
     else:
-        evm.logs += child_evm.logs
-        push(evm.stack, </span>U256(1))
+        generic_call(
+            evm,
+            message_call_gas,
+            value,
+            evm.message.current_target,
+            to,
+            to,
+            True,
+            memory_input_start_position,
+            memory_input_size,
+            memory_output_start_position,
+            memory_output_size,
+        )
 
-    actual_output_size = min(memory_output_size, U256(len(child_evm.output)))
-    memory_write(
-        evm.memory,
-        memory_output_start_position,
-        child_evm.output[:actual_output_size],
-    )
-    evm.gas_left += child_evm.gas_left
-    child_evm.gas_left = U256(0)
+    # PROGRAM COUNTER
+    evm.pc += </span>1
 </pre>
 </section>
 <section id="callcode">
@@ -586,126 +627,79 @@
 </dd></dl>
 
 <pre class="literal-block">def callcode(evm: Evm) -&gt; None:
-    from ...vm.interpreter import STACK_DEPTH_LIMIT, process_message
-
-    <span class="change-added">evm.gas_left = subtract_gas(evm.gas_left, GAS_CALL)
-
-    </span>gas = pop(evm.stack)
+    # STACK
+    gas = Uint(pop(evm.stack))
     code_address = to_address(pop(evm.stack))
     value = pop(evm.stack)
-    memory_input_start_position = Uint(pop(evm.stack))
+    memory_input_start_position = pop(evm.stack)
     memory_input_size = pop(evm.stack)
-    memory_output_start_position = Uint(pop(evm.stack))
+    memory_output_start_position = pop(evm.stack)
     memory_output_size = pop(evm.stack)
+
+    # GAS
     to = evm.message.current_target
 
-    gas_input_memory = calculate_gas_extend_memory(
-        evm.memory, memory_input_start_position, memory_input_size
+    extend_memory(evm, memory_input_start_position, memory_input_size)
+    extend_memory(evm, memory_output_start_position, memory_output_size)
+    <span class="change-added">transfer_gas_cost = Uint(0) if value == 0 else GAS_CALL_VALUE
+    </span>call_gas_fee = <span class="change-replaced">calculate_call_gas_cost(evm.env.state,</span><span class="change-replacement">calculate_call_gas_cost(</span> gas, <span class="change-added">Uint(evm.gas_left), GAS_CALL + transfer_gas_cost
     )
-    evm.gas_left = subtract_gas(evm.gas_left, gas_input_memory)
-    extend_memory(evm.memory, memory_input_start_position, memory_input_size)
-    gas_output_memory = calculate_gas_extend_memory(
-        evm.memory, memory_output_start_position, memory_output_size
+    message_call_gas = calculate_message_call_gas_stipend(
+        value,
+        gas,
+        Uint(evm.gas_left),
+        GAS_CALL + transfer_gas_cost,
     )
-    evm.gas_left = subtract_gas(evm.gas_left, gas_output_memory)
-    extend_memory(evm.memory, memory_output_start_position, memory_output_size)
-    call_data = memory_read_bytes(
-        evm.memory, memory_input_start_position, memory_input_size
-    )<span class="change-added">
+    charge_gas(evm, call_gas_fee)
 
-    transfer_gas_cost = U256(0) if value == 0 else GAS_CALL_VALUE
-    extra_gas = transfer_gas_cost</span>
-
-    call_gas_fee = <span class="change-replaced">calculate_call_gas_cost(evm.env.state,</span><span class="change-replacement">calculate_call_gas_cost(gas, evm.gas_left, extra_gas)
-    message_call_gas_fee = calculate_message_call_gas_stipend(
-        value,</span> gas, <span class="change-replaced">to, value)</span><span class="change-replacement">evm.gas_left, extra_gas
-    )
-
-    evm.gas_left = subtract_gas(evm.gas_left, call_gas_fee)
-
+    # OPERATION
     sender_balance = get_account(
         evm.env.state, evm.message.current_target
     ).balance
-
-    evm.pc += 1
-
     if sender_balance &lt; value:
         push(evm.stack, U256(0))
-        evm.gas_left +=</span>
-    message_call_gas_fee <span class="change-replaced">= u256_safe_add(
-        gas,
-        calculate_message_call_gas_stipend(value),
-        exception_type=OutOfGasError,
-    )
-    evm.gas_left = subtract_gas(evm.gas_left, call_gas_fee)
+        evm.gas_left += message_call_gas
+    else:
+        generic_call(
+            evm,
+            message_call_gas,
+            value,
+            evm.message.current_target,
+            </span>to, <span class="change-replaced">value)
+    charge_gas(evm, call_gas_fee)</span><span class="change-replacement">code_address,
+            True,
+            memory_input_start_position,
+            memory_input_size,
+            memory_output_start_position,
+            memory_output_size,
+        )</span>
 
+    # <span class="change-replaced">OPERATION
     sender_balance = get_account(
         evm.env.state, evm.message.current_target
     ).balance
-
-    evm.pc +=</span><span class="change-replacement">return None
-    if evm.message.depth +</span> 1
-
-    <span class="change-added">&gt; STACK_DEPTH_LIMIT:
+    message_call_gas = gas + calculate_message_call_gas_stipend(value)
+    if sender_balance &lt; value:
         push(evm.stack, U256(0))
-        evm.gas_left += message_call_gas_fee
-        return None
-
-    code = get_account(evm.env.state, code_address).code
-    child_message = Message(
-        caller=evm.message.current_target,
-        target=to,
-        gas=message_call_gas_fee,
-        value=value,
-        data=call_data,
-        code=code,
-        current_target=to,
-        depth=evm.message.depth + 1,
-        code_address=code_address,
-        should_transfer_value=True,
-    )
-
-    child_evm = process_message(child_message, evm.env)
-    evm.children.append(child_evm)
-    </span>if <span class="change-replaced">sender_balance &lt; value:</span><span class="change-replacement">child_evm.has_erred:</span>
-        push(evm.stack, U256(0))
-        <span class="change-replaced">evm.gas_left</span><span class="change-replacement">else:
-        evm.logs</span> += <span class="change-replaced">message_call_gas_fee
-        return None
-    if evm.message.depth + 1 &gt; STACK_DEPTH_LIMIT:</span><span class="change-replacement">child_evm.logs</span>
-        push(evm.stack, <span class="change-removed">U256(0))
-        evm.gas_left += message_call_gas_fee
-        return None
-
-    code = get_account(evm.env.state, code_address).code
-    child_message = Message(
-        caller=evm.message.current_target,
-        target=to,
-        gas=message_call_gas_fee,
-        value=value,
-        data=call_data,
-        code=code,
-        current_target=to,
-        depth=evm.message.depth + 1,
-        code_address=code_address,
-        should_transfer_value=True,
-    )
-
-    child_evm = process_message(child_message, evm.env)
-    evm.children.append(child_evm)
-    if child_evm.has_erred:
-        push(evm.stack, U256(0))
+        evm.gas_left</span><span class="change-replacement">PROGRAM COUNTER
+    evm.pc</span> += <span class="change-removed">message_call_gas
     else:
-        evm.logs += child_evm.logs
-        push(evm.stack, </span>U256(1))
-    actual_output_size = min(memory_output_size, U256(len(child_evm.output)))
-    memory_write(
-        evm.memory,
-        memory_output_start_position,
-        child_evm.output[:actual_output_size],
-    )
-    evm.gas_left += child_evm.gas_left
-    child_evm.gas_left = U256(0)
+        generic_call(
+            evm,
+            message_call_gas,
+            value,
+            evm.message.current_target,
+            to,
+            code_address,
+            True,
+            memory_input_start_position,
+            memory_input_size,
+            memory_output_start_position,
+            memory_output_size,
+        )
+
+    # PROGRAM COUNTER
+    evm.pc += </span>1
 </pre>
 </section>
 <section id="selfdestruct">
@@ -722,14 +716,17 @@
 </dd></dl>
 
 <pre class="literal-block">def selfdestruct(evm: Evm) -&gt; None:
-    <span class="change-added">evm.gas_left = subtract_gas(evm.gas_left, GAS_SELF_DESTRUCT)
-    </span>beneficiary = to_address(pop(evm.stack))
-    <span class="change-added">if not account_exists(evm.env.state, beneficiary):
-        evm.gas_left = subtract_gas(
-            evm.gas_left, GAS_SELF_DESTRUCT_NEW_ACCOUNT
-        )
+    # STACK
+    beneficiary = to_address(pop(evm.stack))
 
-    </span>originator = evm.message.current_target
+    # GAS
+    <span class="change-added">if account_exists(evm.env.state, beneficiary):
+        charge_gas(evm, GAS_SELF_DESTRUCT)
+    else:
+        charge_gas(evm, GAS_SELF_DESTRUCT + GAS_SELF_DESTRUCT_NEW_ACCOUNT)
+
+    # OPERATION
+    originator = evm.message.current_target
     beneficiary_balance = get_account(evm.env.state, beneficiary).balance
     originator_balance = get_account(evm.env.state, originator).balance
 
@@ -747,15 +744,40 @@
 
     # HALT the execution
     evm.running = False
-</pre>
+
+    # PROGRAM COUNTER
+    </span>pass
+
+    <span class="change-removed"># OPERATION
+    originator = evm.message.current_target
+    beneficiary_balance = get_account(evm.env.state, beneficiary).balance
+    originator_balance = get_account(evm.env.state, originator).balance
+
+    # First Transfer to beneficiary
+    set_account_balance(
+        evm.env.state, beneficiary, beneficiary_balance + originator_balance
+    )
+    # Next, Zero the balance of the address being deleted (must come after
+    # sending to beneficiary in case the contract named itself as the
+    # beneficiary).
+    set_account_balance(evm.env.state, originator, U256(0))
+
+    # register account for deletion
+    evm.accounts_to_delete.add(originator)
+
+    # HALT the execution
+    evm.running = False
+
+    # PROGRAM COUNTER
+    pass
+</span></pre>
 </section>
 <section id="delegatecall">
 <h3>delegatecall<a class="headerlink" href="#delegatecall" title="Permalink to this headline"></a></h3>
 <dl class="py function">
 <dt class="sig sig-object py" id="ethereum.dao_fork.vm.instructions.system.delegatecall">
 <span class="sig-name descname"><span class="pre">delegatecall</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">evm</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ethereum.dao_fork.vm.instructions.system.delegatecall" title="Permalink to this definition"></a></dt>
-<dd><p>Message-call into this account with an alternative account’s code,
-but persisting the current values for sender.</p>
+<dd><p>Message-call into an account.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>evm</strong> – The current EVM frame.</p>
@@ -764,113 +786,40 @@ but persisting the current values for sender.</p>
 </dd></dl>
 
 <pre class="literal-block">def delegatecall(evm: Evm) -&gt; None:
-    from ...vm.interpreter import STACK_DEPTH_LIMIT, process_message
-
-    <span class="change-added">evm.gas_left = subtract_gas(evm.gas_left, GAS_CALL)
-
-    </span>gas = pop(evm.stack)
+    # STACK
+    gas = Uint(pop(evm.stack))
     code_address = to_address(pop(evm.stack))
-    memory_input_start_position = Uint(pop(evm.stack))
+    memory_input_start_position = pop(evm.stack)
     memory_input_size = pop(evm.stack)
-    memory_output_start_position = Uint(pop(evm.stack))
+    memory_output_start_position = pop(evm.stack)
     memory_output_size = pop(evm.stack)
-    value = evm.message.value
-    to = evm.message.current_target
 
-    gas_input_memory = calculate_gas_extend_memory(
-        evm.memory, memory_input_start_position, memory_input_size
+    # GAS
+    extend_memory(evm, memory_input_start_position, memory_input_size)
+    extend_memory(evm, memory_output_start_position, memory_output_size)
+    <span class="change-added">call_gas_fee = calculate_call_gas_cost(gas, Uint(evm.gas_left), GAS_CALL)
+    message_call_gas = calculate_message_call_gas_stipend(
+        U256(0), gas, Uint(evm.gas_left), GAS_CALL
     )
-    evm.gas_left = subtract_gas(evm.gas_left, gas_input_memory)
-    extend_memory(evm.memory, memory_input_start_position, memory_input_size)
-    gas_output_memory = calculate_gas_extend_memory(
-        evm.memory, memory_output_start_position, memory_output_size
+    </span>charge_gas(evm, <span class="change-replaced">GAS_CALL + gas)</span><span class="change-replacement">call_gas_fee)</span>
+
+    # OPERATION
+    generic_call(
+        evm,
+        <span class="change-replaced">gas,</span><span class="change-replacement">message_call_gas,</span>
+        evm.message.value,
+        evm.message.caller,
+        evm.message.current_target,
+        code_address,
+        False,
+        memory_input_start_position,
+        memory_input_size,
+        memory_output_start_position,
+        memory_output_size,
     )
-    evm.gas_left = subtract_gas(evm.gas_left, gas_output_memory)
-    extend_memory(evm.memory, memory_output_start_position, memory_output_size)
-    call_data = memory_read_bytes(
-        evm.memory, memory_input_start_position, memory_input_size
-    )<span class="change-added">
 
-    extra_gas = U256(0)</span>
-
-    call_gas_fee = <span class="change-replaced">u256_safe_add(GAS_CALL,</span><span class="change-replacement">calculate_call_gas_cost(gas, evm.gas_left, extra_gas)
-    message_call_gas_fee = calculate_message_call_gas_stipend(
-        value,</span> gas, <span class="change-replaced">exception_type=OutOfGasError)</span><span class="change-replacement">evm.gas_left, extra_gas, call_stipend=U256(0)
-    )
-
-    evm.gas_left = subtract_gas(evm.gas_left, call_gas_fee)
-
+    # PROGRAM COUNTER
     evm.pc += 1
-
-    if evm.message.depth + 1 &gt; STACK_DEPTH_LIMIT:
-        push(evm.stack, U256(0))
-        evm.gas_left +=</span>
-    message_call_gas_fee <span class="change-added">return None
-
-    code </span>= <span class="change-replaced">gas
-    evm.gas_left</span><span class="change-replacement">get_account(evm.env.state, code_address).code
-    child_message</span> = <span class="change-replaced">subtract_gas(evm.gas_left, call_gas_fee)
-
-    evm.pc</span><span class="change-replacement">Message(
-        caller=evm.message.caller,
-        target=to,
-        gas=message_call_gas_fee,
-        value=value,
-        data=call_data,
-        code=code,
-        current_target=to,
-        depth=evm.message.depth + 1,
-        code_address=code_address,
-        should_transfer_value=False,
-    )
-
-    child_evm = process_message(child_message, evm.env)
-    evm.children.append(child_evm)
-    if child_evm.has_erred:
-        push(evm.stack, U256(0))
-    else:
-        evm.logs</span> += <span class="change-replaced">1
-
-    if evm.message.depth + 1 &gt; STACK_DEPTH_LIMIT:</span><span class="change-replacement">child_evm.logs</span>
-        push(evm.stack, <span class="change-replaced">U256(0))</span><span class="change-replacement">U256(1))
-    actual_output_size = min(memory_output_size, U256(len(child_evm.output)))
-    memory_write(
-        evm.memory,
-        memory_output_start_position,
-        child_evm.output[:actual_output_size],
-    )</span>
-        evm.gas_left += <span class="change-removed">message_call_gas_fee
-        return None
-
-    code = get_account(evm.env.state, code_address).code
-    child_message = Message(
-        caller=evm.message.caller,
-        target=to,
-        gas=message_call_gas_fee,
-        value=value,
-        data=call_data,
-        code=code,
-        current_target=to,
-        depth=evm.message.depth + 1,
-        code_address=code_address,
-        should_transfer_value=False,
-    )
-
-    child_evm = process_message(child_message, evm.env)
-    evm.children.append(child_evm)
-    if child_evm.has_erred:
-        push(evm.stack, U256(0))
-    else:
-        evm.logs += child_evm.logs
-        push(evm.stack, U256(1))
-    actual_output_size = min(memory_output_size, U256(len(child_evm.output)))
-    memory_write(
-        evm.memory,
-        memory_output_start_position,
-        child_evm.output[:actual_output_size],
-    )
-    evm.gas_left += </span>child_evm.gas_left
-    child_evm.gas_left = U256(0)
 </pre>
 </section>
 </section>

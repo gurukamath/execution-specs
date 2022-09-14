@@ -352,24 +352,18 @@ insufficient to store the word.</p>
 </dd></dl>
 
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">mstore</span><span class="p">(</span><span class="n">evm</span><span class="p">:</span> <span class="n">Evm</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="c1"># convert to Uint as start_position + size_to_extend can overflow.</span>
-    <span class="n">start_position</span> <span class="o">=</span> <span class="n">Uint</span><span class="p">(</span><span class="n">pop</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">))</span>
+    <span class="c1"># STACK</span>
+    <span class="n">start_position</span> <span class="o">=</span> <span class="n">pop</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">)</span>
     <span class="n">value</span> <span class="o">=</span> <span class="n">pop</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">)</span><span class="o">.</span><span class="n">to_be_bytes32</span><span class="p">()</span>
 
-    <span class="n">gas_cost_memory_extend</span> <span class="o">=</span> <span class="n">calculate_gas_extend_memory</span><span class="p">(</span>
-        <span class="n">evm</span><span class="o">.</span><span class="n">memory</span><span class="p">,</span> <span class="n">start_position</span><span class="p">,</span> <span class="n">U256</span><span class="p">(</span><span class="mi">32</span><span class="p">)</span>
-    <span class="p">)</span>
-    <span class="n">total_gas_cost</span> <span class="o">=</span> <span class="n">u256_safe_add</span><span class="p">(</span>
-        <span class="n">GAS_VERY_LOW</span><span class="p">,</span>
-        <span class="n">gas_cost_memory_extend</span><span class="p">,</span>
-        <span class="n">exception_type</span><span class="o">=</span><span class="n">OutOfGasError</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span> <span class="o">=</span> <span class="n">subtract_gas</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span><span class="p">,</span> <span class="n">total_gas_cost</span><span class="p">)</span>
+    <span class="c1"># GAS</span>
+    <span class="n">extend_memory</span><span class="p">(</span><span class="n">evm</span><span class="p">,</span> <span class="n">start_position</span><span class="p">,</span> <span class="n">U256</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">value</span><span class="p">)))</span>
+    <span class="n">charge_gas</span><span class="p">(</span><span class="n">evm</span><span class="p">,</span> <span class="n">GAS_VERY_LOW</span><span class="p">)</span>
 
-    <span class="c1"># extend memory and subtract gas for allocating 32 bytes of memory</span>
-    <span class="n">extend_memory</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">memory</span><span class="p">,</span> <span class="n">start_position</span><span class="p">,</span> <span class="n">U256</span><span class="p">(</span><span class="mi">32</span><span class="p">))</span>
+    <span class="c1"># OPERATION</span>
     <span class="n">memory_write</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">memory</span><span class="p">,</span> <span class="n">start_position</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
 
+    <span class="c1"># PROGRAM COUNTER</span>
     <span class="n">evm</span><span class="o">.</span><span class="n">pc</span> <span class="o">+=</span> <span class="mi">1</span>
 </pre></div>
 </div>
@@ -397,26 +391,19 @@ insufficient to store the word.</p>
 </dd></dl>
 
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">mstore8</span><span class="p">(</span><span class="n">evm</span><span class="p">:</span> <span class="n">Evm</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="c1"># convert to Uint as start_position + size_to_extend can overflow.</span>
-    <span class="n">start_position</span> <span class="o">=</span> <span class="n">Uint</span><span class="p">(</span><span class="n">pop</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">))</span>
+    <span class="c1"># STACK</span>
+    <span class="n">start_position</span> <span class="o">=</span> <span class="n">pop</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">)</span>
     <span class="n">value</span> <span class="o">=</span> <span class="n">pop</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">)</span>
-    <span class="c1"># make sure that value doesn&#39;t exceed 1 byte</span>
-    <span class="n">normalized_bytes_value</span> <span class="o">=</span> <span class="p">(</span><span class="n">value</span> <span class="o">&amp;</span> <span class="n">U8_MAX_VALUE</span><span class="p">)</span><span class="o">.</span><span class="n">to_bytes</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;big&quot;</span><span class="p">)</span>
 
-    <span class="n">memory_extend_gas_cost</span> <span class="o">=</span> <span class="n">calculate_gas_extend_memory</span><span class="p">(</span>
-        <span class="n">evm</span><span class="o">.</span><span class="n">memory</span><span class="p">,</span> <span class="n">start_position</span><span class="p">,</span> <span class="n">U256</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-    <span class="p">)</span>
-    <span class="n">total_gas_cost</span> <span class="o">=</span> <span class="n">u256_safe_add</span><span class="p">(</span>
-        <span class="n">GAS_VERY_LOW</span><span class="p">,</span>
-        <span class="n">memory_extend_gas_cost</span><span class="p">,</span>
-        <span class="n">exception_type</span><span class="o">=</span><span class="n">OutOfGasError</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span> <span class="o">=</span> <span class="n">subtract_gas</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span><span class="p">,</span> <span class="n">total_gas_cost</span><span class="p">)</span>
+    <span class="c1"># GAS</span>
+    <span class="n">extend_memory</span><span class="p">(</span><span class="n">evm</span><span class="p">,</span> <span class="n">start_position</span><span class="p">,</span> <span class="n">U256</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+    <span class="n">charge_gas</span><span class="p">(</span><span class="n">evm</span><span class="p">,</span> <span class="n">GAS_VERY_LOW</span><span class="p">)</span>
 
-    <span class="c1"># extend memory and subtract gas for allocating 32 bytes of memory</span>
-    <span class="n">extend_memory</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">memory</span><span class="p">,</span> <span class="n">start_position</span><span class="p">,</span> <span class="n">U256</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+    <span class="c1"># OPERATION</span>
+    <span class="n">normalized_bytes_value</span> <span class="o">=</span> <span class="n">Bytes</span><span class="p">([</span><span class="n">value</span> <span class="o">&amp;</span> <span class="n">U8_MAX_VALUE</span><span class="p">])</span>
     <span class="n">memory_write</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">memory</span><span class="p">,</span> <span class="n">start_position</span><span class="p">,</span> <span class="n">normalized_bytes_value</span><span class="p">)</span>
 
+    <span class="c1"># PROGRAM COUNTER</span>
     <span class="n">evm</span><span class="o">.</span><span class="n">pc</span> <span class="o">+=</span> <span class="mi">1</span>
 </pre></div>
 </div>
@@ -442,26 +429,20 @@ insufficient to store the word.</p>
 </dd></dl>
 
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">mload</span><span class="p">(</span><span class="n">evm</span><span class="p">:</span> <span class="n">Evm</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="c1"># convert to Uint as start_position + size_to_extend can overflow.</span>
-    <span class="n">start_position</span> <span class="o">=</span> <span class="n">Uint</span><span class="p">(</span><span class="n">pop</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">))</span>
+    <span class="c1"># STACK</span>
+    <span class="n">start_position</span> <span class="o">=</span> <span class="n">pop</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">)</span>
 
-    <span class="n">memory_extend_gas_cost</span> <span class="o">=</span> <span class="n">calculate_gas_extend_memory</span><span class="p">(</span>
-        <span class="n">evm</span><span class="o">.</span><span class="n">memory</span><span class="p">,</span> <span class="n">start_position</span><span class="p">,</span> <span class="n">U256</span><span class="p">(</span><span class="mi">32</span><span class="p">)</span>
-    <span class="p">)</span>
-    <span class="n">total_gas_cost</span> <span class="o">=</span> <span class="n">u256_safe_add</span><span class="p">(</span>
-        <span class="n">GAS_VERY_LOW</span><span class="p">,</span>
-        <span class="n">memory_extend_gas_cost</span><span class="p">,</span>
-        <span class="n">exception_type</span><span class="o">=</span><span class="n">OutOfGasError</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span> <span class="o">=</span> <span class="n">subtract_gas</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span><span class="p">,</span> <span class="n">total_gas_cost</span><span class="p">)</span>
+    <span class="c1"># GAS</span>
+    <span class="n">extend_memory</span><span class="p">(</span><span class="n">evm</span><span class="p">,</span> <span class="n">start_position</span><span class="p">,</span> <span class="n">U256</span><span class="p">(</span><span class="mi">32</span><span class="p">))</span>
+    <span class="n">charge_gas</span><span class="p">(</span><span class="n">evm</span><span class="p">,</span> <span class="n">GAS_VERY_LOW</span><span class="p">)</span>
 
-    <span class="c1"># extend memory and subtract gas for allocating 32 bytes of memory</span>
-    <span class="n">extend_memory</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">memory</span><span class="p">,</span> <span class="n">start_position</span><span class="p">,</span> <span class="n">U256</span><span class="p">(</span><span class="mi">32</span><span class="p">))</span>
+    <span class="c1"># OPERATION</span>
     <span class="n">value</span> <span class="o">=</span> <span class="n">U256</span><span class="o">.</span><span class="n">from_be_bytes</span><span class="p">(</span>
         <span class="n">memory_read_bytes</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">memory</span><span class="p">,</span> <span class="n">start_position</span><span class="p">,</span> <span class="n">U256</span><span class="p">(</span><span class="mi">32</span><span class="p">))</span>
     <span class="p">)</span>
     <span class="n">push</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
 
+    <span class="c1"># PROGRAM COUNTER</span>
     <span class="n">evm</span><span class="o">.</span><span class="n">pc</span> <span class="o">+=</span> <span class="mi">1</span>
 </pre></div>
 </div>
@@ -483,10 +464,16 @@ insufficient to store the word.</p>
 </dd></dl>
 
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">msize</span><span class="p">(</span><span class="n">evm</span><span class="p">:</span> <span class="n">Evm</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span> <span class="o">=</span> <span class="n">subtract_gas</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span><span class="p">,</span> <span class="n">GAS_BASE</span><span class="p">)</span>
-    <span class="n">memory_size</span> <span class="o">=</span> <span class="n">U256</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">memory</span><span class="p">))</span>
-    <span class="n">push</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">,</span> <span class="n">memory_size</span><span class="p">)</span>
+    <span class="c1"># STACK</span>
+    <span class="k">pass</span>
 
+    <span class="c1"># GAS</span>
+    <span class="n">charge_gas</span><span class="p">(</span><span class="n">evm</span><span class="p">,</span> <span class="n">GAS_BASE</span><span class="p">)</span>
+
+    <span class="c1"># OPERATION</span>
+    <span class="n">push</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">,</span> <span class="n">U256</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">memory</span><span class="p">)))</span>
+
+    <span class="c1"># PROGRAM COUNTER</span>
     <span class="n">evm</span><span class="o">.</span><span class="n">pc</span> <span class="o">+=</span> <span class="mi">1</span>
 </pre></div>
 </div>

@@ -292,20 +292,22 @@ storage of the current account.</p>
 </dd></dl>
 
 <pre class="literal-block">def sload(evm: Evm) -&gt; None:
-    <span class="change-added">key = pop(evm.stack).to_be_bytes32()
-    value = get_storage(evm.env.state, evm.message.current_target, key)
+    # STACK
+    key = pop(evm.stack).to_be_bytes32()
 
-    if (evm.message.current_target, key) in evm.accessed_storage_keys:
-        </span>evm.gas_left = subtract_gas(evm.gas_left, <span class="change-replaced">GAS_SLOAD)
-
-    key</span><span class="change-replacement">GAS_WARM_ACCESS)
+    # GAS
+    <span class="change-added">if (evm.message.current_target, key) in evm.accessed_storage_keys:
+        </span>charge_gas(evm, <span class="change-replaced">GAS_SLOAD)</span><span class="change-replacement">GAS_WARM_ACCESS)
     else:
         evm.accessed_storage_keys.add((evm.message.current_target, key))
-        evm.gas_left</span> = <span class="change-replaced">pop(evm.stack).to_be_bytes32()
-    value = get_storage(evm.env.state, evm.message.current_target, key)</span><span class="change-replacement">subtract_gas(evm.gas_left, GAS_COLD_SLOAD)</span>
+        charge_gas(evm, GAS_COLD_SLOAD)</span>
+
+    # OPERATION
+    value = get_storage(evm.env.state, evm.message.current_target, key)
 
     push(evm.stack, value)
 
+    # PROGRAM COUNTER
     evm.pc += 1
 </pre>
 </section>
@@ -329,21 +331,21 @@ storage of the current account.</p>
 </dd></dl>
 
 <pre class="literal-block">def sstore(evm: Evm) -&gt; None:
-    ensure(evm.gas_left &gt; GAS_CALL_STIPEND, OutOfGasError)
-    ensure(not evm.message.is_static, WriteInStaticContext)
-
+    # STACK
     key = pop(evm.stack).to_be_bytes32()
     new_value = pop(evm.stack)
-    current_value = get_storage(evm.env.state, evm.message.current_target, key)
+
+    # GAS
+    ensure(evm.gas_left &gt; GAS_CALL_STIPEND, OutOfGasError)
 
     original_value = get_storage_original(
         evm.env.state, evm.message.current_target, key
     )
+    current_value = get_storage(evm.env.state, evm.message.current_target, key)
 
-    # Gas Cost Calculation
-    gas_cost = <span class="change-replaced">GAS_SLOAD</span><span class="change-replacement">U256(0)</span>
+    <span class="change-added">gas_cost = Uint(0)
 
-    if <span class="change-added">(evm.message.current_target, key) not in evm.accessed_storage_keys:
+    </span>if <span class="change-added">(evm.message.current_target, key) not in evm.accessed_storage_keys:
         evm.accessed_storage_keys.add((evm.message.current_target, key))
         gas_cost += GAS_COLD_SLOAD
 
@@ -352,12 +354,13 @@ storage of the current account.</p>
             gas_cost <span class="change-replaced">=</span><span class="change-replacement">+=</span> GAS_STORAGE_SET
         else:
             gas_cost <span class="change-replaced">=</span><span class="change-replacement">+=</span> GAS_STORAGE_UPDATE
-
     <span class="change-added">- GAS_COLD_SLOAD
-    else:
-        gas_cost += GAS_WARM_ACCESS
+    </span>else:
+        gas_cost <span class="change-replaced">= GAS_SLOAD</span><span class="change-replacement">+= GAS_WARM_ACCESS</span>
 
-    </span># Refund Counter Calculation
+    charge_gas(evm, gas_cost)
+
+    # Refund Counter Calculation
     if current_value != new_value:
         if original_value != 0 and current_value != 0 and new_value == 0:
             # Storage is cleared for the first time in the transaction
@@ -378,10 +381,11 @@ storage of the current account.</p>
                     GAS_STORAGE_UPDATE</span> - <span class="change-replaced">GAS_SLOAD)</span><span class="change-replacement">GAS_COLD_SLOAD - GAS_WARM_ACCESS
                 )</span>
 
-    evm.gas_left = subtract_gas(evm.gas_left, gas_cost)
-
+    # OPERATION
+    ensure(not evm.message.is_static, WriteInStaticContext)
     set_storage(evm.env.state, evm.message.current_target, key, new_value)
 
+    # PROGRAM COUNTER
     evm.pc += 1
 </pre>
 </section>

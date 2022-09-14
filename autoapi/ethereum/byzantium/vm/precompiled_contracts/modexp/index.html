@@ -324,7 +324,7 @@
 <span class="sig-name descname"><span class="pre">GQUADDIVISOR</span></span><a class="headerlink" href="#ethereum.byzantium.vm.precompiled_contracts.modexp.GQUADDIVISOR" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">GQUADDIVISOR</span> <span class="o">=</span> <span class="mi">20</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">GQUADDIVISOR</span> <span class="o">=</span> <span class="n">Uint</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
@@ -339,55 +339,45 @@
 
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">modexp</span><span class="p">(</span><span class="n">evm</span><span class="p">:</span> <span class="n">Evm</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
     <span class="n">data</span> <span class="o">=</span> <span class="n">evm</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">data</span>
-    <span class="n">base_length</span> <span class="o">=</span> <span class="n">U256</span><span class="o">.</span><span class="n">from_be_bytes</span><span class="p">(</span><span class="n">right_pad_zero_bytes</span><span class="p">(</span><span class="n">data</span><span class="p">[:</span><span class="mi">32</span><span class="p">],</span> <span class="mi">32</span><span class="p">))</span>
-    <span class="n">exp_length</span> <span class="o">=</span> <span class="n">U256</span><span class="o">.</span><span class="n">from_be_bytes</span><span class="p">(</span><span class="n">right_pad_zero_bytes</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="mi">32</span><span class="p">:</span><span class="mi">64</span><span class="p">],</span> <span class="mi">32</span><span class="p">))</span>
-    <span class="n">modulus_length</span> <span class="o">=</span> <span class="n">U256</span><span class="o">.</span><span class="n">from_be_bytes</span><span class="p">(</span><span class="n">right_pad_zero_bytes</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="mi">64</span><span class="p">:</span><span class="mi">96</span><span class="p">],</span> <span class="mi">32</span><span class="p">))</span>
 
+    <span class="c1"># GAS</span>
+    <span class="n">base_length</span> <span class="o">=</span> <span class="n">U256</span><span class="o">.</span><span class="n">from_be_bytes</span><span class="p">(</span><span class="n">buffer_read</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">U256</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="n">U256</span><span class="p">(</span><span class="mi">32</span><span class="p">)))</span>
+    <span class="n">exp_length</span> <span class="o">=</span> <span class="n">U256</span><span class="o">.</span><span class="n">from_be_bytes</span><span class="p">(</span><span class="n">buffer_read</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">U256</span><span class="p">(</span><span class="mi">32</span><span class="p">),</span> <span class="n">U256</span><span class="p">(</span><span class="mi">32</span><span class="p">)))</span>
+    <span class="n">modulus_length</span> <span class="o">=</span> <span class="n">U256</span><span class="o">.</span><span class="n">from_be_bytes</span><span class="p">(</span><span class="n">buffer_read</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">U256</span><span class="p">(</span><span class="mi">64</span><span class="p">),</span> <span class="n">U256</span><span class="p">(</span><span class="mi">32</span><span class="p">)))</span>
+
+    <span class="n">exp_start</span> <span class="o">=</span> <span class="n">U256</span><span class="p">(</span><span class="mi">96</span><span class="p">)</span> <span class="o">+</span> <span class="n">base_length</span>
+    <span class="n">modulus_start</span> <span class="o">=</span> <span class="n">exp_start</span> <span class="o">+</span> <span class="n">exp_length</span>
+
+    <span class="n">exp_head</span> <span class="o">=</span> <span class="n">U256</span><span class="o">.</span><span class="n">from_be_bytes</span><span class="p">(</span>
+        <span class="n">buffer_read</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">exp_start</span><span class="p">,</span> <span class="nb">min</span><span class="p">(</span><span class="n">U256</span><span class="p">(</span><span class="mi">32</span><span class="p">),</span> <span class="n">exp_length</span><span class="p">))</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">exp_length</span> <span class="o">&lt;</span> <span class="mi">32</span><span class="p">:</span>
+        <span class="n">adjusted_exp_length</span> <span class="o">=</span> <span class="n">Uint</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">exp_head</span><span class="o">.</span><span class="n">bit_length</span><span class="p">()</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">adjusted_exp_length</span> <span class="o">=</span> <span class="n">Uint</span><span class="p">(</span>
+            <span class="mi">8</span> <span class="o">*</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">exp_length</span><span class="p">)</span> <span class="o">-</span> <span class="mi">32</span><span class="p">)</span> <span class="o">+</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">exp_head</span><span class="o">.</span><span class="n">bit_length</span><span class="p">()</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="n">charge_gas</span><span class="p">(</span>
+        <span class="n">evm</span><span class="p">,</span>
+        <span class="p">(</span>
+            <span class="n">get_mult_complexity</span><span class="p">(</span><span class="n">Uint</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">base_length</span><span class="p">,</span> <span class="n">modulus_length</span><span class="p">)))</span>
+            <span class="o">*</span> <span class="nb">max</span><span class="p">(</span><span class="n">adjusted_exp_length</span><span class="p">,</span> <span class="n">Uint</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+        <span class="p">)</span>
+        <span class="o">//</span> <span class="n">GQUADDIVISOR</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="c1"># OPERATION</span>
     <span class="k">if</span> <span class="n">base_length</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">modulus_length</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
         <span class="n">evm</span><span class="o">.</span><span class="n">output</span> <span class="o">=</span> <span class="n">Bytes</span><span class="p">()</span>
         <span class="k">return</span>
 
-    <span class="n">mult_complexity</span> <span class="o">=</span> <span class="n">get_mult_complexity</span><span class="p">(</span>
-        <span class="n">Uint</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">base_length</span><span class="p">,</span> <span class="n">modulus_length</span><span class="p">))</span>
+    <span class="n">base</span> <span class="o">=</span> <span class="n">Uint</span><span class="o">.</span><span class="n">from_be_bytes</span><span class="p">(</span><span class="n">buffer_read</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">U256</span><span class="p">(</span><span class="mi">96</span><span class="p">),</span> <span class="n">base_length</span><span class="p">))</span>
+    <span class="n">exp</span> <span class="o">=</span> <span class="n">Uint</span><span class="o">.</span><span class="n">from_be_bytes</span><span class="p">(</span><span class="n">buffer_read</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">exp_start</span><span class="p">,</span> <span class="n">exp_length</span><span class="p">))</span>
+    <span class="n">modulus</span> <span class="o">=</span> <span class="n">Uint</span><span class="o">.</span><span class="n">from_be_bytes</span><span class="p">(</span>
+        <span class="n">buffer_read</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">modulus_start</span><span class="p">,</span> <span class="n">modulus_length</span><span class="p">)</span>
     <span class="p">)</span>
-    <span class="c1"># This is an estimate of the bit length of exp</span>
-    <span class="n">adjusted_exp_length</span> <span class="o">=</span> <span class="n">Uint</span><span class="p">(</span><span class="mi">8</span> <span class="o">*</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">exp_length</span><span class="p">)</span> <span class="o">-</span> <span class="mi">32</span><span class="p">))</span>
 
-    <span class="k">if</span> <span class="p">(</span>
-        <span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span>
-        <span class="o">&lt;</span> <span class="n">mult_complexity</span> <span class="o">*</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">adjusted_exp_length</span><span class="p">)</span> <span class="o">//</span> <span class="n">GQUADDIVISOR</span>
-    <span class="p">):</span>
-        <span class="c1"># This check must be done now to prevent loading of absurdly long</span>
-        <span class="c1"># arguments. It is an underestimate, because adjusted_exp_length may</span>
-        <span class="c1"># increase later.</span>
-        <span class="k">raise</span> <span class="n">OutOfGasError</span><span class="p">()</span>
-
-    <span class="n">pointer</span> <span class="o">=</span> <span class="mi">96</span>
-    <span class="n">base_data</span> <span class="o">=</span> <span class="n">right_pad_zero_bytes</span><span class="p">(</span>
-        <span class="n">data</span><span class="p">[</span><span class="n">pointer</span> <span class="p">:</span> <span class="n">pointer</span> <span class="o">+</span> <span class="n">base_length</span><span class="p">],</span> <span class="n">base_length</span>
-    <span class="p">)</span>
-    <span class="n">base</span> <span class="o">=</span> <span class="n">Uint</span><span class="o">.</span><span class="n">from_be_bytes</span><span class="p">(</span><span class="n">base_data</span><span class="p">)</span>
-    <span class="n">pointer</span> <span class="o">+=</span> <span class="n">base_length</span>
-    <span class="n">exp_data</span> <span class="o">=</span> <span class="n">right_pad_zero_bytes</span><span class="p">(</span>
-        <span class="n">data</span><span class="p">[</span><span class="n">pointer</span> <span class="p">:</span> <span class="n">pointer</span> <span class="o">+</span> <span class="n">exp_length</span><span class="p">],</span> <span class="n">exp_length</span>
-    <span class="p">)</span>
-    <span class="n">exp</span> <span class="o">=</span> <span class="n">Uint</span><span class="o">.</span><span class="n">from_be_bytes</span><span class="p">(</span><span class="n">exp_data</span><span class="p">)</span>
-    <span class="n">pointer</span> <span class="o">+=</span> <span class="n">exp_length</span>
-    <span class="n">modulus_data</span> <span class="o">=</span> <span class="n">right_pad_zero_bytes</span><span class="p">(</span>
-        <span class="n">data</span><span class="p">[</span><span class="n">pointer</span> <span class="p">:</span> <span class="n">pointer</span> <span class="o">+</span> <span class="n">modulus_length</span><span class="p">],</span> <span class="n">modulus_length</span>
-    <span class="p">)</span>
-    <span class="n">modulus</span> <span class="o">=</span> <span class="n">Uint</span><span class="o">.</span><span class="n">from_be_bytes</span><span class="p">(</span><span class="n">modulus_data</span><span class="p">)</span>
-
-    <span class="n">adjusted_exp_length</span> <span class="o">=</span> <span class="n">Uint</span><span class="p">(</span>
-        <span class="nb">max</span><span class="p">(</span><span class="n">adjusted_exp_length</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">exp</span><span class="o">.</span><span class="n">bit_length</span><span class="p">())</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
-    <span class="p">)</span>
-    <span class="n">gas_used</span> <span class="o">=</span> <span class="n">mult_complexity</span> <span class="o">*</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">adjusted_exp_length</span><span class="p">)</span> <span class="o">//</span> <span class="n">GQUADDIVISOR</span>
-
-    <span class="c1"># NOTE: It is in principle possible for the conversion to U256 to overflow</span>
-    <span class="c1"># here. However, for this to happen without triggering the earlier check</span>
-    <span class="c1"># would require providing more than 2**250 gas, which is obviously</span>
-    <span class="c1"># not realistic.</span>
-    <span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span> <span class="o">=</span> <span class="n">subtract_gas</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span><span class="p">,</span> <span class="n">U256</span><span class="p">(</span><span class="n">gas_used</span><span class="p">))</span>
     <span class="k">if</span> <span class="n">modulus</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
         <span class="n">evm</span><span class="o">.</span><span class="n">output</span> <span class="o">=</span> <span class="n">Bytes</span><span class="p">(</span><span class="sa">b</span><span class="s2">&quot;</span><span class="se">\x00</span><span class="s2">&quot;</span><span class="p">)</span> <span class="o">*</span> <span class="n">modulus_length</span>
     <span class="k">else</span><span class="p">:</span>

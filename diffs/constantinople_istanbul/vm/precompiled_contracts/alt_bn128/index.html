@@ -289,13 +289,19 @@
 </dd></dl>
 
 <pre class="literal-block">def alt_bn128_add(evm: Evm) -&gt; None:
-    x0_bytes = right_pad_zero_bytes(evm.message.data[:32], 32)
+    data = evm.message.data
+
+    # GAS
+    charge_gas(evm, <span class="change-replaced">Uint(500))</span><span class="change-replacement">Uint(150))</span>
+
+    # OPERATION
+    x0_bytes = buffer_read(data, U256(0), U256(32))
     x0_value = U256.from_be_bytes(x0_bytes)
-    y0_bytes = right_pad_zero_bytes(evm.message.data[32:64], 32)
+    y0_bytes = buffer_read(data, U256(32), U256(32))
     y0_value = U256.from_be_bytes(y0_bytes)
-    x1_bytes = right_pad_zero_bytes(evm.message.data[64:96], 32)
+    x1_bytes = buffer_read(data, U256(64), U256(32))
     x1_value = U256.from_be_bytes(x1_bytes)
-    y1_bytes = right_pad_zero_bytes(evm.message.data[96:128], 32)
+    y1_bytes = buffer_read(data, U256(96), U256(32))
     y1_value = U256.from_be_bytes(y1_bytes)
 
     for i in (x0_value, y0_value, x1_value, y1_value):
@@ -310,7 +316,6 @@
 
     p = p0 + p1
 
-    evm.gas_left = subtract_gas(evm.gas_left, <span class="change-replaced">U256(500))</span><span class="change-replacement">U256(150))</span>
     evm.output = p.x.to_be_bytes32() + p.y.to_be_bytes32()
 </pre>
 </section>
@@ -328,11 +333,17 @@
 </dd></dl>
 
 <pre class="literal-block">def alt_bn128_mul(evm: Evm) -&gt; None:
-    x0_bytes = right_pad_zero_bytes(evm.message.data[:32], 32)
+    data = evm.message.data
+
+    # GAS
+    charge_gas(evm, <span class="change-replaced">Uint(40000))</span><span class="change-replacement">Uint(6000))</span>
+
+    # OPERATION
+    x0_bytes = buffer_read(data, U256(0), U256(32))
     x0_value = U256.from_be_bytes(x0_bytes)
-    y0_bytes = right_pad_zero_bytes(evm.message.data[32:64], 32)
+    y0_bytes = buffer_read(data, U256(32), U256(32))
     y0_value = U256.from_be_bytes(y0_bytes)
-    n = U256.from_be_bytes(right_pad_zero_bytes(evm.message.data[64:96], 32))
+    n = U256.from_be_bytes(buffer_read(data, U256(64), U256(32)))
 
     for i in (x0_value, y0_value):
         if i &gt;= ALT_BN128_PRIME:
@@ -345,7 +356,6 @@
 
     p = p0.mul_by(n)
 
-    evm.gas_left = subtract_gas(evm.gas_left, <span class="change-replaced">U256(40000))</span><span class="change-replacement">U256(6000))</span>
     evm.output = p.x.to_be_bytes32() + p.y.to_be_bytes32()
 </pre>
 </section>
@@ -363,17 +373,20 @@
 </dd></dl>
 
 <pre class="literal-block">def alt_bn128_pairing_check(evm: Evm) -&gt; None:
-    if len(evm.message.data) % 192 != 0:
+    data = evm.message.data
+
+    # GAS
+    charge_gas(evm, <span class="change-replaced">Uint(80000</span><span class="change-replacement">Uint(34000</span> * (len(data) // 192) + <span class="change-replaced">100000))</span><span class="change-replacement">45000))</span>
+
+    # OPERATION
+    if len(data) % 192 != 0:
         raise OutOfGasError
-    evm.gas_left = subtract_gas(
-        evm.gas_left, <span class="change-replaced">U256(80000</span><span class="change-replacement">U256(34000</span> * (len(evm.message.data) // 192) + <span class="change-replaced">100000)</span><span class="change-replacement">45000)</span>
-    )
     result = BNF12.from_int(1)
-    for i in range(len(evm.message.data) // 192):
+    for i in range(len(data) // 192):
         values = []
         for j in range(6):
             value = U256.from_be_bytes(
-                evm.message.data[i * 192 + 32 * j : i * 192 + 32 * (j + 1)]
+                data[i * 192 + 32 * j : i * 192 + 32 * (j + 1)]
             )
             if value &gt;= ALT_BN128_PRIME:
                 raise OutOfGasError

@@ -332,18 +332,12 @@
 
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">ripemd160</span><span class="p">(</span><span class="n">evm</span><span class="p">:</span> <span class="n">Evm</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
     <span class="n">data</span> <span class="o">=</span> <span class="n">evm</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">data</span>
+
+    <span class="c1"># GAS</span>
     <span class="n">word_count</span> <span class="o">=</span> <span class="n">ceil32</span><span class="p">(</span><span class="n">Uint</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)))</span> <span class="o">//</span> <span class="mi">32</span>
-    <span class="n">word_count_gas_cost</span> <span class="o">=</span> <span class="n">u256_safe_multiply</span><span class="p">(</span>
-        <span class="n">word_count</span><span class="p">,</span>
-        <span class="n">GAS_RIPEMD160_WORD</span><span class="p">,</span>
-        <span class="n">exception_type</span><span class="o">=</span><span class="n">OutOfGasError</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="n">total_gas_cost</span> <span class="o">=</span> <span class="n">u256_safe_add</span><span class="p">(</span>
-        <span class="n">GAS_RIPEMD160</span><span class="p">,</span>
-        <span class="n">word_count_gas_cost</span><span class="p">,</span>
-        <span class="n">exception_type</span><span class="o">=</span><span class="n">OutOfGasError</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span> <span class="o">=</span> <span class="n">subtract_gas</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span><span class="p">,</span> <span class="n">total_gas_cost</span><span class="p">)</span>
+    <span class="n">charge_gas</span><span class="p">(</span><span class="n">evm</span><span class="p">,</span> <span class="n">GAS_RIPEMD160</span> <span class="o">+</span> <span class="n">GAS_RIPEMD160_WORD</span> <span class="o">*</span> <span class="n">word_count</span><span class="p">)</span>
+
+    <span class="c1"># OPERATION</span>
     <span class="n">hash_bytes</span> <span class="o">=</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s2">&quot;ripemd160&quot;</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span><span class="o">.</span><span class="n">digest</span><span class="p">()</span>
     <span class="n">padded_hash</span> <span class="o">=</span> <span class="n">left_pad_zero_bytes</span><span class="p">(</span><span class="n">hash_bytes</span><span class="p">,</span> <span class="mi">32</span><span class="p">)</span>
     <span class="n">evm</span><span class="o">.</span><span class="n">output</span> <span class="o">=</span> <span class="n">padded_hash</span>

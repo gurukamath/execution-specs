@@ -378,14 +378,19 @@ on the stack.</p>
 </dd></dl>
 
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">add</span><span class="p">(</span><span class="n">evm</span><span class="p">:</span> <span class="n">Evm</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span> <span class="o">=</span> <span class="n">subtract_gas</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span><span class="p">,</span> <span class="n">GAS_VERY_LOW</span><span class="p">)</span>
-
+    <span class="c1"># STACK</span>
     <span class="n">x</span> <span class="o">=</span> <span class="n">pop</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">)</span>
     <span class="n">y</span> <span class="o">=</span> <span class="n">pop</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">)</span>
+
+    <span class="c1"># GAS</span>
+    <span class="n">charge_gas</span><span class="p">(</span><span class="n">evm</span><span class="p">,</span> <span class="n">GAS_VERY_LOW</span><span class="p">)</span>
+
+    <span class="c1"># OPERATION</span>
     <span class="n">result</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">wrapping_add</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
 
     <span class="n">push</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
 
+    <span class="c1"># PROGRAM COUNTER</span>
     <span class="n">evm</span><span class="o">.</span><span class="n">pc</span> <span class="o">+=</span> <span class="mi">1</span>
 </pre></div>
 </div>
@@ -411,14 +416,19 @@ on the stack.</p>
 </dd></dl>
 
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">sub</span><span class="p">(</span><span class="n">evm</span><span class="p">:</span> <span class="n">Evm</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span> <span class="o">=</span> <span class="n">subtract_gas</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span><span class="p">,</span> <span class="n">GAS_VERY_LOW</span><span class="p">)</span>
-
+    <span class="c1"># STACK</span>
     <span class="n">x</span> <span class="o">=</span> <span class="n">pop</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">)</span>
     <span class="n">y</span> <span class="o">=</span> <span class="n">pop</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">)</span>
+
+    <span class="c1"># GAS</span>
+    <span class="n">charge_gas</span><span class="p">(</span><span class="n">evm</span><span class="p">,</span> <span class="n">GAS_VERY_LOW</span><span class="p">)</span>
+
+    <span class="c1"># OPERATION</span>
     <span class="n">result</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">wrapping_sub</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
 
     <span class="n">push</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
 
+    <span class="c1"># PROGRAM COUNTER</span>
     <span class="n">evm</span><span class="o">.</span><span class="n">pc</span> <span class="o">+=</span> <span class="mi">1</span>
 </pre></div>
 </div>
@@ -444,14 +454,19 @@ on the stack.</p>
 </dd></dl>
 
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">mul</span><span class="p">(</span><span class="n">evm</span><span class="p">:</span> <span class="n">Evm</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span> <span class="o">=</span> <span class="n">subtract_gas</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span><span class="p">,</span> <span class="n">GAS_LOW</span><span class="p">)</span>
-
+    <span class="c1"># STACK</span>
     <span class="n">x</span> <span class="o">=</span> <span class="n">pop</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">)</span>
     <span class="n">y</span> <span class="o">=</span> <span class="n">pop</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">)</span>
+
+    <span class="c1"># GAS</span>
+    <span class="n">charge_gas</span><span class="p">(</span><span class="n">evm</span><span class="p">,</span> <span class="n">GAS_LOW</span><span class="p">)</span>
+
+    <span class="c1"># OPERATION</span>
     <span class="n">result</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">wrapping_mul</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
 
     <span class="n">push</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
 
+    <span class="c1"># PROGRAM COUNTER</span>
     <span class="n">evm</span><span class="o">.</span><span class="n">pc</span> <span class="o">+=</span> <span class="mi">1</span>
 </pre></div>
 </div>
@@ -477,10 +492,14 @@ back on the stack.</p>
 </dd></dl>
 
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">div</span><span class="p">(</span><span class="n">evm</span><span class="p">:</span> <span class="n">Evm</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span> <span class="o">=</span> <span class="n">subtract_gas</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span><span class="p">,</span> <span class="n">GAS_LOW</span><span class="p">)</span>
-
+    <span class="c1"># STACK</span>
     <span class="n">dividend</span> <span class="o">=</span> <span class="n">pop</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">)</span>
     <span class="n">divisor</span> <span class="o">=</span> <span class="n">pop</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">)</span>
+
+    <span class="c1"># GAS</span>
+    <span class="n">charge_gas</span><span class="p">(</span><span class="n">evm</span><span class="p">,</span> <span class="n">GAS_LOW</span><span class="p">)</span>
+
+    <span class="c1"># OPERATION</span>
     <span class="k">if</span> <span class="n">divisor</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
         <span class="n">quotient</span> <span class="o">=</span> <span class="n">U256</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
@@ -488,6 +507,7 @@ back on the stack.</p>
 
     <span class="n">push</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">,</span> <span class="n">quotient</span><span class="p">)</span>
 
+    <span class="c1"># PROGRAM COUNTER</span>
     <span class="n">evm</span><span class="o">.</span><span class="n">pc</span> <span class="o">+=</span> <span class="mi">1</span>
 </pre></div>
 </div>
@@ -513,11 +533,14 @@ result back on the stack.</p>
 </dd></dl>
 
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">sdiv</span><span class="p">(</span><span class="n">evm</span><span class="p">:</span> <span class="n">Evm</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span> <span class="o">=</span> <span class="n">subtract_gas</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span><span class="p">,</span> <span class="n">GAS_LOW</span><span class="p">)</span>
-
+    <span class="c1"># STACK</span>
     <span class="n">dividend</span> <span class="o">=</span> <span class="n">pop</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">)</span><span class="o">.</span><span class="n">to_signed</span><span class="p">()</span>
     <span class="n">divisor</span> <span class="o">=</span> <span class="n">pop</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">)</span><span class="o">.</span><span class="n">to_signed</span><span class="p">()</span>
 
+    <span class="c1"># GAS</span>
+    <span class="n">charge_gas</span><span class="p">(</span><span class="n">evm</span><span class="p">,</span> <span class="n">GAS_LOW</span><span class="p">)</span>
+
+    <span class="c1"># OPERATION</span>
     <span class="k">if</span> <span class="n">divisor</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
         <span class="n">quotient</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="k">elif</span> <span class="n">dividend</span> <span class="o">==</span> <span class="o">-</span><span class="n">U255_CEIL_VALUE</span> <span class="ow">and</span> <span class="n">divisor</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
@@ -528,6 +551,7 @@ result back on the stack.</p>
 
     <span class="n">push</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">,</span> <span class="n">U256</span><span class="o">.</span><span class="n">from_signed</span><span class="p">(</span><span class="n">quotient</span><span class="p">))</span>
 
+    <span class="c1"># PROGRAM COUNTER</span>
     <span class="n">evm</span><span class="o">.</span><span class="n">pc</span> <span class="o">+=</span> <span class="mi">1</span>
 </pre></div>
 </div>
@@ -553,10 +577,14 @@ back on the stack.</p>
 </dd></dl>
 
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">mod</span><span class="p">(</span><span class="n">evm</span><span class="p">:</span> <span class="n">Evm</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span> <span class="o">=</span> <span class="n">subtract_gas</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span><span class="p">,</span> <span class="n">GAS_LOW</span><span class="p">)</span>
-
+    <span class="c1"># STACK</span>
     <span class="n">x</span> <span class="o">=</span> <span class="n">pop</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">)</span>
     <span class="n">y</span> <span class="o">=</span> <span class="n">pop</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">)</span>
+
+    <span class="c1"># GAS</span>
+    <span class="n">charge_gas</span><span class="p">(</span><span class="n">evm</span><span class="p">,</span> <span class="n">GAS_LOW</span><span class="p">)</span>
+
+    <span class="c1"># OPERATION</span>
     <span class="k">if</span> <span class="n">y</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
         <span class="n">remainder</span> <span class="o">=</span> <span class="n">U256</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
@@ -564,6 +592,7 @@ back on the stack.</p>
 
     <span class="n">push</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">,</span> <span class="n">remainder</span><span class="p">)</span>
 
+    <span class="c1"># PROGRAM COUNTER</span>
     <span class="n">evm</span><span class="o">.</span><span class="n">pc</span> <span class="o">+=</span> <span class="mi">1</span>
 </pre></div>
 </div>
@@ -589,11 +618,14 @@ result back on the stack.</p>
 </dd></dl>
 
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">smod</span><span class="p">(</span><span class="n">evm</span><span class="p">:</span> <span class="n">Evm</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span> <span class="o">=</span> <span class="n">subtract_gas</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span><span class="p">,</span> <span class="n">GAS_LOW</span><span class="p">)</span>
-
+    <span class="c1"># STACK</span>
     <span class="n">x</span> <span class="o">=</span> <span class="n">pop</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">)</span><span class="o">.</span><span class="n">to_signed</span><span class="p">()</span>
     <span class="n">y</span> <span class="o">=</span> <span class="n">pop</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">)</span><span class="o">.</span><span class="n">to_signed</span><span class="p">()</span>
 
+    <span class="c1"># GAS</span>
+    <span class="n">charge_gas</span><span class="p">(</span><span class="n">evm</span><span class="p">,</span> <span class="n">GAS_LOW</span><span class="p">)</span>
+
+    <span class="c1"># OPERATION</span>
     <span class="k">if</span> <span class="n">y</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
         <span class="n">remainder</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="k">else</span><span class="p">:</span>
@@ -601,6 +633,7 @@ result back on the stack.</p>
 
     <span class="n">push</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">,</span> <span class="n">U256</span><span class="o">.</span><span class="n">from_signed</span><span class="p">(</span><span class="n">remainder</span><span class="p">))</span>
 
+    <span class="c1"># PROGRAM COUNTER</span>
     <span class="n">evm</span><span class="o">.</span><span class="n">pc</span> <span class="o">+=</span> <span class="mi">1</span>
 </pre></div>
 </div>
@@ -626,12 +659,15 @@ result back on the stack.</p>
 </dd></dl>
 
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">addmod</span><span class="p">(</span><span class="n">evm</span><span class="p">:</span> <span class="n">Evm</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span> <span class="o">=</span> <span class="n">subtract_gas</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span><span class="p">,</span> <span class="n">GAS_MID</span><span class="p">)</span>
-
+    <span class="c1"># STACK</span>
     <span class="n">x</span> <span class="o">=</span> <span class="n">Uint</span><span class="p">(</span><span class="n">pop</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">))</span>
     <span class="n">y</span> <span class="o">=</span> <span class="n">Uint</span><span class="p">(</span><span class="n">pop</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">))</span>
     <span class="n">z</span> <span class="o">=</span> <span class="n">Uint</span><span class="p">(</span><span class="n">pop</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">))</span>
 
+    <span class="c1"># GAS</span>
+    <span class="n">charge_gas</span><span class="p">(</span><span class="n">evm</span><span class="p">,</span> <span class="n">GAS_MID</span><span class="p">)</span>
+
+    <span class="c1"># OPERATION</span>
     <span class="k">if</span> <span class="n">z</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
         <span class="n">result</span> <span class="o">=</span> <span class="n">U256</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
@@ -639,6 +675,7 @@ result back on the stack.</p>
 
     <span class="n">push</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
 
+    <span class="c1"># PROGRAM COUNTER</span>
     <span class="n">evm</span><span class="o">.</span><span class="n">pc</span> <span class="o">+=</span> <span class="mi">1</span>
 </pre></div>
 </div>
@@ -664,12 +701,15 @@ the result back on the stack.</p>
 </dd></dl>
 
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">mulmod</span><span class="p">(</span><span class="n">evm</span><span class="p">:</span> <span class="n">Evm</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span> <span class="o">=</span> <span class="n">subtract_gas</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span><span class="p">,</span> <span class="n">GAS_MID</span><span class="p">)</span>
-
+    <span class="c1"># STACK</span>
     <span class="n">x</span> <span class="o">=</span> <span class="n">Uint</span><span class="p">(</span><span class="n">pop</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">))</span>
     <span class="n">y</span> <span class="o">=</span> <span class="n">Uint</span><span class="p">(</span><span class="n">pop</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">))</span>
     <span class="n">z</span> <span class="o">=</span> <span class="n">Uint</span><span class="p">(</span><span class="n">pop</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">))</span>
 
+    <span class="c1"># GAS</span>
+    <span class="n">charge_gas</span><span class="p">(</span><span class="n">evm</span><span class="p">,</span> <span class="n">GAS_MID</span><span class="p">)</span>
+
+    <span class="c1"># OPERATION</span>
     <span class="k">if</span> <span class="n">z</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
         <span class="n">result</span> <span class="o">=</span> <span class="n">U256</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
@@ -677,6 +717,7 @@ the result back on the stack.</p>
 
     <span class="n">push</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
 
+    <span class="c1"># PROGRAM COUNTER</span>
     <span class="n">evm</span><span class="o">.</span><span class="n">pc</span> <span class="o">+=</span> <span class="mi">1</span>
 </pre></div>
 </div>
@@ -699,22 +740,25 @@ the stack.</p>
 </dd></dl>
 
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">exp</span><span class="p">(</span><span class="n">evm</span><span class="p">:</span> <span class="n">Evm</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="c1"># STACK</span>
     <span class="n">base</span> <span class="o">=</span> <span class="n">Uint</span><span class="p">(</span><span class="n">pop</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">))</span>
     <span class="n">exponent</span> <span class="o">=</span> <span class="n">Uint</span><span class="p">(</span><span class="n">pop</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">))</span>
 
-    <span class="n">gas_used</span> <span class="o">=</span> <span class="n">GAS_EXPONENTIATION</span>
-    <span class="k">if</span> <span class="n">exponent</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="c1"># This is equivalent to 1 + floor(log(y, 256)). But in python the log</span>
-        <span class="c1"># function is inaccurate leading to wrong results.</span>
-        <span class="n">exponent_bits</span> <span class="o">=</span> <span class="n">exponent</span><span class="o">.</span><span class="n">bit_length</span><span class="p">()</span>
-        <span class="n">exponent_bytes</span> <span class="o">=</span> <span class="p">(</span><span class="n">exponent_bits</span> <span class="o">+</span> <span class="mi">7</span><span class="p">)</span> <span class="o">//</span> <span class="mi">8</span>
-        <span class="n">gas_used</span> <span class="o">+=</span> <span class="n">GAS_EXPONENTIATION_PER_BYTE</span> <span class="o">*</span> <span class="n">exponent_bytes</span>
-    <span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span> <span class="o">=</span> <span class="n">subtract_gas</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span><span class="p">,</span> <span class="n">gas_used</span><span class="p">)</span>
+    <span class="c1"># GAS</span>
+    <span class="c1"># This is equivalent to 1 + floor(log(y, 256)). But in python the log</span>
+    <span class="c1"># function is inaccurate leading to wrong results.</span>
+    <span class="n">exponent_bits</span> <span class="o">=</span> <span class="n">exponent</span><span class="o">.</span><span class="n">bit_length</span><span class="p">()</span>
+    <span class="n">exponent_bytes</span> <span class="o">=</span> <span class="p">(</span><span class="n">exponent_bits</span> <span class="o">+</span> <span class="mi">7</span><span class="p">)</span> <span class="o">//</span> <span class="mi">8</span>
+    <span class="n">charge_gas</span><span class="p">(</span>
+        <span class="n">evm</span><span class="p">,</span> <span class="n">GAS_EXPONENTIATION</span> <span class="o">+</span> <span class="n">GAS_EXPONENTIATION_PER_BYTE</span> <span class="o">*</span> <span class="n">exponent_bytes</span>
+    <span class="p">)</span>
 
+    <span class="c1"># OPERATION</span>
     <span class="n">result</span> <span class="o">=</span> <span class="n">U256</span><span class="p">(</span><span class="nb">pow</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="n">exponent</span><span class="p">,</span> <span class="n">U256_CEIL_VALUE</span><span class="p">))</span>
 
     <span class="n">push</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
 
+    <span class="c1"># PROGRAM COUNTER</span>
     <span class="n">evm</span><span class="o">.</span><span class="n">pc</span> <span class="o">+=</span> <span class="mi">1</span>
 </pre></div>
 </div>
@@ -740,17 +784,19 @@ fits in N bytes to 32 bytes.</p>
 </dd></dl>
 
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">signextend</span><span class="p">(</span><span class="n">evm</span><span class="p">:</span> <span class="n">Evm</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span> <span class="o">=</span> <span class="n">subtract_gas</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span><span class="p">,</span> <span class="n">GAS_LOW</span><span class="p">)</span>
-
-    <span class="c1"># byte_num would be 0-indexed when inserted to the stack.</span>
+    <span class="c1"># STACK</span>
     <span class="n">byte_num</span> <span class="o">=</span> <span class="n">pop</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">)</span>
     <span class="n">value</span> <span class="o">=</span> <span class="n">pop</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">)</span>
 
+    <span class="c1"># GAS</span>
+    <span class="n">charge_gas</span><span class="p">(</span><span class="n">evm</span><span class="p">,</span> <span class="n">GAS_LOW</span><span class="p">)</span>
+
+    <span class="c1"># OPERATION</span>
     <span class="k">if</span> <span class="n">byte_num</span> <span class="o">&gt;</span> <span class="mi">31</span><span class="p">:</span>
         <span class="c1"># Can&#39;t extend any further</span>
         <span class="n">result</span> <span class="o">=</span> <span class="n">value</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="c1"># U256(0).to_be_bytes() gives b&#39;&#39; instead b&#39;\x00&#39;. # noqa: SC100</span>
+        <span class="c1"># U256(0).to_be_bytes() gives b&#39;&#39; instead b&#39;\x00&#39;.</span>
         <span class="n">value_bytes</span> <span class="o">=</span> <span class="nb">bytes</span><span class="p">(</span><span class="n">value</span><span class="o">.</span><span class="n">to_be_bytes32</span><span class="p">())</span>
         <span class="c1"># Now among the obtained value bytes, consider only</span>
         <span class="c1"># N `least significant bytes`, where N is `byte_num + 1`.</span>
@@ -766,6 +812,7 @@ fits in N bytes to 32 bytes.</p>
 
     <span class="n">push</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
 
+    <span class="c1"># PROGRAM COUNTER</span>
     <span class="n">evm</span><span class="o">.</span><span class="n">pc</span> <span class="o">+=</span> <span class="mi">1</span>
 </pre></div>
 </div>

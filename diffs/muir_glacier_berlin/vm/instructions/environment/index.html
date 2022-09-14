@@ -348,9 +348,16 @@
 </dd></dl>
 
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">address</span><span class="p">(</span><span class="n">evm</span><span class="p">:</span> <span class="n">Evm</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span> <span class="o">=</span> <span class="n">subtract_gas</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span><span class="p">,</span> <span class="n">GAS_BASE</span><span class="p">)</span>
+    <span class="c1"># STACK</span>
+    <span class="k">pass</span>
+
+    <span class="c1"># GAS</span>
+    <span class="n">charge_gas</span><span class="p">(</span><span class="n">evm</span><span class="p">,</span> <span class="n">GAS_BASE</span><span class="p">)</span>
+
+    <span class="c1"># OPERATION</span>
     <span class="n">push</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">,</span> <span class="n">U256</span><span class="o">.</span><span class="n">from_be_bytes</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">current_target</span><span class="p">))</span>
 
+    <span class="c1"># PROGRAM COUNTER</span>
     <span class="n">evm</span><span class="o">.</span><span class="n">pc</span> <span class="o">+=</span> <span class="mi">1</span>
 </pre></div>
 </div>
@@ -375,23 +382,23 @@
 </dd></dl>
 
 <pre class="literal-block">def balance(evm: Evm) -&gt; None:
-    # TODO: There are no test cases against this function. Need to write
-    # custom test cases.
-    <span class="change-added">address = to_address(pop(evm.stack))
+    # STACK
+    address = to_address(pop(evm.stack))
 
-    if address in evm.accessed_addresses:
-        </span>evm.gas_left = subtract_gas(evm.gas_left, <span class="change-replaced">GAS_BALANCE)
-
-    address</span><span class="change-replacement">GAS_WARM_ACCESS)
+    # GAS
+    <span class="change-added">if address in evm.accessed_addresses:
+        </span>charge_gas(evm, <span class="change-replaced">GAS_BALANCE)</span><span class="change-replacement">GAS_WARM_ACCESS)
     else:
         evm.accessed_addresses.add(address)
-        evm.gas_left</span> = <span class="change-replaced">to_address(pop(evm.stack))</span><span class="change-replacement">subtract_gas(evm.gas_left, GAS_COLD_ACCOUNT_ACCESS)</span>
+        charge_gas(evm, GAS_COLD_ACCOUNT_ACCESS)</span>
 
+    # OPERATION
     # Non-existent accounts default to EMPTY_ACCOUNT, which has balance 0.
     balance = get_account(evm.env.state, address).balance
 
     push(evm.stack, balance)
 
+    # PROGRAM COUNTER
     evm.pc += 1
 </pre>
 </section>
@@ -413,9 +420,16 @@ The origin address can only be an EOA.</p>
 </dd></dl>
 
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">origin</span><span class="p">(</span><span class="n">evm</span><span class="p">:</span> <span class="n">Evm</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span> <span class="o">=</span> <span class="n">subtract_gas</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span><span class="p">,</span> <span class="n">GAS_BASE</span><span class="p">)</span>
+    <span class="c1"># STACK</span>
+    <span class="k">pass</span>
+
+    <span class="c1"># GAS</span>
+    <span class="n">charge_gas</span><span class="p">(</span><span class="n">evm</span><span class="p">,</span> <span class="n">GAS_BASE</span><span class="p">)</span>
+
+    <span class="c1"># OPERATION</span>
     <span class="n">push</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">,</span> <span class="n">U256</span><span class="o">.</span><span class="n">from_be_bytes</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">origin</span><span class="p">))</span>
 
+    <span class="c1"># PROGRAM COUNTER</span>
     <span class="n">evm</span><span class="o">.</span><span class="n">pc</span> <span class="o">+=</span> <span class="mi">1</span>
 </pre></div>
 </div>
@@ -437,9 +451,16 @@ The origin address can only be an EOA.</p>
 </dd></dl>
 
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">caller</span><span class="p">(</span><span class="n">evm</span><span class="p">:</span> <span class="n">Evm</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span> <span class="o">=</span> <span class="n">subtract_gas</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span><span class="p">,</span> <span class="n">GAS_BASE</span><span class="p">)</span>
+    <span class="c1"># STACK</span>
+    <span class="k">pass</span>
+
+    <span class="c1"># GAS</span>
+    <span class="n">charge_gas</span><span class="p">(</span><span class="n">evm</span><span class="p">,</span> <span class="n">GAS_BASE</span><span class="p">)</span>
+
+    <span class="c1"># OPERATION</span>
     <span class="n">push</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">,</span> <span class="n">U256</span><span class="o">.</span><span class="n">from_be_bytes</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">caller</span><span class="p">))</span>
 
+    <span class="c1"># PROGRAM COUNTER</span>
     <span class="n">evm</span><span class="o">.</span><span class="n">pc</span> <span class="o">+=</span> <span class="mi">1</span>
 </pre></div>
 </div>
@@ -461,9 +482,16 @@ The origin address can only be an EOA.</p>
 </dd></dl>
 
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">callvalue</span><span class="p">(</span><span class="n">evm</span><span class="p">:</span> <span class="n">Evm</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span> <span class="o">=</span> <span class="n">subtract_gas</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span><span class="p">,</span> <span class="n">GAS_BASE</span><span class="p">)</span>
+    <span class="c1"># STACK</span>
+    <span class="k">pass</span>
+
+    <span class="c1"># GAS</span>
+    <span class="n">charge_gas</span><span class="p">(</span><span class="n">evm</span><span class="p">,</span> <span class="n">GAS_BASE</span><span class="p">)</span>
+
+    <span class="c1"># OPERATION</span>
     <span class="n">push</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">,</span> <span class="n">evm</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
 
+    <span class="c1"># PROGRAM COUNTER</span>
     <span class="n">evm</span><span class="o">.</span><span class="n">pc</span> <span class="o">+=</span> <span class="mi">1</span>
 </pre></div>
 </div>
@@ -489,17 +517,18 @@ environment onto the stack.</p>
 </dd></dl>
 
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">calldataload</span><span class="p">(</span><span class="n">evm</span><span class="p">:</span> <span class="n">Evm</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span> <span class="o">=</span> <span class="n">subtract_gas</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span><span class="p">,</span> <span class="n">GAS_VERY_LOW</span><span class="p">)</span>
+    <span class="c1"># STACK</span>
+    <span class="n">start_index</span> <span class="o">=</span> <span class="n">pop</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">)</span>
 
-    <span class="c1"># Converting start_index to Uint from U256 as start_index + 32 can</span>
-    <span class="c1"># overflow U256.</span>
-    <span class="n">start_index</span> <span class="o">=</span> <span class="n">Uint</span><span class="p">(</span><span class="n">pop</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">))</span>
-    <span class="n">value</span> <span class="o">=</span> <span class="n">evm</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">start_index</span> <span class="p">:</span> <span class="n">start_index</span> <span class="o">+</span> <span class="mi">32</span><span class="p">]</span>
-    <span class="c1"># Right pad with 0 so that there are overall 32 bytes.</span>
-    <span class="n">value</span> <span class="o">=</span> <span class="n">right_pad_zero_bytes</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="mi">32</span><span class="p">)</span>
+    <span class="c1"># GAS</span>
+    <span class="n">charge_gas</span><span class="p">(</span><span class="n">evm</span><span class="p">,</span> <span class="n">GAS_VERY_LOW</span><span class="p">)</span>
+
+    <span class="c1"># OPERATION</span>
+    <span class="n">value</span> <span class="o">=</span> <span class="n">buffer_read</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">start_index</span><span class="p">,</span> <span class="n">U256</span><span class="p">(</span><span class="mi">32</span><span class="p">))</span>
 
     <span class="n">push</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">,</span> <span class="n">U256</span><span class="o">.</span><span class="n">from_be_bytes</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
 
+    <span class="c1"># PROGRAM COUNTER</span>
     <span class="n">evm</span><span class="o">.</span><span class="n">pc</span> <span class="o">+=</span> <span class="mi">1</span>
 </pre></div>
 </div>
@@ -521,9 +550,16 @@ environment onto the stack.</p>
 </dd></dl>
 
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">calldatasize</span><span class="p">(</span><span class="n">evm</span><span class="p">:</span> <span class="n">Evm</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span> <span class="o">=</span> <span class="n">subtract_gas</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span><span class="p">,</span> <span class="n">GAS_BASE</span><span class="p">)</span>
+    <span class="c1"># STACK</span>
+    <span class="k">pass</span>
+
+    <span class="c1"># GAS</span>
+    <span class="n">charge_gas</span><span class="p">(</span><span class="n">evm</span><span class="p">,</span> <span class="n">GAS_BASE</span><span class="p">)</span>
+
+    <span class="c1"># OPERATION</span>
     <span class="n">push</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">,</span> <span class="n">U256</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">data</span><span class="p">)))</span>
 
+    <span class="c1"># PROGRAM COUNTER</span>
     <span class="n">evm</span><span class="o">.</span><span class="n">pc</span> <span class="o">+=</span> <span class="mi">1</span>
 </pre></div>
 </div>
@@ -547,42 +583,23 @@ to store the data.</p>
 </dd></dl>
 
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">calldatacopy</span><span class="p">(</span><span class="n">evm</span><span class="p">:</span> <span class="n">Evm</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="c1"># Converting below to Uint as though the start indices may belong to U256,</span>
-    <span class="c1"># the ending indices may overflow U256.</span>
-    <span class="n">memory_start_index</span> <span class="o">=</span> <span class="n">Uint</span><span class="p">(</span><span class="n">pop</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">))</span>
-    <span class="n">data_start_index</span> <span class="o">=</span> <span class="n">Uint</span><span class="p">(</span><span class="n">pop</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">))</span>
+    <span class="c1"># STACK</span>
+    <span class="n">memory_start_index</span> <span class="o">=</span> <span class="n">pop</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">)</span>
+    <span class="n">data_start_index</span> <span class="o">=</span> <span class="n">pop</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">)</span>
     <span class="n">size</span> <span class="o">=</span> <span class="n">pop</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">)</span>
 
+    <span class="c1"># GAS</span>
     <span class="n">words</span> <span class="o">=</span> <span class="n">ceil32</span><span class="p">(</span><span class="n">Uint</span><span class="p">(</span><span class="n">size</span><span class="p">))</span> <span class="o">//</span> <span class="mi">32</span>
-    <span class="n">copy_gas_cost</span> <span class="o">=</span> <span class="n">u256_safe_multiply</span><span class="p">(</span>
-        <span class="n">GAS_COPY</span><span class="p">,</span>
-        <span class="n">words</span><span class="p">,</span>
-        <span class="n">exception_type</span><span class="o">=</span><span class="n">OutOfGasError</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="n">memory_extend_gas_cost</span> <span class="o">=</span> <span class="n">calculate_gas_extend_memory</span><span class="p">(</span>
-        <span class="n">evm</span><span class="o">.</span><span class="n">memory</span><span class="p">,</span> <span class="n">memory_start_index</span><span class="p">,</span> <span class="n">size</span>
-    <span class="p">)</span>
-    <span class="n">total_gas_cost</span> <span class="o">=</span> <span class="n">u256_safe_add</span><span class="p">(</span>
-        <span class="n">GAS_VERY_LOW</span><span class="p">,</span>
-        <span class="n">copy_gas_cost</span><span class="p">,</span>
-        <span class="n">memory_extend_gas_cost</span><span class="p">,</span>
-        <span class="n">exception_type</span><span class="o">=</span><span class="n">OutOfGasError</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span> <span class="o">=</span> <span class="n">subtract_gas</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span><span class="p">,</span> <span class="n">total_gas_cost</span><span class="p">)</span>
+    <span class="n">copy_gas_cost</span> <span class="o">=</span> <span class="n">GAS_COPY</span> <span class="o">*</span> <span class="n">words</span>
+    <span class="n">extend_memory</span><span class="p">(</span><span class="n">evm</span><span class="p">,</span> <span class="n">memory_start_index</span><span class="p">,</span> <span class="n">size</span><span class="p">)</span>
+    <span class="n">charge_gas</span><span class="p">(</span><span class="n">evm</span><span class="p">,</span> <span class="n">GAS_VERY_LOW</span> <span class="o">+</span> <span class="n">copy_gas_cost</span><span class="p">)</span>
 
-    <span class="n">evm</span><span class="o">.</span><span class="n">pc</span> <span class="o">+=</span> <span class="mi">1</span>
-
-    <span class="k">if</span> <span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="k">return</span>
-
-    <span class="n">extend_memory</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">memory</span><span class="p">,</span> <span class="n">memory_start_index</span><span class="p">,</span> <span class="n">size</span><span class="p">)</span>
-
-    <span class="n">value</span> <span class="o">=</span> <span class="n">evm</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">data_start_index</span> <span class="p">:</span> <span class="n">data_start_index</span> <span class="o">+</span> <span class="n">size</span><span class="p">]</span>
-    <span class="c1"># But it is possible that data_start_index + size won&#39;t exist in evm.data</span>
-    <span class="c1"># in which case we need to right pad the above obtained bytes with 0.</span>
-    <span class="n">value</span> <span class="o">=</span> <span class="n">right_pad_zero_bytes</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">size</span><span class="p">)</span>
-
+    <span class="c1"># OPERATION</span>
+    <span class="n">value</span> <span class="o">=</span> <span class="n">buffer_read</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">data_start_index</span><span class="p">,</span> <span class="n">size</span><span class="p">)</span>
     <span class="n">memory_write</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">memory</span><span class="p">,</span> <span class="n">memory_start_index</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+
+    <span class="c1"># PROGRAM COUNTER</span>
+    <span class="n">evm</span><span class="o">.</span><span class="n">pc</span> <span class="o">+=</span> <span class="mi">1</span>
 </pre></div>
 </div>
 </section>
@@ -603,9 +620,16 @@ to store the data.</p>
 </dd></dl>
 
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">codesize</span><span class="p">(</span><span class="n">evm</span><span class="p">:</span> <span class="n">Evm</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span> <span class="o">=</span> <span class="n">subtract_gas</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span><span class="p">,</span> <span class="n">GAS_BASE</span><span class="p">)</span>
+    <span class="c1"># STACK</span>
+    <span class="k">pass</span>
+
+    <span class="c1"># GAS</span>
+    <span class="n">charge_gas</span><span class="p">(</span><span class="n">evm</span><span class="p">,</span> <span class="n">GAS_BASE</span><span class="p">)</span>
+
+    <span class="c1"># OPERATION</span>
     <span class="n">push</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">,</span> <span class="n">U256</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">code</span><span class="p">)))</span>
 
+    <span class="c1"># PROGRAM COUNTER</span>
     <span class="n">evm</span><span class="o">.</span><span class="n">pc</span> <span class="o">+=</span> <span class="mi">1</span>
 </pre></div>
 </div>
@@ -629,43 +653,23 @@ to store the data.</p>
 </dd></dl>
 
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">codecopy</span><span class="p">(</span><span class="n">evm</span><span class="p">:</span> <span class="n">Evm</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="c1"># Converting below to Uint as though the start indices may belong to U256,</span>
-    <span class="c1"># the ending indices may not belong to U256.</span>
-    <span class="n">memory_start_index</span> <span class="o">=</span> <span class="n">Uint</span><span class="p">(</span><span class="n">pop</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">))</span>
-    <span class="n">code_start_index</span> <span class="o">=</span> <span class="n">Uint</span><span class="p">(</span><span class="n">pop</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">))</span>
+    <span class="c1"># STACK</span>
+    <span class="n">memory_start_index</span> <span class="o">=</span> <span class="n">pop</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">)</span>
+    <span class="n">code_start_index</span> <span class="o">=</span> <span class="n">pop</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">)</span>
     <span class="n">size</span> <span class="o">=</span> <span class="n">pop</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">)</span>
 
+    <span class="c1"># GAS</span>
     <span class="n">words</span> <span class="o">=</span> <span class="n">ceil32</span><span class="p">(</span><span class="n">Uint</span><span class="p">(</span><span class="n">size</span><span class="p">))</span> <span class="o">//</span> <span class="mi">32</span>
-    <span class="n">copy_gas_cost</span> <span class="o">=</span> <span class="n">u256_safe_multiply</span><span class="p">(</span>
-        <span class="n">GAS_COPY</span><span class="p">,</span>
-        <span class="n">words</span><span class="p">,</span>
-        <span class="n">exception_type</span><span class="o">=</span><span class="n">OutOfGasError</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="n">memory_extend_gas_cost</span> <span class="o">=</span> <span class="n">calculate_gas_extend_memory</span><span class="p">(</span>
-        <span class="n">evm</span><span class="o">.</span><span class="n">memory</span><span class="p">,</span> <span class="n">memory_start_index</span><span class="p">,</span> <span class="n">size</span>
-    <span class="p">)</span>
-    <span class="n">total_gas_cost</span> <span class="o">=</span> <span class="n">u256_safe_add</span><span class="p">(</span>
-        <span class="n">GAS_VERY_LOW</span><span class="p">,</span>
-        <span class="n">copy_gas_cost</span><span class="p">,</span>
-        <span class="n">memory_extend_gas_cost</span><span class="p">,</span>
-        <span class="n">exception_type</span><span class="o">=</span><span class="n">OutOfGasError</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span> <span class="o">=</span> <span class="n">subtract_gas</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span><span class="p">,</span> <span class="n">total_gas_cost</span><span class="p">)</span>
+    <span class="n">copy_gas_cost</span> <span class="o">=</span> <span class="n">GAS_COPY</span> <span class="o">*</span> <span class="n">words</span>
+    <span class="n">extend_memory</span><span class="p">(</span><span class="n">evm</span><span class="p">,</span> <span class="n">memory_start_index</span><span class="p">,</span> <span class="n">size</span><span class="p">)</span>
+    <span class="n">charge_gas</span><span class="p">(</span><span class="n">evm</span><span class="p">,</span> <span class="n">GAS_VERY_LOW</span> <span class="o">+</span> <span class="n">copy_gas_cost</span><span class="p">)</span>
 
-    <span class="n">evm</span><span class="o">.</span><span class="n">pc</span> <span class="o">+=</span> <span class="mi">1</span>
-
-    <span class="k">if</span> <span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="k">return</span>
-
-    <span class="n">extend_memory</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">memory</span><span class="p">,</span> <span class="n">memory_start_index</span><span class="p">,</span> <span class="n">size</span><span class="p">)</span>
-
-    <span class="n">value</span> <span class="o">=</span> <span class="n">evm</span><span class="o">.</span><span class="n">code</span><span class="p">[</span><span class="n">code_start_index</span> <span class="p">:</span> <span class="n">code_start_index</span> <span class="o">+</span> <span class="n">size</span><span class="p">]</span>
-    <span class="c1"># But it is possible that code_start_index + size - 1 won&#39;t exist in</span>
-    <span class="c1"># evm.code in which case we need to right pad the above obtained bytes</span>
-    <span class="c1"># with 0.</span>
-    <span class="n">value</span> <span class="o">=</span> <span class="n">right_pad_zero_bytes</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">size</span><span class="p">)</span>
-
+    <span class="c1"># OPERATION</span>
+    <span class="n">value</span> <span class="o">=</span> <span class="n">buffer_read</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">code</span><span class="p">,</span> <span class="n">code_start_index</span><span class="p">,</span> <span class="n">size</span><span class="p">)</span>
     <span class="n">memory_write</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">memory</span><span class="p">,</span> <span class="n">memory_start_index</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+
+    <span class="c1"># PROGRAM COUNTER</span>
+    <span class="n">evm</span><span class="o">.</span><span class="n">pc</span> <span class="o">+=</span> <span class="mi">1</span>
 </pre></div>
 </div>
 </section>
@@ -686,9 +690,16 @@ to store the data.</p>
 </dd></dl>
 
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">gasprice</span><span class="p">(</span><span class="n">evm</span><span class="p">:</span> <span class="n">Evm</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span> <span class="o">=</span> <span class="n">subtract_gas</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span><span class="p">,</span> <span class="n">GAS_BASE</span><span class="p">)</span>
+    <span class="c1"># STACK</span>
+    <span class="k">pass</span>
+
+    <span class="c1"># GAS</span>
+    <span class="n">charge_gas</span><span class="p">(</span><span class="n">evm</span><span class="p">,</span> <span class="n">GAS_BASE</span><span class="p">)</span>
+
+    <span class="c1"># OPERATION</span>
     <span class="n">push</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">,</span> <span class="n">evm</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">gas_price</span><span class="p">)</span>
 
+    <span class="c1"># PROGRAM COUNTER</span>
     <span class="n">evm</span><span class="o">.</span><span class="n">pc</span> <span class="o">+=</span> <span class="mi">1</span>
 </pre></div>
 </div>
@@ -713,23 +724,23 @@ to store the data.</p>
 </dd></dl>
 
 <pre class="literal-block">def extcodesize(evm: Evm) -&gt; None:
-    # TODO: There are no test cases against this function. Need to write
-    # custom test cases.
-    <span class="change-added">address = to_address(pop(evm.stack))
+    # STACK
+    address = to_address(pop(evm.stack))
 
-    if address in evm.accessed_addresses:
-        </span>evm.gas_left = subtract_gas(evm.gas_left, <span class="change-replaced">GAS_EXTERNAL)
-
-    address</span><span class="change-replacement">GAS_WARM_ACCESS)
+    # GAS
+    <span class="change-added">if address in evm.accessed_addresses:
+        </span>charge_gas(evm, <span class="change-replaced">GAS_EXTERNAL)</span><span class="change-replacement">GAS_WARM_ACCESS)
     else:
         evm.accessed_addresses.add(address)
-        evm.gas_left</span> = <span class="change-replaced">to_address(pop(evm.stack))</span><span class="change-replacement">subtract_gas(evm.gas_left, GAS_COLD_ACCOUNT_ACCESS)</span>
+        charge_gas(evm, GAS_COLD_ACCOUNT_ACCESS)</span>
 
+    # OPERATION
     # Non-existent accounts default to EMPTY_ACCOUNT, which has empty code.
     codesize = U256(len(get_account(evm.env.state, address).code))
 
     push(evm.stack, codesize)
 
+    # PROGRAM COUNTER
     evm.pc += 1
 </pre>
 </section>
@@ -750,54 +761,30 @@ to store the data.</p>
 </dd></dl>
 
 <pre class="literal-block">def extcodecopy(evm: Evm) -&gt; None:
-    # TODO: There are no test cases against this function. Need to write
-    # custom test cases.
-
+    # STACK
     address = to_address(pop(evm.stack))
-
-    memory_start_index = Uint(pop(evm.stack))
-    code_start_index = Uint(pop(evm.stack))
+    memory_start_index = pop(evm.stack)
+    code_start_index = pop(evm.stack)
     size = pop(evm.stack)
 
+    # GAS
     words = ceil32(Uint(size)) // 32
-    copy_gas_cost = u256_safe_multiply(
-        GAS_COPY,
-        words,
-        exception_type=OutOfGasError,
-    )
-    memory_extend_gas_cost = calculate_gas_extend_memory(
-        evm.memory, memory_start_index, size
-    )
+    copy_gas_cost = GAS_COPY * words
+    extend_memory(evm, memory_start_index, size)
     <span class="change-added">if address in evm.accessed_addresses:
-        access_gas_cost = GAS_WARM_ACCESS
-    else:
+        </span>charge_gas(evm, <span class="change-replaced">GAS_EXTERNAL</span><span class="change-replacement">GAS_WARM_ACCESS</span> + copy_gas_cost)
+
+    <span class="change-added">else:
         evm.accessed_addresses.add(address)
-        access_gas_cost = GAS_COLD_ACCOUNT_ACCESS
+        charge_gas(evm, GAS_COLD_ACCOUNT_ACCESS + copy_gas_cost)
 
-    </span>total_gas_cost = u256_safe_add(
-        <span class="change-replaced">GAS_EXTERNAL,</span><span class="change-replacement">access_gas_cost,</span>
-        copy_gas_cost,
-        memory_extend_gas_cost,
-        exception_type=OutOfGasError,
-    )
-    evm.gas_left = subtract_gas(evm.gas_left, total_gas_cost)
-
-    evm.pc += 1
-
-    if size == 0:
-        return
-
-    # Non-existent accounts default to EMPTY_ACCOUNT, which has empty code.
+    </span># OPERATION
     code = get_account(evm.env.state, address).code
-
-    extend_memory(evm.memory, memory_start_index, size)
-
-    value = code[code_start_index : code_start_index + size]
-    # But it is possible that code_start_index + size won't exist in evm.code
-    # in which case we need to right pad the above obtained bytes with 0.
-    value = right_pad_zero_bytes(value, size)
-
+    value = buffer_read(code, code_start_index, size)
     memory_write(evm.memory, memory_start_index, value)
+
+    # PROGRAM COUNTER
+    evm.pc += 1
 </pre>
 </section>
 <section id="returndatasize">
@@ -814,9 +801,16 @@ to store the data.</p>
 </dd></dl>
 
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">returndatasize</span><span class="p">(</span><span class="n">evm</span><span class="p">:</span> <span class="n">Evm</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span> <span class="o">=</span> <span class="n">subtract_gas</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span><span class="p">,</span> <span class="n">GAS_BASE</span><span class="p">)</span>
-    <span class="n">return_size</span> <span class="o">=</span> <span class="n">U256</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">return_data</span><span class="p">))</span>
-    <span class="n">push</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">,</span> <span class="n">return_size</span><span class="p">)</span>
+    <span class="c1"># STACK</span>
+    <span class="k">pass</span>
+
+    <span class="c1"># GAS</span>
+    <span class="n">charge_gas</span><span class="p">(</span><span class="n">evm</span><span class="p">,</span> <span class="n">GAS_BASE</span><span class="p">)</span>
+
+    <span class="c1"># OPERATION</span>
+    <span class="n">push</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">,</span> <span class="n">U256</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">return_data</span><span class="p">)))</span>
+
+    <span class="c1"># PROGRAM COUNTER</span>
     <span class="n">evm</span><span class="o">.</span><span class="n">pc</span> <span class="o">+=</span> <span class="mi">1</span>
 </pre></div>
 </div>
@@ -835,36 +829,29 @@ to store the data.</p>
 </dd></dl>
 
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">returndatacopy</span><span class="p">(</span><span class="n">evm</span><span class="p">:</span> <span class="n">Evm</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="n">memory_start_index</span> <span class="o">=</span> <span class="n">Uint</span><span class="p">(</span><span class="n">pop</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">))</span>
-    <span class="n">return_data_start_position</span> <span class="o">=</span> <span class="n">Uint</span><span class="p">(</span><span class="n">pop</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">))</span>
+    <span class="c1"># STACK</span>
+    <span class="n">memory_start_index</span> <span class="o">=</span> <span class="n">pop</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">)</span>
+    <span class="n">return_data_start_position</span> <span class="o">=</span> <span class="n">pop</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">)</span>
     <span class="n">size</span> <span class="o">=</span> <span class="n">pop</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">)</span>
+
+    <span class="c1"># GAS</span>
+    <span class="n">words</span> <span class="o">=</span> <span class="n">ceil32</span><span class="p">(</span><span class="n">Uint</span><span class="p">(</span><span class="n">size</span><span class="p">))</span> <span class="o">//</span> <span class="mi">32</span>
+    <span class="n">copy_gas_cost</span> <span class="o">=</span> <span class="n">GAS_RETURN_DATA_COPY</span> <span class="o">*</span> <span class="n">words</span>
+    <span class="n">extend_memory</span><span class="p">(</span><span class="n">evm</span><span class="p">,</span> <span class="n">memory_start_index</span><span class="p">,</span> <span class="n">size</span><span class="p">)</span>
+    <span class="n">charge_gas</span><span class="p">(</span><span class="n">evm</span><span class="p">,</span> <span class="n">GAS_VERY_LOW</span> <span class="o">+</span> <span class="n">copy_gas_cost</span><span class="p">)</span>
+
+    <span class="c1"># OPERATION</span>
     <span class="n">ensure</span><span class="p">(</span>
-        <span class="n">return_data_start_position</span> <span class="o">+</span> <span class="n">size</span> <span class="o">&lt;=</span> <span class="nb">len</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">return_data</span><span class="p">),</span>
+        <span class="n">Uint</span><span class="p">(</span><span class="n">return_data_start_position</span><span class="p">)</span> <span class="o">+</span> <span class="n">Uint</span><span class="p">(</span><span class="n">size</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="nb">len</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">return_data</span><span class="p">),</span>
         <span class="n">OutOfBoundsRead</span><span class="p">,</span>
     <span class="p">)</span>
 
-    <span class="n">words</span> <span class="o">=</span> <span class="n">ceil32</span><span class="p">(</span><span class="n">Uint</span><span class="p">(</span><span class="n">size</span><span class="p">))</span> <span class="o">//</span> <span class="mi">32</span>
-    <span class="n">copy_gas_cost</span> <span class="o">=</span> <span class="n">u256_safe_multiply</span><span class="p">(</span>
-        <span class="n">GAS_RETURN_DATA_COPY</span><span class="p">,</span>
-        <span class="n">words</span><span class="p">,</span>
-        <span class="n">exception_type</span><span class="o">=</span><span class="n">OutOfGasError</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="n">memory_extend_gas_cost</span> <span class="o">=</span> <span class="n">calculate_gas_extend_memory</span><span class="p">(</span>
-        <span class="n">evm</span><span class="o">.</span><span class="n">memory</span><span class="p">,</span> <span class="n">memory_start_index</span><span class="p">,</span> <span class="n">size</span>
-    <span class="p">)</span>
-    <span class="n">total_gas_cost</span> <span class="o">=</span> <span class="n">u256_safe_add</span><span class="p">(</span>
-        <span class="n">GAS_VERY_LOW</span><span class="p">,</span>
-        <span class="n">copy_gas_cost</span><span class="p">,</span>
-        <span class="n">memory_extend_gas_cost</span><span class="p">,</span>
-        <span class="n">exception_type</span><span class="o">=</span><span class="n">OutOfGasError</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span> <span class="o">=</span> <span class="n">subtract_gas</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span><span class="p">,</span> <span class="n">total_gas_cost</span><span class="p">)</span>
-
-    <span class="n">extend_memory</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">memory</span><span class="p">,</span> <span class="n">memory_start_index</span><span class="p">,</span> <span class="n">size</span><span class="p">)</span>
     <span class="n">value</span> <span class="o">=</span> <span class="n">evm</span><span class="o">.</span><span class="n">return_data</span><span class="p">[</span>
         <span class="n">return_data_start_position</span> <span class="p">:</span> <span class="n">return_data_start_position</span> <span class="o">+</span> <span class="n">size</span>
     <span class="p">]</span>
     <span class="n">memory_write</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">memory</span><span class="p">,</span> <span class="n">memory_start_index</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+
+    <span class="c1"># PROGRAM COUNTER</span>
     <span class="n">evm</span><span class="o">.</span><span class="n">pc</span> <span class="o">+=</span> <span class="mi">1</span>
 </pre></div>
 </div>
@@ -874,33 +861,33 @@ to store the data.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="ethereum.muir_glacier.vm.instructions.environment.extcodehash">
 <span class="sig-name descname"><span class="pre">extcodehash</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">evm</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ethereum.muir_glacier.vm.instructions.environment.extcodehash" title="Permalink to this definition"></a></dt>
-<dd><p>Returns the keccak256 hash of a contract’s bytecode</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>evm</strong> – The current EVM frame.</p>
-</dd>
-</dl>
+<dd><p>Returns the keccak256 hash of a contract’s bytecode
+:param evm: The current EVM frame.</p>
 </dd></dl>
 
 <pre class="literal-block">def extcodehash(evm: Evm) -&gt; None:
+    # STACK
     address = to_address(pop(evm.stack))
 
+    # GAS
     <span class="change-added">if address in evm.accessed_addresses:
-        </span>evm.gas_left = subtract_gas(evm.gas_left, <span class="change-replaced">GAS_CODE_HASH)</span><span class="change-replacement">GAS_WARM_ACCESS)
+        </span>charge_gas(evm, <span class="change-replaced">GAS_CODE_HASH)</span><span class="change-replacement">GAS_WARM_ACCESS)
     else:
         evm.accessed_addresses.add(address)
-        evm.gas_left = subtract_gas(evm.gas_left, GAS_COLD_ACCOUNT_ACCESS)</span>
+        charge_gas(evm, GAS_COLD_ACCOUNT_ACCESS)</span>
 
-    evm.pc += 1
-
+    # OPERATION
     account = get_account(evm.env.state, address)
 
     if account == EMPTY_ACCOUNT:
-        push(evm.stack, U256(0))
+        codehash = U256(0)
     else:
-        code = account.code
-        code_hash = keccak256(code)
-        push(evm.stack, U256.from_be_bytes(code_hash))
+        codehash = U256.from_be_bytes(keccak256(account.code))
+
+    push(evm.stack, codehash)
+
+    # PROGRAM COUNTER
+    evm.pc += 1
 </pre>
 </section>
 <section id="self-balance">
@@ -914,20 +901,28 @@ to store the data.</p>
 <dd class="field-odd"><p><strong>evm</strong> – The current EVM frame.</p>
 </dd>
 <dt class="field-even">Raises</dt>
-<dd class="field-even"><p><a class="reference internal" href="../../exceptions/index.pickle#ethereum.muir_glacier.vm.exceptions.OutOfGasError" title="ethereum.muir_glacier.vm.exceptions.OutOfGasError"><strong>OutOfGasError</strong></a> – If <cite>evm.gas_left</cite> is less than GAS_FAST_STEP.</p>
+<dd class="field-even"><ul class="simple">
+<li><p><a class="reference internal" href="../../exceptions/index.pickle#ethereum.muir_glacier.vm.exceptions.StackUnderflowError" title="ethereum.muir_glacier.vm.exceptions.StackUnderflowError"><strong>StackUnderflowError</strong></a> – If <cite>len(stack)</cite> is less than <cite>1</cite>.</p></li>
+<li><p><a class="reference internal" href="../../exceptions/index.pickle#ethereum.muir_glacier.vm.exceptions.OutOfGasError" title="ethereum.muir_glacier.vm.exceptions.OutOfGasError"><strong>OutOfGasError</strong></a> – If <cite>evm.gas_left</cite> is less than <cite>20</cite>.</p></li>
+</ul>
 </dd>
 </dl>
 </dd></dl>
 
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">self_balance</span><span class="p">(</span><span class="n">evm</span><span class="p">:</span> <span class="n">Evm</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span> <span class="o">=</span> <span class="n">subtract_gas</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span><span class="p">,</span> <span class="n">GAS_FAST_STEP</span><span class="p">)</span>
+    <span class="c1"># STACK</span>
+    <span class="k">pass</span>
 
-    <span class="n">address</span> <span class="o">=</span> <span class="n">evm</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">current_target</span>
+    <span class="c1"># GAS</span>
+    <span class="n">charge_gas</span><span class="p">(</span><span class="n">evm</span><span class="p">,</span> <span class="n">GAS_FAST_STEP</span><span class="p">)</span>
 
-    <span class="n">balance</span> <span class="o">=</span> <span class="n">get_account</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">state</span><span class="p">,</span> <span class="n">address</span><span class="p">)</span><span class="o">.</span><span class="n">balance</span>
+    <span class="c1"># OPERATION</span>
+    <span class="c1"># Non-existent accounts default to EMPTY_ACCOUNT, which has balance 0.</span>
+    <span class="n">balance</span> <span class="o">=</span> <span class="n">get_account</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">state</span><span class="p">,</span> <span class="n">evm</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">current_target</span><span class="p">)</span><span class="o">.</span><span class="n">balance</span>
 
     <span class="n">push</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">,</span> <span class="n">balance</span><span class="p">)</span>
 
+    <span class="c1"># PROGRAM COUNTER</span>
     <span class="n">evm</span><span class="o">.</span><span class="n">pc</span> <span class="o">+=</span> <span class="mi">1</span>
 </pre></div>
 </div>

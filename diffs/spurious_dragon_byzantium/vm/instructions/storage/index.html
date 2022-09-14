@@ -292,13 +292,18 @@ storage of the current account.</p>
 </dd></dl>
 
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">sload</span><span class="p">(</span><span class="n">evm</span><span class="p">:</span> <span class="n">Evm</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span> <span class="o">=</span> <span class="n">subtract_gas</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span><span class="p">,</span> <span class="n">GAS_SLOAD</span><span class="p">)</span>
-
+    <span class="c1"># STACK</span>
     <span class="n">key</span> <span class="o">=</span> <span class="n">pop</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">)</span><span class="o">.</span><span class="n">to_be_bytes32</span><span class="p">()</span>
+
+    <span class="c1"># GAS</span>
+    <span class="n">charge_gas</span><span class="p">(</span><span class="n">evm</span><span class="p">,</span> <span class="n">GAS_SLOAD</span><span class="p">)</span>
+
+    <span class="c1"># OPERATION</span>
     <span class="n">value</span> <span class="o">=</span> <span class="n">get_storage</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">state</span><span class="p">,</span> <span class="n">evm</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">current_target</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
 
     <span class="n">push</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">stack</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
 
+    <span class="c1"># PROGRAM COUNTER</span>
     <span class="n">evm</span><span class="o">.</span><span class="n">pc</span> <span class="o">+=</span> <span class="mi">1</span>
 </pre></div>
 </div>
@@ -323,28 +328,27 @@ storage of the current account.</p>
 </dd></dl>
 
 <pre class="literal-block">def sstore(evm: Evm) -&gt; None:
-    <span class="change-added">ensure(not evm.message.is_static, WriteInStaticContext)
-    </span>key = pop(evm.stack).to_be_bytes32()
+    # STACK
+    key = pop(evm.stack).to_be_bytes32()
     new_value = pop(evm.stack)
-    current_value = get_storage(evm.env.state, evm.message.current_target, key)
 
-    # TODO: SSTORE gas usage hasn't been tested yet. Testing this needs
-    # other opcodes to be implemented.
-    # Calculating the gas needed for the storage
+    # GAS
+    current_value = get_storage(evm.env.state, evm.message.current_target, key)
     if new_value != 0 and current_value == 0:
         gas_cost = GAS_STORAGE_SET
     else:
         gas_cost = GAS_STORAGE_UPDATE
 
-    evm.gas_left = subtract_gas(evm.gas_left, gas_cost)
+    charge_gas(evm, gas_cost)
 
-    # TODO: Refund counter hasn't been tested yet. Testing this needs other
-    # Opcodes to be implemented
     if new_value == 0 and current_value != 0:
         evm.refund_counter += GAS_STORAGE_CLEAR_REFUND
 
-    set_storage(evm.env.state, evm.message.current_target, key, new_value)
+    # OPERATION
+    <span class="change-added">ensure(not evm.message.is_static, WriteInStaticContext)
+    </span>set_storage(evm.env.state, evm.message.current_target, key, new_value)
 
+    # PROGRAM COUNTER
     evm.pc += 1
 </pre>
 </section>

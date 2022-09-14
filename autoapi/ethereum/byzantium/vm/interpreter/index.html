@@ -551,7 +551,7 @@ else it executes a call from the <cite>message.caller</cite> to the <cite>messag
         <span class="n">contract_code</span> <span class="o">=</span> <span class="n">evm</span><span class="o">.</span><span class="n">output</span>
         <span class="n">contract_code_gas</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">contract_code</span><span class="p">)</span> <span class="o">*</span> <span class="n">GAS_CODE_DEPOSIT</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span> <span class="o">=</span> <span class="n">subtract_gas</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">gas_left</span><span class="p">,</span> <span class="n">contract_code_gas</span><span class="p">)</span>
+            <span class="n">charge_gas</span><span class="p">(</span><span class="n">evm</span><span class="p">,</span> <span class="n">contract_code_gas</span><span class="p">)</span>
             <span class="n">ensure</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">contract_code</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">MAX_CODE_SIZE</span><span class="p">,</span> <span class="n">OutOfGasError</span><span class="p">)</span>
         <span class="k">except</span> <span class="n">ExceptionalHalt</span><span class="p">:</span>
             <span class="n">rollback_transaction</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">state</span><span class="p">)</span>
