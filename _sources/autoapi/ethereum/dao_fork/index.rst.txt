@@ -1,7 +1,7 @@
 .. py:module:: ethereum.dao_fork
 
-Ethereum Dao Hardfork
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Ethereum Dao Fork Hardfork
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The third Ethereum hardfork.
 
