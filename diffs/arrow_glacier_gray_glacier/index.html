@@ -19,7 +19,6 @@
         <script src="../../_static/underscore.js"></script>
         <script src="../../_static/doctools.js"></script>
         <script src="../../_static/js/toggle_diffs.js"></script>
-        <script src="../../_static/js/hide_elements.js"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -74,6 +73,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../../autoapi/ethereum/london/index.html">Ethereum London Hardfork</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../autoapi/ethereum/arrow_glacier/index.html">Ethereum Arrow Glacier Hardfork</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../autoapi/ethereum/gray_glacier/index.html">Ethereum Gray Glacier Hardfork</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../autoapi/ethereum/paris/index.html">Ethereum Paris Hardfork</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../autoapi/ethereum/crypto/index.html">Cryptographic Functions</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../autoapi/ethereum/utils/index.html">Utility Functions</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../autoapi/ethereum/base_types/index.html">Numeric &amp; Array Types</a></li>
@@ -222,6 +222,27 @@
 <li class="toctree-l3"><a class="reference internal" href="spec/index.html">Ethereum Specification</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="../gray_glacier_paris.html">Gray Glacier → Paris</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../gray_glacier_paris/eth_types/index.html">Ethereum Types</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../gray_glacier_paris/index.html">Ethereum <span class="change-replaced">Gray Glacier</span><span class="change-replacement">Paris</span> Hardfork</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../gray_glacier_paris/spec/index.html">Ethereum Specification</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../gray_glacier_paris/vm/gas/index.html">Ethereum Virtual Machine (EVM) Gas</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../gray_glacier_paris/vm/index.html">Ethereum Virtual Machine (EVM)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../gray_glacier_paris/vm/instructions/arithmetic/index.html">Ethereum Virtual Machine (EVM) Arithmetic Instructions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../gray_glacier_paris/vm/instructions/bitwise/index.html">Ethereum Virtual Machine (EVM) Bitwise Instructions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../gray_glacier_paris/vm/instructions/block/index.html">Ethereum Virtual Machine (EVM) Block Instructions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../gray_glacier_paris/vm/instructions/comparison/index.html">Ethereum Virtual Machine (EVM) Comparison Instructions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../gray_glacier_paris/vm/instructions/control_flow/index.html">Ethereum Virtual Machine (EVM) Control Flow Instructions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../gray_glacier_paris/vm/instructions/environment/index.html">Ethereum Virtual Machine (EVM) Environmental Instructions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../gray_glacier_paris/vm/instructions/index.html">EVM Instruction Encoding (Opcodes)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../gray_glacier_paris/vm/instructions/keccak/index.html">Ethereum Virtual Machine (EVM) Keccak Instructions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../gray_glacier_paris/vm/instructions/log/index.html">Ethereum Virtual Machine (EVM) Logging Instructions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../gray_glacier_paris/vm/instructions/memory/index.html">Ethereum Virtual Machine (EVM) Memory Instructions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../gray_glacier_paris/vm/instructions/stack/index.html">Ethereum Virtual Machine (EVM) Stack Instructions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../gray_glacier_paris/vm/instructions/storage/index.html">Ethereum Virtual Machine (EVM) Storage Instructions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../gray_glacier_paris/vm/stack/index.html">Ethereum Virtual Machine (EVM) Stack</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -239,10 +260,10 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="../index.html">Comparisons</a> &raquo;</li>
-          <li><a href="../arrow_glacier_gray_glacier.html">Arrow Glacier → Gray Glacier</a> &raquo;</li>
-      <li>Ethereum <span class="change-replaced">Arrow</span><span class="change-replacement">Gray</span> Glacier Hardfork</li>
+      <li><a href="../../index.html" class="icon icon-home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Comparisons</a></li>
+          <li class="breadcrumb-item"><a href="../arrow_glacier_gray_glacier.html">Arrow Glacier → Gray Glacier</a></li>
+      <li class="breadcrumb-item active">Ethereum <span class="change-replaced">Arrow</span><span class="change-replacement">Gray</span> Glacier Hardfork</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../../_sources/diffs/arrow_glacier_gray_glacier/index.pickle64.txt" rel="nofollow"> View page source</a>
       </li>
@@ -341,16 +362,7 @@
   <hr/>
 
   <div role="contentinfo">
-<jinja2.runtime.BlockReference object at 0x7fb8258ab0d0>
-
-
-<script>
-    jQuery($(document).ready(function() {
-        hideSubmodules();
-}))
-</script>
-
-
+    <p>&#169; Copyright 2021, Ethereum.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
