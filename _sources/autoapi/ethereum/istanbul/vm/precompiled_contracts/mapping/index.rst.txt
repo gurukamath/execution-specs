@@ -13,6 +13,8 @@ Introduction
 Mapping of precompiled contracts their implementations.
 
 
+.. only:: stage1
+
 Module Contents
 ---------------
 
