@@ -3,7 +3,7 @@
 Ethereum Byzantium Hardfork
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The fifth Ethereum hardfork.
+The sixth Ethereum hardfork.
 
 
 .. only:: stage1

@@ -46,8 +46,6 @@ keccak
 
    :param evm: The current EVM frame.
 
-   :raises ~ethereum.paris.vm.exceptions.StackUnderflowError: If `len(stack)` is less than `2`.
-
 
 
 

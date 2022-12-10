@@ -3,7 +3,7 @@
 Ethereum Arrow Glacier Hardfork
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The Eleventh Ethereum hardfork.
+The Twelfth Ethereum hardfork.
 
 
 .. only:: stage1
