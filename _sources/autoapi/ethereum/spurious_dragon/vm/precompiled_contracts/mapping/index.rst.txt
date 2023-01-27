@@ -30,5 +30,5 @@ PRE_COMPILED_CONTRACTS
 
 .. undocinclude:: /../src/ethereum/spurious_dragon/vm/precompiled_contracts/mapping.py
    :language: python
-   :lines: 23-28
+   :lines: 28-33
 

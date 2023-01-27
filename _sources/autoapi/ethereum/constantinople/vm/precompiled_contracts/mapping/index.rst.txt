@@ -30,5 +30,5 @@ PRE_COMPILED_CONTRACTS
 
 .. undocinclude:: /../src/ethereum/constantinople/vm/precompiled_contracts/mapping.py
    :language: python
-   :lines: 25-34
+   :lines: 34-43
 
