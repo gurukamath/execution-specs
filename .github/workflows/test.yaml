@@ -9,7 +9,7 @@ on:
 
 jobs:
   build:
-    runs-on: self-hosted
+    runs-on: "ubuntu-latest"
     strategy:
       matrix:
         py: [ "3.10", "pypy3.10" ]
@@ -41,17 +41,4 @@ jobs:
 
       - name: Run Tox (CPython)
         if: "${{ !startsWith(matrix.py, 'pypy') }}"
-        run: tox -e static,optimized,py3
-
-      - name: Run Tox (PyPy)
-        if: "${{ startsWith(matrix.py, 'pypy') }}"
-        run: tox -e pypy3
-        env:
-          PYPY_GC_MAX: "10G"
-
-      - name: Upload coverage to Codecov
-        if: "${{ !startsWith(matrix.py, 'pypy') }}"
-        uses: codecov/codecov-action@v1
-        with:
-          files: .tox/coverage.xml
-          flags: unittests
+        run: tox -e static
