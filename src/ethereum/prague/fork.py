@@ -23,7 +23,7 @@ from ethereum.utils.ensure import ensure
 
 from .. import rlp
 from ..base_types import U64, U256, Bytes, Uint
-from . import vm
+from . import FORK_CRITERIA, vm
 from .blocks import Block, Header, Log, Receipt, Withdrawal
 from .bloom import logs_bloom
 from .fork_types import Address, Bloom, Root, VersionedHash
@@ -37,6 +37,7 @@ from .state import (
     increment_nonce,
     process_withdrawal,
     set_account_balance,
+    set_storage,
     state_root,
 )
 from .transactions import (
@@ -76,9 +77,13 @@ SYSTEM_ADDRESS = hex_to_address("0xfffffffffffffffffffffffffffffffffffffffe")
 BEACON_ROOTS_ADDRESS = hex_to_address(
     "0x000F3df6D732807Ef1319fB7B8bB8522d0Beac02"
 )
+HISTORY_STORAGE_ADDRESS = hex_to_address(
+    "0x25a219378dad9b3503c8268c9ca836a52427a4fb"
+)
 SYSTEM_TRANSACTION_GAS = Uint(30000000)
 MAX_BLOB_GAS_PER_BLOCK = 786432
 VERSIONED_HASH_VERSION_KZG = b"\x01"
+HISTORY_SERVE_WINDOW = 8192
 
 
 @dataclass
@@ -114,44 +119,46 @@ def apply_fork(old: BlockChain) -> BlockChain:
     return old
 
 
-def get_last_256_block_hashes(chain: BlockChain) -> List[Hash32]:
+def process_block_hash_history(chain: BlockChain, block: Block) -> None:
     """
-    Obtain the list of hashes of the previous 256 blocks in order of
-    increasing block number.
-
-    This function will return less hashes for the first 256 blocks.
-
-    The ``BLOCKHASH`` opcode needs to access the latest hashes on the chain,
-    therefore this function retrieves them.
+    Update the block hash history before block execution.
+    Introduced in EIP-2935. https://eips.ethereum.org/EIPS/eip-2935
 
     Parameters
     ----------
     chain :
         History and current state.
-
-    Returns
-    -------
-    recent_block_hashes : `List[Hash32]`
-        Hashes of the recent 256 blocks in order of increasing block number.
+    block :
+        Block to be executed.
     """
-    recent_blocks = chain.blocks[-255:]
-    # TODO: This function has not been tested rigorously
-    if len(recent_blocks) == 0:
-        return []
+    assert block.header.timestamp >= FORK_CRITERIA.timestamp
 
-    recent_block_hashes = []
+    if chain.blocks[-1].header.timestamp < FORK_CRITERIA.timestamp:
+        # Parent timestamp is less than fork timestamp. Can only happen
+        # at fork block. Set hashes for the entire HISTORY_SERVE_WINDOW
+        current_block = block
+        for i in range(HISTORY_SERVE_WINDOW - 1):
+            if current_block.header.number == 0:
+                break
 
-    for block in recent_blocks:
-        prev_block_hash = block.header.parent_hash
-        recent_block_hashes.append(prev_block_hash)
-
-    # We are computing the hash only for the most recent block and not for
-    # the rest of the blocks as they have successors which have the hash of
-    # the current block as parent hash.
-    most_recent_block_hash = keccak256(rlp.encode(recent_blocks[-1].header))
-    recent_block_hashes.append(most_recent_block_hash)
-
-    return recent_block_hashes
+            set_storage(
+                chain.state,
+                HISTORY_STORAGE_ADDRESS,
+                (
+                    (current_block.header.number - 1) % HISTORY_SERVE_WINDOW
+                ).to_be_bytes32(),
+                U256.from_be_bytes(current_block.header.parent_hash),
+            )
+            # Set the earlier block as the current block
+            current_block = chain.blocks[-1 - i]
+    else:
+        # Set the hash for only one block
+        set_storage(
+            chain.state,
+            HISTORY_STORAGE_ADDRESS,
+            ((block.header.number - 1) % HISTORY_SERVE_WINDOW).to_be_bytes32(),
+            U256.from_be_bytes(block.header.parent_hash),
+        )
 
 
 def state_transition(chain: BlockChain, block: Block) -> None:
@@ -182,9 +189,10 @@ def state_transition(chain: BlockChain, block: Block) -> None:
 
     validate_header(block.header, parent_header)
     ensure(block.ommers == (), InvalidBlock)
+    process_block_hash_history(chain, block)
+
     apply_body_output = apply_body(
         chain.state,
-        get_last_256_block_hashes(chain),
         block.header.coinbase,
         block.header.number,
         block.header.base_fee_per_gas,
@@ -509,7 +517,6 @@ class ApplyBodyOutput:
 
 def apply_body(
     state: State,
-    block_hashes: List[Hash32],
     coinbase: Address,
     block_number: Uint,
     base_fee_per_gas: Uint,
@@ -536,9 +543,6 @@ def apply_body(
     ----------
     state :
         Current account state.
-    block_hashes :
-        List of hashes of the previous 256 blocks in the order of
-        increasing block number.
     coinbase :
         Address of account which receives block reward and transaction fees.
     block_number :
@@ -607,7 +611,6 @@ def apply_body(
     system_tx_env = vm.Environment(
         caller=SYSTEM_ADDRESS,
         origin=SYSTEM_ADDRESS,
-        block_hashes=block_hashes,
         coinbase=coinbase,
         number=block_number,
         gas_limit=block_gas_limit,
@@ -650,7 +653,6 @@ def apply_body(
         env = vm.Environment(
             caller=sender_address,
             origin=sender_address,
-            block_hashes=block_hashes,
             coinbase=coinbase,
             number=block_number,
             gas_limit=block_gas_limit,
