@@ -1,3 +1,4 @@
+import time
 from functools import partial
 from typing import Dict, Generator, Tuple
 
@@ -48,4 +49,11 @@ def fetch_temporary_tests(test_dirs: Tuple[str, ...]) -> Generator:
     ids=idfn,
 )
 def test_evm_tools(test_case: Dict) -> None:
+    test_file = test_case["test_file"]
+    test_key = test_case["test_key"]
+    print(f"\nTest file: {test_file} -- Test key: {test_key}")
+    t0 = time.time()
     run_evm_tools_test(test_case)
+    t1 = time.time()
+    total = t1 - t0
+    print(f"Total time: {total}")
