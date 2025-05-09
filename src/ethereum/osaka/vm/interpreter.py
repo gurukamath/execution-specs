@@ -61,7 +61,8 @@ from .instructions import Ops, op_implementation
 from .runtime import get_valid_jump_destinations
 
 STACK_DEPTH_LIMIT = Uint(1024)
-MAX_CODE_SIZE = 0x6000
+MAX_CODE_SIZE_WITH_NO_ACCESS_COST = 0x6000
+MAX_CODE_SIZE = 0x40000
 
 
 @dataclass
