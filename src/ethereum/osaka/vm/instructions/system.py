@@ -31,6 +31,7 @@ from ...utils.address import (
     compute_contract_address,
     compute_create2_contract_address,
     to_address,
+    to_address_without_mask,
 )
 from ...vm.eoa_delegation import access_delegation
 from .. import (
@@ -39,7 +40,12 @@ from .. import (
     incorporate_child_on_error,
     incorporate_child_on_success,
 )
-from ..exceptions import OutOfGasError, Revert, WriteInStaticContext
+from ..exceptions import (
+    ExceptionalHalt,
+    OutOfGasError,
+    Revert,
+    WriteInStaticContext,
+)
 from ..gas import (
     GAS_CALL_VALUE,
     GAS_COLD_ACCOUNT_ACCESS,
@@ -742,3 +748,58 @@ def revert(evm: Evm) -> None:
 
     # PROGRAM COUNTER
     pass
+
+
+def pay(evm: Evm) -> None:
+    """
+    Transfer ether to an account.
+
+    Parameters
+    ----------
+    evm :
+        The current EVM frame.
+    """
+    # STACK
+    try:
+        to = to_address_without_mask(pop(evm.stack))
+    except ValueError as e:
+        raise ExceptionalHalt from e
+    value = pop(evm.stack)
+
+    # GAS
+    if to in evm.accessed_addresses:
+        access_gas_cost = GAS_WARM_ACCESS
+    else:
+        evm.accessed_addresses.add(to)
+        access_gas_cost = GAS_COLD_ACCOUNT_ACCESS
+
+    create_gas_cost = (
+        Uint(0)
+        if is_account_alive(evm.message.block_env.state, to) or value == 0
+        else GAS_NEW_ACCOUNT
+    )
+
+    transfer_gas_cost = Uint(0) if value == U256(0) else GAS_CALL_VALUE
+
+    charge_gas(evm, access_gas_cost + create_gas_cost + transfer_gas_cost)
+
+    # OPERATION
+    if value > U256(0):
+        try:
+            move_ether(
+                evm.message.block_env.state,
+                evm.message.current_target,
+                to,
+                value,
+            )
+            push(evm.stack, U256(1))
+        except AssertionError:
+            # TODO: This behavior has not been
+            # finalized yet and is simply based on
+            # ongoing discussions. The final update
+            # needs to be made to this based on the
+            # agreed upon spec.
+            push(evm.stack, U256(0))
+
+    # PROGRAM COUNTER
+    evm.pc += Uint(1)
