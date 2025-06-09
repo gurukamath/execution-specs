@@ -62,6 +62,7 @@ def load_evm_tools_test(test_case: Dict[str, str], fork_name: str) -> None:
     """
     Runs a single general state test
     """
+    print(test_case)
     test_file = test_case["test_file"]
     test_key = test_case["test_key"]
     index = test_case["index"]

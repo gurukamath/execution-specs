@@ -26,6 +26,7 @@ class NoTestsFound(Exception):
 
 
 def run_blockchain_st_test(test_case: Dict, load: Load) -> None:
+    print(test_case)
     test_file = test_case["test_file"]
     test_key = test_case["test_key"]
 
