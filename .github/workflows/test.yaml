@@ -27,7 +27,7 @@ jobs:
           python-version: "3.11"
       - name: Install Tox and any other packages
         run: |
-          DEBIAN_FRONTEND=noninteractive apt-get install --yes --force-yes build-essential pkg-config
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install --yes --force-yes build-essential pkg-config
           pip install 'tox>=4.11,<5' requests
       - name: Download Geth and add to $PATH
         run: |
@@ -55,7 +55,7 @@ jobs:
           python-version: "3.11"
       - name: Install Tox and any other packages
         run: |
-          DEBIAN_FRONTEND=noninteractive apt-get install --yes --force-yes build-essential pkg-config
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install --yes --force-yes build-essential pkg-config
           pip install 'tox>=4.11,<5' requests
       - name: Download Geth and add to $PATH
         run: |
@@ -83,7 +83,7 @@ jobs:
           python-version: "pypy3.11"
       - name: Install Tox and any other packages
         run: |
-          DEBIAN_FRONTEND=noninteractive apt-get install --yes --force-yes build-essential pkg-config
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install --yes --force-yes build-essential pkg-config
           pip install 'tox>=4.11,<5' requests
       - name: Download Geth and add to $PATH
         run: |
@@ -113,7 +113,7 @@ jobs:
           python-version: "3.11"
       - name: Install Tox and any other packages
         run: |
-          DEBIAN_FRONTEND=noninteractive apt-get install --yes --force-yes build-essential pkg-config
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install --yes --force-yes build-essential pkg-config
           pip install 'tox>=4.11,<5' requests
       - name: Download Geth and add to $PATH
         run: |
@@ -147,7 +147,7 @@ jobs:
           python-version: "3.11"
       - name: Install Tox and any other packages
         run: |
-          DEBIAN_FRONTEND=noninteractive apt-get install --yes --force-yes build-essential pkg-config
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install --yes --force-yes build-essential pkg-config
           pip install 'tox>=4.11,<5' requests
       - name: Download Geth and add to $PATH
         run: |
