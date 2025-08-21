@@ -9,8 +9,6 @@ import os
 from typing import Any, Final, TextIO, Type, TypeVar
 
 from ethereum_rlp import rlp
-
-from ethereum.osaka.block_access_lists import StateChangeTracker
 from ethereum_types.numeric import U64, U256, Uint
 
 from ethereum import trace
@@ -109,7 +107,9 @@ class T8N(Load):
         else:
             stdin = None
 
-        fork_module, self.fork_block = get_module_name(self.forks, self.options, stdin)
+        fork_module, self.fork_block = get_module_name(
+            self.forks, self.options, stdin
+        )
         self.fork = ForkLoad(fork_module)
 
         tracers = GroupTracer()
@@ -150,7 +150,9 @@ class T8N(Load):
         self.alloc = Alloc(self, stdin)
         self.env = Env(self, stdin)
         self.txs = Txs(self, stdin)
-        self.result = Result(self.env.block_difficulty, self.env.base_fee_per_gas)
+        self.result = Result(
+            self.env.block_difficulty, self.env.base_fee_per_gas
+        )
 
     def _tracer(self, type_: Type[T]) -> T:
         group = self.tracers
@@ -185,7 +187,9 @@ class T8N(Load):
             kw_arguments["difficulty"] = self.env.block_difficulty
 
         if self.fork.is_after_fork("ethereum.cancun"):
-            kw_arguments["parent_beacon_block_root"] = self.env.parent_beacon_block_root
+            kw_arguments[
+                "parent_beacon_block_root"
+            ] = self.env.parent_beacon_block_root
             kw_arguments["excess_blob_gas"] = self.env.excess_blob_gas
 
         return self.fork.BlockEnvironment(**kw_arguments)
@@ -195,7 +199,10 @@ class T8N(Load):
         state = self.alloc.state
         self.alloc.state_backup = (
             self.fork.copy_trie(state._main_trie),
-            {k: self.fork.copy_trie(t) for (k, t) in state._storage_tries.items()},
+            {
+                k: self.fork.copy_trie(t)
+                for (k, t) in state._storage_tries.items()
+            },
         )
 
     def restore_state(self) -> None:
@@ -206,14 +213,22 @@ class T8N(Load):
     def pay_block_rewards(self, block_reward: U256, block_env: Any) -> None:
         """Apply the block rewards to the block coinbase."""
         ommer_count = U256(len(self.env.ommers))
-        miner_reward = block_reward + (ommer_count * (block_reward // U256(32)))
-        self.fork.create_ether(block_env.state, block_env.coinbase, miner_reward)
+        miner_reward = block_reward + (
+            ommer_count * (block_reward // U256(32))
+        )
+        self.fork.create_ether(
+            block_env.state, block_env.coinbase, miner_reward
+        )
 
         for ommer in self.env.ommers:
             # Ommer age with respect to the current block.
             ommer_age = U256(block_env.number - ommer.number)
-            ommer_miner_reward = ((U256(8) - ommer_age) * block_reward) // U256(8)
-            self.fork.create_ether(block_env.state, ommer.coinbase, ommer_miner_reward)
+            ommer_miner_reward = (
+                (U256(8) - ommer_age) * block_reward
+            ) // U256(8)
+            self.fork.create_ether(
+                block_env.state, ommer.coinbase, ommer_miner_reward
+            )
 
     def run_state_test(self) -> Any:
         """
@@ -290,7 +305,9 @@ class T8N(Load):
             if self.options.state_reward is None:
                 self.pay_block_rewards(self.fork.BLOCK_REWARD, block_env)
             elif self.options.state_reward != -1:
-                self.pay_block_rewards(U256(self.options.state_reward), block_env)
+                self.pay_block_rewards(
+                    U256(self.options.state_reward), block_env
+                )
 
         if self.fork.is_after_fork("ethereum.shanghai"):
             self.fork.process_withdrawals(
@@ -343,7 +360,9 @@ class T8N(Load):
             file_path = os.path.join(self.options.output_basedir, file)
 
             # Check if the file matches the specific names or the pattern
-            if file in files_to_delete or fnmatch.fnmatch(file, pattern_to_delete):
+            if file in files_to_delete or fnmatch.fnmatch(
+                file, pattern_to_delete
+            ):
                 os.remove(file_path)
 
         try:
