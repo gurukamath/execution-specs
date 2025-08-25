@@ -71,7 +71,9 @@ class StateChangeTracker:
     """
 
 
-def set_transaction_index(tracker: StateChangeTracker, block_access_index: int) -> None:
+def set_transaction_index(
+    tracker: StateChangeTracker, block_access_index: int
+) -> None:
     """
     Set the current block access index for tracking changes.
 
@@ -125,7 +127,9 @@ def capture_pre_state(
     return tracker.pre_storage_cache[cache_key]
 
 
-def track_address_access(tracker: StateChangeTracker, address: Address) -> None:
+def track_address_access(
+    tracker: StateChangeTracker, address: Address
+) -> None:
     """
     Track that an address was accessed.
 

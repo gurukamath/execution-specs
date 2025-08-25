@@ -16,6 +16,9 @@ from ethereum.amsterdam.block_access_lists import (
     StateChangeTracker,
     set_transaction_index,
 )
+from ethereum.amsterdam.block_access_lists.tracker import (
+    finalize_transaction_changes,
+)
 from ethereum.exceptions import EthereumException, InvalidBlock
 from ethereum_spec_tools.forks import Hardfork
 
@@ -298,11 +301,19 @@ class T8N(Load):
                     Uint(original_idx),
                     bal_change_tracker,
                 )
+                finalize_transaction_changes(
+                    bal_change_tracker,
+                    block_env.state,
+                )
 
             except EthereumException as e:
-                self.txs.rejected_txs[original_idx] = f"Failed transaction: {e!r}"
+                self.txs.rejected_txs[
+                    original_idx
+                ] = f"Failed transaction: {e!r}"
                 self.restore_state()
-                self.logger.warning(f"Transaction {original_idx} failed: {e!r}")
+                self.logger.warning(
+                    f"Transaction {original_idx} failed: {e!r}"
+                )
 
         if not self.fork.is_after_fork("ethereum.paris"):
             if self.options.state_reward is None:
@@ -314,7 +325,10 @@ class T8N(Load):
 
         if self.fork.is_after_fork("ethereum.shanghai"):
             self.fork.process_withdrawals(
-                block_env, block_output, self.env.withdrawals, bal_change_tracker
+                block_env,
+                block_output,
+                self.env.withdrawals,
+                bal_change_tracker,
             )
 
         if self.fork.is_after_fork("ethereum.prague"):

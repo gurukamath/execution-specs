@@ -28,8 +28,8 @@ Nonce = U64
 
 # Constants chosen to support a 630m block gas limit
 MAX_TXS = 30_000
-MAX_SLOTS = 300_000
-MAX_ACCOUNTS = 300_000
+# MAX_SLOTS = 300_000
+# MAX_ACCOUNTS = 300_000
 MAX_CODE_SIZE = 24_576
 MAX_CODE_CHANGES = 1
 

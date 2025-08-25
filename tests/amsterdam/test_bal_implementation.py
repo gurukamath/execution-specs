@@ -27,6 +27,7 @@ from ethereum.amsterdam.block_access_lists import (
 )
 from ethereum.amsterdam.block_access_lists.tracker import (
     capture_pre_state,
+    set_transaction_index,
     track_balance_change,
     track_code_change,
     track_nonce_change,
@@ -442,7 +443,11 @@ class TestBALIntegration:
         # Should be sorted by block_access_index
         for i in range(4):
             assert account.balance_changes[i].block_access_index == i
-            expected = U256(0) if i == 0 else U256(int.from_bytes(bytes([i]) * 4, 'big'))
+            expected = (
+                U256(0)
+                if i == 0
+                else U256(int.from_bytes(bytes([i]) * 4, "big"))
+            )
             assert account.balance_changes[i].post_balance == expected
 
 

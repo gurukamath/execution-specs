@@ -143,7 +143,9 @@ def process_message_call(message: Message) -> MessageCallOutput:
         accounts_to_delete = evm.accounts_to_delete
         refund_counter += U256(evm.refund_counter)
 
-    tx_end = TransactionEnd(int(message.gas) - int(evm.gas_left), evm.output, evm.error)
+    tx_end = TransactionEnd(
+        int(message.gas) - int(evm.gas_left), evm.output, evm.error
+    )
     evm_trace(evm, tx_end)
 
     return MessageCallOutput(
