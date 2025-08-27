@@ -103,7 +103,8 @@ def capture_pre_state(
 
     Retrieves the storage value from the beginning of the current transaction.
     The value is cached within the transaction to avoid repeated lookups and
-    to maintain consistency across multiple accesses within the same transaction.
+    to maintain consistency across multiple accesses within the same
+    transaction.
 
     Parameters
     ----------
