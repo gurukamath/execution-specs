@@ -221,11 +221,17 @@ packages = [
     "ethereum.prague.vm.precompiled_contracts.bls12_381",
     "ethereum.osaka",
     "ethereum.osaka.utils",
-    "ethereum.amsterdam.block_access_lists",
     "ethereum.osaka.vm",
     "ethereum.osaka.vm.instructions",
     "ethereum.osaka.vm.precompiled_contracts",
     "ethereum.osaka.vm.precompiled_contracts.bls12_381",
+    "ethereum.amsterdam",
+    "ethereum.amsterdam.block_access_lists",
+    "ethereum.amsterdam.utils",
+    "ethereum.amsterdam.vm",
+    "ethereum.amsterdam.vm.instructions",
+    "ethereum.amsterdam.vm.precompiled_contracts",
+    "ethereum.amsterdam.vm.precompiled_contracts.bls12_381",
 ]
 
 [tool.setuptools.package-data]

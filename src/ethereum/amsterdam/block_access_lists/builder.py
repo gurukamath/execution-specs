@@ -22,8 +22,8 @@ from typing import Dict, List, Set
 from ethereum_types.bytes import Bytes, Bytes32
 from ethereum_types.numeric import U64, U256
 
-from ethereum.amsterdam.fork_types import Address
-from ethereum.amsterdam.rlp_types import (
+from ..fork_types import Address
+from ..rlp_types import (
     AccountChanges,
     BalanceChange,
     BlockAccessIndex,
