@@ -30,10 +30,10 @@ from ethereum.exceptions import (
 )
 
 from . import vm
-from .block_access_lists import (
+from .block_access_lists.builder import build
+from .block_access_lists.rlp_utils import compute_block_access_list_hash
+from .block_access_lists.tracker import (
     StateChangeTracker,
-    build,
-    compute_block_access_list_hash,
     set_transaction_index,
     track_balance_change,
 )

@@ -8,6 +8,7 @@ Together, these blocks form a cryptographically secure journal recording the
 history of all state transitions that have happened since the genesis of the
 chain.
 """
+
 from dataclasses import dataclass
 from typing import Tuple
 
@@ -243,10 +244,14 @@ class Header:
 
     bal_hash: Hash32
     """
-    Hash of the Block Access List containing all accounts and storage
-    locations accessed during block execution. Introduced in [EIP-7928].
+    [SHA2-256] hash of the Block Access List containing all accounts and
+    storage locations accessed during block execution. Introduced in
+    [EIP-7928]. See [`compute_block_access_list_hash`][cbalh] for more
+    details.
 
     [EIP-7928]: https://eips.ethereum.org/EIPS/eip-7928
+    [cbalh]: ref:ethereum.amsterdam.block_access_lists.rlp_utils.compute_block_access_list_hash  # noqa: E501
+    [SHA2-256]: https://en.wikipedia.org/wiki/SHA-2
     """
 
 

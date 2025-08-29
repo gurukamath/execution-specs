@@ -495,6 +495,9 @@ ignore = [
 "src/ethereum_spec_tools/evm_tools/t8n/evm_trace.py" = [
     "N815"          # The traces must use camel case in JSON property names
 ]
+"src/ethereum/amsterdam/blocks.py" = [
+    "E501"          # Line too long - needed for long ref links
+]
 
 [tool.ruff.lint.mccabe]
 # Set the maximum allowed cyclomatic complexity. C901 default is 10.

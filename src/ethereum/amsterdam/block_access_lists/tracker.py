@@ -311,7 +311,6 @@ def track_code_change(
 
     [`CREATE`]: ref:ethereum.amsterdam.vm.instructions.system.create
     [`CREATE2`]: ref:ethereum.amsterdam.vm.instructions.system.create2
-    [`SETCODE`]: ref:ethereum.amsterdam.vm.instructions.system.setcode
     """
     track_address_access(tracker, address)
     add_code_change(
@@ -323,7 +322,7 @@ def track_code_change(
 
 
 def finalize_transaction_changes(
-    tracker: StateChangeTracker, state: "State"  # noqa: U100
+    tracker: StateChangeTracker, state: "State"
 ) -> None:
     """
     Finalize changes for the current transaction.

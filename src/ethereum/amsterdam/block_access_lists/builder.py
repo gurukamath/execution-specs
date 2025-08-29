@@ -305,7 +305,6 @@ def add_code_change(
 
     [`CREATE`]: ref:ethereum.amsterdam.vm.instructions.system.create
     [`CREATE2`]: ref:ethereum.amsterdam.vm.instructions.system.create2
-    [`SETCODE`]: ref:ethereum.amsterdam.vm.instructions.system.setcode
     """
     ensure_account(builder, address)
 

@@ -22,7 +22,7 @@ from ethereum_types.numeric import U64, U256, Uint
 from ethereum.crypto.hash import Hash32
 from ethereum.exceptions import EthereumException
 
-from ..block_access_lists import BlockAccessListBuilder
+from ..block_access_lists.builder import BlockAccessListBuilder
 from ..blocks import Log, Receipt, Withdrawal
 from ..fork_types import Address, Authorization, VersionedHash
 from ..state import State, TransientStorage
@@ -30,9 +30,7 @@ from ..transactions import LegacyTransaction
 from ..trie import Trie
 
 if TYPE_CHECKING:
-    from ..block_access_lists import StateChangeTracker
-
-__all__ = ("Environment", "Evm", "Message")
+    from ..block_access_lists.tracker import StateChangeTracker  # noqa: F401
 
 
 @dataclass
