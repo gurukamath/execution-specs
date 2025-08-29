@@ -244,15 +244,24 @@ class T8N(Load):
         if len(self.txs.transactions) > 0:
             tx = self.txs.transactions[0]
             try:
-                self.fork.process_transaction(
-                    block_env=block_env,
-                    block_output=block_output,
-                    tx=tx,
-                    index=Uint(0),
-                    change_tracker=StateChangeTracker(
-                        block_output.block_access_list_builder
-                    ),
-                )
+                # Only pass change_tracker for Amsterdam and later
+                if self.fork.is_after_fork("ethereum.amsterdam"):
+                    self.fork.process_transaction(
+                        block_env=block_env,
+                        block_output=block_output,
+                        tx=tx,
+                        index=Uint(0),
+                        change_tracker=StateChangeTracker(
+                            block_output.block_access_list_builder
+                        ),
+                    )
+                else:
+                    self.fork.process_transaction(
+                        block_env=block_env,
+                        block_output=block_output,
+                        tx=tx,
+                        index=Uint(0),
+                    )
             except EthereumException as e:
                 self.txs.rejected_txs[0] = f"Failed transaction: {e!r}"
                 self.restore_state()
@@ -276,12 +285,12 @@ class T8N(Load):
                 data=block_env.parent_beacon_block_root,
             )
 
-        bal_change_tracker = StateChangeTracker(
-            block_output.block_access_list_builder
-        )
-
-        # EIP-7928: Set transaction index for block access lists
+        bal_change_tracker = None
         if self.fork.is_after_fork("ethereum.amsterdam"):
+            bal_change_tracker = StateChangeTracker(
+                block_output.block_access_list_builder
+            )
+            # EIP-7928: Set transaction index for block access lists
             # pre-execution system contracts use index 0
             set_transaction_index(bal_change_tracker, 0)
 
@@ -290,21 +299,26 @@ class T8N(Load):
         )):
             self.backup_state()
             try:
-                # use 1...n for transaction indices
-                if self.fork.is_after_fork("ethereum.amsterdam"):
-                    set_transaction_index(bal_change_tracker, tx_index + 1)
+                process_tx_args = [
+                        block_env,
+                        block_output,
+                        tx,
+                        Uint(original_idx),
+                ]
 
-                self.fork.process_transaction(
-                    block_env,
-                    block_output,
-                    tx,
-                    Uint(original_idx),
-                    bal_change_tracker,
-                )
-                finalize_transaction_changes(
-                    bal_change_tracker,
-                    block_env.state,
-                )
+                if self.fork.is_after_fork("ethereum.amsterdam"):
+                    process_tx_args.append(bal_change_tracker)
+
+                    assert bal_change_tracker is not None
+                    # use 1...n for transaction indices
+                    set_transaction_index(bal_change_tracker, tx_index + 1)
+                    self.fork.process_transaction(*process_tx_args)
+                    finalize_transaction_changes(
+                        bal_change_tracker,
+                        block_env.state,
+                    )
+                else:
+                    self.fork.process_transaction(*process_tx_args)
 
             except EthereumException as e:
                 self.txs.rejected_txs[
@@ -324,19 +338,27 @@ class T8N(Load):
                 )
 
         if self.fork.is_after_fork("ethereum.shanghai"):
-            self.fork.process_withdrawals(
-                block_env,
-                block_output,
-                self.env.withdrawals,
-                bal_change_tracker,
-            )
+            process_withdrawal_args = [
+                block_env, block_output, self.env.withdrawals
+            ]
+
+            if self.fork.is_after_fork("ethereum.amsterdam"):
+                assert bal_change_tracker is not None
+                process_withdrawal_args.append(bal_change_tracker)
+
+            self.fork.process_withdrawals(*process_withdrawal_args)
 
         if self.fork.is_after_fork("ethereum.prague"):
-            self.fork.process_general_purpose_requests(
-                block_env, block_output, bal_change_tracker
-            )
+            process_general_purpose_args = [block_env, block_output]
+
+            if self.fork.is_after_fork("ethereum.amsterdam"):
+                assert bal_change_tracker is not None
+                process_general_purpose_args.append(bal_change_tracker)
+
+            self.fork.process_general_purpose_requests(*process_general_purpose_args)
 
         if self.fork.is_after_fork("ethereum.amsterdam"):
+            assert bal_change_tracker is not None
             num_transactions = len(
                 [tx for tx in self.txs.successfully_parsed if tx]
             )
