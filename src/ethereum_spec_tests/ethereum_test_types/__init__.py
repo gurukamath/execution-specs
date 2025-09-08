@@ -2,11 +2,22 @@
 
 from .account_types import EOA, Alloc
 from .blob_types import Blob
+from .block_access_list import (
+    BalAccountChange,
+    BalBalanceChange,
+    BalCodeChange,
+    BalNonceChange,
+    BalStorageChange,
+    BalStorageSlot,
+    BlockAccessList,
+    BlockAccessListExpectation,
+)
 from .block_types import (
     Environment,
     EnvironmentDefaults,
     Withdrawal,
 )
+from .chain_config_types import ChainConfig, ChainConfigDefaults
 from .helpers import (
     TestParameterGroup,
     add_kzg_version,
@@ -35,7 +46,17 @@ from .utils import Removable, keccak256
 __all__ = (
     "Alloc",
     "AuthorizationTuple",
+    "BalAccountChange",
+    "BalBalanceChange",
+    "BalCodeChange",
+    "BalNonceChange",
+    "BalStorageChange",
+    "BalStorageSlot",
     "Blob",
+    "BlockAccessList",
+    "BlockAccessListExpectation",
+    "ChainConfig",
+    "ChainConfigDefaults",
     "ConsolidationRequest",
     "DepositRequest",
     "Environment",
