@@ -1,8 +1,5 @@
 """
-abstract: Tests benchmark worst-case opcode scenarios.
-    Tests benchmark worst-case opcode scenarios.
-
-Tests running worst-case opcodes scenarios for benchmarking purposes.
+Tests benchmark worst-case opcode scenarios.
 """
 
 import pytest
@@ -14,8 +11,8 @@ from ethereum_test_tools import (
     StateTestFiller,
     Transaction,
 )
-from ethereum_test_tools.vm.opcode import Opcodes as Op
-from ethereum_test_vm.opcode import Opcode
+from ethereum_test_vm import Opcode
+from ethereum_test_vm import Opcodes as Op
 
 from .helpers import code_loop_precompile_call
 

@@ -4,11 +4,16 @@ from pathlib import Path
 
 import pytest
 
+from ethereum_test_forks import Fork
+
 DEFAULT_BENCHMARK_FORK = "Prague"
 
 
 def pytest_generate_tests(metafunc):
-    """Modify test generation to enforce default benchmark fork for benchmark tests."""
+    """
+    Modify test generation to enforce default benchmark fork for benchmark
+    tests.
+    """
     benchmark_dir = Path(__file__).parent
     test_file_path = Path(metafunc.definition.fspath)
 
@@ -59,3 +64,9 @@ def pytest_collection_modifyitems(config, items):
 
     for i in reversed(items_for_removal):
         items.pop(i)
+
+
+@pytest.fixture
+def tx_gas_limit_cap(fork: Fork, gas_benchmark_value: int) -> int:
+    """Return the transaction gas limit cap."""
+    return fork.transaction_gas_limit_cap() or gas_benchmark_value

@@ -1,9 +1,8 @@
 """
-abstract: Tests [EIP-3651: Warm COINBASE](https://eips.ethereum.org/EIPS/eip-3651)
-    Tests for [EIP-3651: Warm COINBASE](https://eips.ethereum.org/EIPS/eip-3651).
+Tests [EIP-3651: Warm COINBASE](https://eips.ethereum.org/EIPS/eip-3651).
 
-note: Tests ported from:
-    - [ethereum/tests/pull/1082](https://github.com/ethereum/tests/pull/1082).
+Tests ported from:
+[ethereum/tests/pull/1082](https://github.com/ethereum/tests/pull/1082).
 """
 
 import pytest
@@ -19,7 +18,7 @@ from ethereum_test_tools import (
     StateTestFiller,
     Transaction,
 )
-from ethereum_test_tools.vm.opcode import Opcodes as Op
+from ethereum_test_vm import Opcodes as Op
 
 from .spec import ref_spec_3651
 
