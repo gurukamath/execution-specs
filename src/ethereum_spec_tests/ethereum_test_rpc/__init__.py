@@ -1,4 +1,6 @@
-"""JSON-RPC methods and helper functions for EEST consume based hive simulators."""
+"""
+JSON-RPC methods and helper functions for EEST consume based hive simulators.
+"""
 
 from .rpc import (
     AdminRPC,
@@ -9,7 +11,7 @@ from .rpc import (
     NetRPC,
     SendTransactionExceptionError,
 )
-from .types import (
+from .rpc_types import (
     BlobAndProofV1,
     BlobAndProofV2,
     EthConfigResponse,

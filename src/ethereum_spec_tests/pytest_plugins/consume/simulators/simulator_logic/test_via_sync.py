@@ -1,10 +1,12 @@
 """
-A hive based simulator that executes blocks against clients using the `engine_newPayloadV*` method
-from the Engine API with sync testing. The simulator uses the `BlockchainEngineSyncFixtures` to
-test against clients with client synchronization.
+A hive based simulator that executes blocks against clients using the
+`engine_newPayloadV*` method from the Engine API with sync testing. The
+simulator uses the `BlockchainEngineSyncFixtures` to test against clients with
+client synchronization.
 
 This simulator:
-1. Spins up two clients: one as the client under test and another as the sync client
+1. Spins up two clients: one as the client under test and another as the sync
+   client
 2. Executes payloads on the client under test
 3. Has the sync client synchronize from the client under test
 4. Verifies that the sync was successful
@@ -18,13 +20,13 @@ from ethereum_test_base_types import Hash
 from ethereum_test_exceptions import UndefinedException
 from ethereum_test_fixtures import BlockchainEngineSyncFixture
 from ethereum_test_rpc import AdminRPC, EngineRPC, EthRPC, NetRPC
-from ethereum_test_rpc.types import (
+from ethereum_test_rpc.rpc_types import (
     ForkchoiceState,
     JSONRPCError,
     PayloadStatusEnum,
 )
 
-from ....logging import get_logger
+from ....custom_logging import get_logger
 from ..helpers.exceptions import GenesisBlockMismatchExceptionError
 from ..helpers.timing import TimingData
 
@@ -42,7 +44,6 @@ class LoggedError(Exception):
 
 def wait_for_sync(
     sync_eth_rpc: EthRPC,
-    sync_engine_rpc: EngineRPC,
     expected_block_hash: str | Hash,
     timeout: int = 10,
     poll_interval: float = 1.0,
@@ -105,7 +106,6 @@ def test_blockchain_via_sync(
     eth_rpc: EthRPC,
     engine_rpc: EngineRPC,
     net_rpc: NetRPC,
-    admin_rpc: AdminRPC,
     sync_eth_rpc: EthRPC,
     sync_engine_rpc: EngineRPC,
     sync_net_rpc: NetRPC,
@@ -330,8 +330,8 @@ def test_blockchain_via_sync(
                 f"{forkchoice_response}"
             )
 
-    # Add peer using admin_addPeer
-    # This seems to be required... TODO: we can maybe improve flow here if not required
+    # Add peer using admin_addPeer This seems to be required... TODO: we can
+    # maybe improve flow here if not required
     logger.info(f"Adding peer: {client_enode_url}")
     assert sync_admin_rpc is not None, "sync_admin_rpc is required"
     try:
@@ -340,7 +340,8 @@ def test_blockchain_via_sync(
     except Exception as e:
         raise LoggedError(f"admin_addPeer failed: {e}") from e
 
-    time.sleep(1)  # quick sleep to allow for connection - TODO: is this necessary?
+    # quick sleep to allow for connection - TODO: is this necessary?
+    time.sleep(1)
 
     try:
         sync_peer_count = sync_net_rpc.peer_count()
@@ -354,7 +355,8 @@ def test_blockchain_via_sync(
     except Exception as e:
         logger.warning(f"Could not verify peer connection: {e}")
 
-    # Trigger sync by sending the target block via newPayload followed by forkchoice update
+    # Trigger sync by sending the target block via newPayload followed by
+    # forkchoice update
     logger.info(f"Triggering sync to block {last_valid_block_hash}")
 
     # Find the last valid payload to send to sync client
@@ -376,7 +378,8 @@ def test_blockchain_via_sync(
         )
 
         try:
-            version = last_valid_payload.new_payload_version  # log version used for debugging
+            # log version used for debugging
+            version = last_valid_payload.new_payload_version
             logger.info(f"Sending target payload via engine_newPayloadV{version}")
 
             # send the payload to sync client
@@ -405,9 +408,9 @@ def test_blockchain_via_sync(
             # Give a moment for P2P connections to establish after sync starts
             time.sleep(1)
 
-            # Check peer count after triggering sync
-            # Note: Reth does not actually raise the peer count but doesn't seem
-            # to need this to sync.
+            # Check peer count after triggering sync Note: Reth does not
+            # actually raise the peer count but doesn't seem to need this to
+            # sync.
             try:
                 assert sync_net_rpc is not None, "sync_net_rpc is required"
                 client_peer_count = net_rpc.peer_count()
@@ -442,11 +445,12 @@ def test_blockchain_via_sync(
         last_forkchoice_time = time.time()
         forkchoice_interval = 2.0  # Send forkchoice updates every 2 seconds
 
-        while time.time() - sync_start_time < 10:  # 10 second timeout
+        while time.time() - sync_start_time < 60:  # 60 second timeout
             # Send periodic forkchoice updates to keep sync alive
             if time.time() - last_forkchoice_time >= forkchoice_interval:
                 try:
-                    # Send forkchoice update to sync client to trigger/maintain sync
+                    # Send forkchoice update to sync client to trigger/maintain
+                    # sync
                     assert sync_engine_rpc is not None, "sync_engine_rpc is required"
                     sync_fc_response = sync_engine_rpc.forkchoice_updated(
                         forkchoice_state=last_valid_block_forkchoice_state,
@@ -472,7 +476,7 @@ def test_blockchain_via_sync(
         # Final verification
         assert sync_eth_rpc is not None, "sync_eth_rpc is required"
         assert sync_engine_rpc is not None, "sync_engine_rpc is required"
-        if wait_for_sync(sync_eth_rpc, sync_engine_rpc, last_valid_block_hash, timeout=5):
+        if wait_for_sync(sync_eth_rpc, last_valid_block_hash, timeout=5):
             logger.info("Sync verification successful!")
 
             # Verify the final state

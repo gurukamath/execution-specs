@@ -1,8 +1,8 @@
 """
 Pytest plugin for generating EIP test completion checklists.
 
-This plugin collects checklist markers from tests and generates a filled checklist
-for each EIP based on the template at
+This plugin collects checklist markers from tests and generates a filled
+checklist for each EIP based on the template at
 docs/writing_tests/checklist_templates/eip_testing_checklist_template.md
 """
 
@@ -118,7 +118,7 @@ class EIPItem:
                 status = "❓"
             else:
                 status = "✅"
-            tests = ", ".join(sorted(map(resolve_test_link, self.tests)))
+            tests = ", ".join(sorted(self.tests))
         elif self.not_applicable:
             status = "N/A"
             tests = self.not_applicable_reason
@@ -160,17 +160,6 @@ def resolve_id(item_id: str) -> Set[str]:
     return covered_ids
 
 
-def resolve_test_link(test_id: str) -> str:
-    """Resolve a test ID to a test link."""
-    # test_id example: tests/fork/eip1234_some_eip/test_file.py::test_function[test_param1-...]
-    # Relative path:  ../../../../tests/fork/eip1234_some_eip/test_file/test_function/
-    pattern = r"(.*)\.py::(\w+)"
-    match = re.match(pattern, test_id)
-    if not match:
-        return test_id
-    return f"[{test_id}](../../../../{match.group(1)}/{match.group(2)}/)"
-
-
 ALL_CHECKLIST_WARNINGS: Dict[str, Type["ChecklistWarning"]] = {}
 
 
@@ -206,7 +195,9 @@ class ConflictingChecklistItemsWarning(ChecklistWarning):
 
     @classmethod
     def from_items(cls, all_items: Dict[str, EIPItem]) -> ChecklistWarning | None:
-        """Generate a conflicting checklist items warning from a list of items."""
+        """
+        Generate a conflicting checklist items warning from a list of items.
+        """
         conflicting_items = [
             item for item in all_items.values() if item.not_applicable and item.covered
         ]
@@ -222,8 +213,7 @@ class ConflictingChecklistItemsWarning(ChecklistWarning):
         for item in conflicting_items:
             details.append(
                 f"| {item.id} | {item.description} | "
-                + f"{item.not_applicable_reason} | "
-                + f"{', '.join(sorted(map(resolve_test_link, item.tests)))} |"
+                + f"{item.not_applicable_reason} | {', '.join(sorted(item.tests))} |"
             )
 
         return cls(details=details)
@@ -244,6 +234,7 @@ class EIP:
     @property
     def covered_items(self) -> int:
         """Return the number of covered items."""
+        return sum(1 for item in self.items.values() if item.covered and not item.not_applicable)
         return sum(1 for item in self.items.values() if item.covered and not item.not_applicable)
 
     @property
@@ -346,8 +337,8 @@ class EIP:
         # Replace the title line with the EIP number
         lines[lines.index(TITLE_LINE)] = f"# EIP-{self.number} Test Checklist"
 
-        # Last, add the warnings if there are any, this must be the last thing we do
-        # to avoid shifting the lines below the percentage line
+        # Last, add the warnings if there are any, this must be the last thing
+        # we do to avoid shifting the lines below the percentage line
         if self.warnings:
             warnings_line_idx = lines.index(WARNINGS_LINE)
             warnings_lines = ["", "## ⚠️ Checklist Warnings ⚠️", ""]

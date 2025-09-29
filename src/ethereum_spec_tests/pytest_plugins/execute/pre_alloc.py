@@ -23,7 +23,7 @@ from ethereum_test_base_types.conversions import (
 )
 from ethereum_test_forks import Fork
 from ethereum_test_rpc import EthRPC
-from ethereum_test_rpc.types import TransactionByHashResponse
+from ethereum_test_rpc.rpc_types import TransactionByHashResponse
 from ethereum_test_tools import (
     EOA,
     Account,
@@ -48,8 +48,9 @@ class AddressStubs(EthereumTestRootModel[Dict[str, Address]]):
     """
     Address stubs class.
 
-    The key represents the label that is used in the test to tag the contract, and the value
-    is the address where the contract is already located at in the current network.
+    The key represents the label that is used in the test to tag the contract,
+    and the value is the address where the contract is already located at in
+    the current network.
     """
 
     root: Dict[str, Address]
@@ -65,8 +66,8 @@ class AddressStubs(EthereumTestRootModel[Dict[str, Address]]):
     @classmethod
     def model_validate_json_or_file(cls, json_data_or_path: str) -> Self:
         """
-        Try to load from file if the value resembles a path that ends with .json/.yml and the
-        file exists.
+        Try to load from file if the value resembles a path that ends with
+        .json/.yml and the file exists.
         """
         lower_json_data_or_path = json_data_or_path.lower()
         if (
@@ -259,6 +260,7 @@ class Alloc(BaseAlloc):
                     storage={},
                 ),
             )
+            return contract_address
 
         initcode_prefix = Bytecode()
 
@@ -341,7 +343,10 @@ class Alloc(BaseAlloc):
         delegation: Address | Literal["Self"] | None = None,
         nonce: NumberConvertible | None = None,
     ) -> EOA:
-        """Add a previously unused EOA to the pre-alloc with the balance specified by `amount`."""
+        """
+        Add a previously unused EOA to the pre-alloc with the balance specified
+        by `amount`.
+        """
         assert nonce is None, "nonce parameter is not supported for execute"
         eoa = next(self._eoa_iterator)
         eoa.label = label
@@ -384,7 +389,8 @@ class Alloc(BaseAlloc):
             if delegation is not None:
                 if not isinstance(delegation, Address) and delegation == "Self":
                     delegation = eoa
-                # TODO: This tx has side-effects on the EOA state because of the delegation
+                # TODO: This tx has side-effects on the EOA state because of
+                # the delegation
                 fund_tx = Transaction(
                     sender=self._sender,
                     to=eoa,
@@ -408,7 +414,8 @@ class Alloc(BaseAlloc):
                     authorization_list=[
                         AuthorizationTuple(
                             chain_id=self._chain_id,
-                            address=0,  # Reset delegation to an address without code
+                            # Reset delegation to an address without code
+                            address=0,
                             nonce=eoa.nonce,
                             signer=eoa,
                         ),
@@ -477,7 +484,8 @@ class Alloc(BaseAlloc):
 
     def empty_account(self) -> Address:
         """
-        Add a previously unused account guaranteed to be empty to the pre-alloc.
+        Add a previously unused account guaranteed to be empty to the
+        pre-alloc.
 
         This ensures the account has:
         - Zero balance
@@ -485,8 +493,9 @@ class Alloc(BaseAlloc):
         - No code
         - No storage
 
-        This is different from precompiles or system contracts. The function does not
-        send any transactions, ensuring that the account remains "empty."
+        This is different from precompiles or system contracts. The function
+        does not send any transactions, ensuring that the account remains
+        "empty."
 
         Returns:
             Address: The address of the created empty account.

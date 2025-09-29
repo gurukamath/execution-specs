@@ -232,7 +232,7 @@ class StateTest(FormattedTest):  # noqa: D101
             StateTestFiller,
             Transaction
         )
-        from ethereum_test_tools.vm.opcode import Opcodes as Op
+        from ethereum_test_vm import Opcodes as Op
 
         @pytest.mark.valid_from("Istanbul")
         def test_chainid(state_test: StateTestFiller, pre: Alloc):
@@ -269,7 +269,7 @@ class BlockchainTest(FormattedTest):  # noqa: D101
             Environment,
             Transaction
         )
-        from ethereum_test_tools.vm.opcode import Opcodes as Op
+        from ethereum_test_vm import Opcodes as Op
 
         @pytest.mark.valid_from("Istanbul")
         def test_chainid_blockchain(blockchain_test: BlockchainTestFiller, pre: Alloc):
@@ -412,7 +412,10 @@ def test_pre_alloc_grouping_by_test_type(
     test_definitions: List[FormattedTest],
     expected_different_pre_alloc_groups: int,
 ):
-    """Test pre-alloc grouping when filling state tests, and the effect of the `state_test.env`."""
+    """
+    Test pre-alloc grouping when filling state tests, and the effect of the
+    `state_test.env`.
+    """
     tests_dir = Path(pytester.mkdir("tests"))
     for i, test in enumerate(test_definitions):
         test_module = tests_dir / f"test_{i}.py"

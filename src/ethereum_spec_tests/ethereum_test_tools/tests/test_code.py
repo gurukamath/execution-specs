@@ -22,7 +22,7 @@ from ethereum_test_vm import Opcodes as Op
 from ethereum_test_vm import UndefinedOpcodes
 from pytest_plugins.solc.solc import SOLC_EXPECTED_MIN_VERSION
 
-from ..code import CalldataCase, Case, Conditional, Initcode, Switch
+from ..tools_code import CalldataCase, Case, Conditional, Initcode, Switch
 
 
 @pytest.fixture(params=get_deployed_forks())
@@ -185,7 +185,9 @@ def test_initcode(initcode: Initcode, bytecode: bytes):  # noqa: D103
     ],
 )
 def test_opcodes_if(conditional_bytecode: bytes, expected: bytes):
-    """Test that the if opcode macro is transformed into bytecode as expected."""
+    """
+    Test that the if opcode macro is transformed into bytecode as expected.
+    """
     assert bytes(conditional_bytecode) == expected
 
 
@@ -514,7 +516,9 @@ def test_opcodes_if(conditional_bytecode: bytes, expected: bytes):
 def test_switch(
     tx_data: bytes, switch_bytecode: bytes, expected_storage: Mapping, default_t8n: TransitionTool
 ):
-    """Test that the switch opcode macro gets executed as using the t8n tool."""
+    """
+    Test that the switch opcode macro gets executed as using the t8n tool.
+    """
     code_address = Address(0x1000)
     pre = Alloc(
         {

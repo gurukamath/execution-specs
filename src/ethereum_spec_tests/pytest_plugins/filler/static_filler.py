@@ -1,6 +1,6 @@
 """
-Static filler pytest plugin that reads test cases from static files and fills them into test
-fixtures.
+Static filler pytest plugin that reads test cases from static files and fills
+them into test fixtures.
 """
 
 import inspect
@@ -19,7 +19,7 @@ from _pytest.python import Module
 from ethereum_test_fixtures import BaseFixture, LabeledFixtureFormat
 from ethereum_test_forks import Fork, get_closest_fork
 from ethereum_test_specs import BaseStaticTest, BaseTest
-from ethereum_test_tools.code.yul import Yul
+from ethereum_test_tools.tools_code.yul import Yul
 
 from ..forks.forks import ValidityMarker
 from ..shared.helpers import labeled_format_parameter_set
@@ -111,7 +111,10 @@ def get_all_combinations_from_parametrize_marks(
 
 
 def pytest_collect_file(file_path: Path, parent) -> pytest.Collector | None:
-    """Pytest hook that collects test cases from static files and fills them into test fixtures."""
+    """
+    Pytest hook that collects test cases from static files and fills them into
+    test fixtures.
+    """
     fill_static_tests_enabled = parent.config.getoption("fill_static_tests_enabled")
     if not fill_static_tests_enabled:
         return None
@@ -147,8 +150,8 @@ for ch in list(NoIntResolver.yaml_implicit_resolvers):
 
 class FillerFile(pytest.File):
     """
-    Filler file that reads test cases from static files and fills them into test
-    fixtures.
+    Filler file that reads test cases from static files and fills them into
+    test fixtures.
     """
 
     def collect(self: "FillerFile") -> Generator["FillerTestItem", None, None]:
@@ -241,7 +244,8 @@ class FillerFile(pytest.File):
                                     get_all_combinations_from_parametrize_marks(parametrize_marks)
                                 )
                                 for parameter_set in parameter_set_list:
-                                    # Copy and extend the params with the parameter set
+                                    # Copy and extend the params with the
+                                    # parameter set
                                     case_marks = (
                                         marks[:]
                                         + [
@@ -349,10 +353,10 @@ def yul(fork: Fork, request: pytest.FixtureRequest):
     """
     Fixture that allows contract code to be defined with Yul code.
 
-    This fixture defines a class that wraps the ::ethereum_test_tools.Yul
-    class so that upon instantiation within the test case, it provides the
-    test case's current fork parameter. The forks is then available for use
-    in solc's arguments for the Yul code compilation.
+    This fixture defines a class that wraps the ::ethereum_test_tools.Yul class
+    so that upon instantiation within the test case, it provides the test
+    case's current fork parameter. The forks is then available for use in
+    solc's arguments for the Yul code compilation.
 
     Test cases can override the default value by specifying a fixed version
     with the @pytest.mark.compile_yul_with(FORK) marker.
@@ -372,7 +376,7 @@ def yul(fork: Fork, request: pytest.FixtureRequest):
         else:
             pytest.fail(f"{request.node.name}: Fork {marker.args[0]} not found in forks list.")
     else:
-        solc_target_fork = get_closest_fork(fork, request.config.solc_version)
+        solc_target_fork = get_closest_fork(fork)
         assert solc_target_fork is not None, "No fork supports provided solc version."
         if solc_target_fork != fork and request.config.getoption("verbose") >= 1:
             warnings.warn(

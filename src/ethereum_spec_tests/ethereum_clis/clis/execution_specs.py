@@ -16,7 +16,7 @@ from ethereum_test_exceptions import (
     TransactionException,
 )
 from ethereum_test_forks import Fork
-from pytest_plugins.logging import get_logger
+from pytest_plugins.custom_logging import get_logger
 
 import ethereum
 from ethereum_spec_tools.evm_tools import create_parser
@@ -136,7 +136,10 @@ class ExecutionSpecsTransitionTool(TransitionTool):
 
 
 class ExecutionSpecsExceptionMapper(ExceptionMapper):
-    """Translate between EEST exceptions and error strings returned by ExecutionSpecs."""
+    """
+    Translate between EEST exceptions and error strings returned by
+    ExecutionSpecs.
+    """
 
     mapping_substring: ClassVar[Dict[ExceptionBase, str]] = {
         TransactionException.TYPE_4_EMPTY_AUTHORIZATION_LIST: "EmptyAuthorizationListError",
