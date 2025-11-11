@@ -72,7 +72,6 @@ class BlockchainTestFixture(Fixture, FixtureTestItem):
         super().__init__(*args, **kwargs)
         self.fork_name = self.test_dict["network"]
         self.add_marker(pytest.mark.fork(self.fork_name))
-        self.add_marker("evm_tools")
         self.add_marker("json_blockchain_tests")
         eels_fork = FORKS[self.fork_name]["eels_fork"]
         test_patterns = exceptional_blockchain_test_patterns(
