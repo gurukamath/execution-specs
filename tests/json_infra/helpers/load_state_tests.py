@@ -3,9 +3,10 @@
 import json
 import sys
 from io import StringIO
-from typing import Any, Dict, Iterable
+from typing import Any, Dict, Iterable, List
 
 import pytest
+from _pytest.config import Config
 from _pytest.nodes import Item
 from pytest import Collector
 
@@ -16,6 +17,7 @@ from ethereum_spec_tools.evm_tools.statetest import read_test_case
 from ethereum_spec_tools.evm_tools.t8n import T8N
 
 from .. import FORKS
+from ..stash_keys import desired_forks_key
 from .exceptional_test_patterns import (
     exceptional_state_test_patterns,
 )
@@ -186,12 +188,18 @@ class StateTestFixture(Fixture, Collector):
 
     def collect(self) -> Iterable[Item | Collector]:
         """Collect state test cases inside of this fixture."""
+        desired_forks: List[str] = self.config.stash.get(desired_forks_key, [])
         for test_case in read_test_case(
             test_file_path=self.test_file,
             key=self.test_key,
             test=self.test_dict,
         ):
-            if test_case.fork_name not in FORKS:
+            # The has_desired_fork method is used to skip the entire
+            # fixture file if it does not feature any of the desired
+            # forks. The below check is performed on the individual
+            # test cases within a fixture file in order to keep
+            # nothing other than the desired forks.
+            if test_case.fork_name not in desired_forks:
                 continue
             name = f"{test_case.index}"
             yield StateTest.from_parent(
@@ -201,3 +209,20 @@ class StateTestFixture(Fixture, Collector):
                 fork_name=test_case.fork_name,
                 key=self.test_key,
             )
+
+    @classmethod
+    def has_desired_fork(
+        cls, test_dict: Dict[str, Any], config: Config
+    ) -> bool:
+        """
+        Check if the collector fork list has at least
+        one fork in the desired fork list.
+        """
+        desired_forks = config.stash.get(desired_forks_key, None)
+        if desired_forks is None:
+            return True
+
+        for network in test_dict["post"].keys():
+            if network in desired_forks:
+                return True
+        return False
