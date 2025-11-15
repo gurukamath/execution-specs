@@ -73,7 +73,7 @@ class BlockchainTestFixture(Fixture, FixtureTestItem):
         self.fork_name = self.test_dict["network"]
         self.add_marker(pytest.mark.fork(self.fork_name))
         self.add_marker("json_blockchain_tests")
-        eels_fork = FORKS[self.fork_name]["eels_fork"]
+        eels_fork = FORKS[self.fork_name]
         test_patterns = exceptional_blockchain_test_patterns(
             self.fork_name, eels_fork
         )
@@ -111,7 +111,7 @@ class BlockchainTestFixture(Fixture, FixtureTestItem):
                 f"{self.test_file}[{self.test_key}] doesn't have post state"
             )
 
-        eels_fork = FORKS[self.fork_name]["eels_fork"]
+        eels_fork = FORKS[self.fork_name]
         load = Load(
             self.fork_name,
             eels_fork,
