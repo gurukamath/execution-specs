@@ -1,5 +1,6 @@
 """
 Simple patching tool.
+This is a change.
 """
 
 import argparse
