@@ -26,8 +26,8 @@ jobs:
         with:
           python-version: "3.11"
       - uses: ./.github/actions/setup-env
-      - name: Determine fork options for json_infra
-        id: select-tests
+      - name: Get changed files and save to disk
+        id: get-changed-files
         run: |
           if [ "${{ github.event_name }}" = "pull_request" ]; then
             BASE_SHA="${{ github.event.pull_request.base.sha }}"
@@ -46,14 +46,17 @@ jobs:
 
           echo "should_run=true" >> $GITHUB_OUTPUT
           echo "Comparing commits: $BASE_SHA...$HEAD_SHA"
-          FORK_ARGS=$(python .github/scripts/select_tests.py "$BASE_SHA" "$HEAD_SHA")
-          echo "Fork arguments: $FORK_ARGS"
-          echo "fork_args=$FORK_ARGS" >> $GITHUB_OUTPUT
+
+          # Get changed files and save to disk
+          FILE_LIST="changed_files.txt"
+          git diff --name-only "$BASE_SHA" "$HEAD_SHA" > "$FILE_LIST"
+          echo "Changed files saved to $FILE_LIST"
+          echo "file_list=$FILE_LIST" >> $GITHUB_OUTPUT
       - name: Run json infra tests
-        if: steps.select-tests.outputs.should_run == 'true'
-        run: tox -e json_infra -- ${{ steps.select-tests.outputs.fork_args }}
+        if: steps.get-changed-files.outputs.should_run == 'true'
+        run: tox -e json_infra -- --file-list=${{ steps.get-changed-files.outputs.file_list }}
       - name: Upload coverage reports to Codecov
-        if: steps.select-tests.outputs.should_run == 'true'
+        if: steps.get-changed-files.outputs.should_run == 'true'
         uses: codecov/codecov-action@5a1091511ad55cbe89839c7260b706298ca349f7
         with:
           files: .tox/coverage.xml
