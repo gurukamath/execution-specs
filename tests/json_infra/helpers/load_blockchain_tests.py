@@ -1,8 +1,4 @@
-"""
-Helpers to load and run blockchain tests from JSON files.
-
-This is a change.
-"""
+"""Helpers to load and run blockchain tests from JSON files."""
 
 import importlib
 from pathlib import Path
