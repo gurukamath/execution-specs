@@ -9,6 +9,7 @@ Introduction
 ------------
 
 Entry point for the Ethereum specification.
+This is a change in the same commit.
 """
 
 from dataclasses import dataclass
