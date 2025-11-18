@@ -27,6 +27,7 @@ from ethereum_spec_tools.forks import Hardfork
 
 from . import TEST_FIXTURES
 from .helpers import FixturesFile, FixtureTestItem
+from .helpers.select_tests import extract_affected_forks
 from .stash_keys import desired_forks_key, fixture_lock
 
 try:
@@ -97,6 +98,12 @@ def pytest_addoption(parser: Parser) -> None:
         default="",
         help="Only fill tests for the specified fork.",
     )
+    parser.addoption(
+        "--file-list",
+        action="store",
+        dest="file_list",
+        help="Only fill tests for the specified fork.",
+    )
 
 
 def pytest_configure(config: Config) -> None:
@@ -121,6 +128,7 @@ def pytest_configure(config: Config) -> None:
     desired_fork = config.getoption("single_fork", "")
     forks_from = config.getoption("forks_from", "")
     forks_until = config.getoption("forks_until", "")
+    file_list = config.getoption("file_list", None)
 
     desired_forks = []
     all_forks = [fork.json_test_name for fork in Hardfork.discover()]
@@ -154,9 +162,16 @@ def pytest_configure(config: Config) -> None:
 
         # Extract the fork range
         desired_forks = all_forks[start_idx:end_idx]
-
+    elif file_list:
+        desired_forks = extract_affected_forks(file_list)
     else:
         desired_forks = all_forks
+
+    if not any(desired_fork):
+        print("No fork specific tests will be run!!!")
+    else:
+        fork_list_str = " ".join(desired_forks)
+        print(f"Running tests for the following forks: {fork_list_str}")
 
     config.stash[desired_forks_key] = desired_forks
 
