@@ -55,7 +55,9 @@ def extract_affected_forks(files_path: str) -> List[str]:
             else:
                 # Example src/ethereum/exceptions.py
                 return all_forks
-        elif file_path.startswith("tests/json_infra/"):
+        elif file_path.startswith(
+            "src/ethereum_spec_tools/evm_tools"
+        ) or file_path.startswith("tests/json_infra/"):
             return all_forks
 
     return list(affected_forks)
