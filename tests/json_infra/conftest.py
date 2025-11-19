@@ -23,9 +23,7 @@ from pytest import Collector, Session, fixture
 from requests_cache import CachedSession
 from requests_cache.backends.sqlite import SQLiteCache
 
-from ethereum_spec_tools.forks import Hardfork
-
-from . import TEST_FIXTURES
+from . import FORKS, TEST_FIXTURES
 from .helpers import FixturesFile, FixtureTestItem
 from .helpers.select_tests import extract_affected_forks
 from .stash_keys import desired_forks_key, fixture_lock
@@ -131,7 +129,7 @@ def pytest_configure(config: Config) -> None:
     file_list = config.getoption("file_list", None)
 
     desired_forks = []
-    all_forks = [fork.json_test_name for fork in Hardfork.discover()]
+    all_forks = list(FORKS.keys())
     if desired_fork:
         if desired_fork not in all_forks:
             raise ValueError(f"Unknown fork: {desired_fork}")
@@ -168,7 +166,7 @@ def pytest_configure(config: Config) -> None:
     if not any(desired_forks):
         print("No fork specific tests will be run!!!")
     else:
-        fork_list_str = " ".join(desired_forks)
+        fork_list_str = ", ".join(desired_forks)
         print(f"Running tests for the following forks: {fork_list_str}")
 
     config.stash[desired_forks_key] = desired_forks

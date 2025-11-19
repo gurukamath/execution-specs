@@ -4,7 +4,7 @@ from typing import Dict, TypedDict
 
 from typing_extensions import NotRequired
 
-from ethereum_spec_tools.forks import Hardfork
+from .hardfork import TestHardfork
 
 
 class _FixtureSource(TypedDict):
@@ -33,6 +33,6 @@ TEST_FIXTURES: Dict[str, _FixtureSource] = {
 }
 
 
-FORKS: Dict[str, str] = {
-    fork.json_test_name: fork.short_name for fork in Hardfork.discover()
+FORKS: Dict[str, TestHardfork] = {
+    fork.json_test_name: fork for fork in TestHardfork.discover()
 }

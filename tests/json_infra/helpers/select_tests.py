@@ -9,10 +9,10 @@ pytest commands.
 from pathlib import Path
 from typing import List
 
-from ethereum_spec_tools.forks import Hardfork
+from .. import TestHardfork
 
 FORK_MAPPING = {
-    fork.short_name: fork.json_test_name for fork in Hardfork.discover()
+    fork.short_name: fork.json_test_name for fork in TestHardfork.discover()
 }
 
 

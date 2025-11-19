@@ -257,20 +257,6 @@ class Hardfork:
         """
         return self.short_name.replace("_", " ").title()
 
-    @property
-    def json_test_name(self) -> str:
-        """
-        Name of the hard fork in the test json fixtures.
-        """
-        if self.title_case_name == "Tangerine Whistle":
-            return "EIP150"
-        elif self.title_case_name == "Spurious Dragon":
-            return "EIP158"
-        elif self.title_case_name == "Constantinople":
-            return "ConstantinopleFix"
-        else:
-            return self.title_case_name
-
     def __repr__(self) -> str:
         """
         Return repr(self).
