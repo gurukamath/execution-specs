@@ -28,7 +28,7 @@ def extract_affected_forks(files_path: str) -> List[str]:
         List of fork json_test_names that have been affected
 
     """
-    all_forks = [fork.json_test_name for fork in Hardfork.discover()]
+    all_forks = [fork.json_test_name for fork in TestHardfork.discover()]
     # Read changed files from disk
     changed_files_file = Path(files_path)
     if not changed_files_file.exists():
@@ -40,24 +40,49 @@ def extract_affected_forks(files_path: str) -> List[str]:
 
     # Extract affected forks
     affected_forks = set()
+    repo_root = Path.cwd()  # Assuming running from repo root
 
-    for file_path in changed_files:
+    for file_path_str in changed_files:
+        if not file_path_str or file_path_str.startswith("#"):
+            # Skip empty lines and comments
+            continue
 
-        # Check if path contains src/ethereum/forks/{fork_name}/
-        if file_path.startswith("src/ethereum/"):
-            parts = Path(file_path).parts
-            if len(parts) >= 4 and parts[2] == "forks":
-                # Example src/ethereum/forks/berlin/__init__.py
-                fork_short_name = parts[3]
-                fork_json_name = FORK_MAPPING.get(fork_short_name)
-                if fork_json_name:
-                    affected_forks.add(fork_json_name)
-            else:
-                # Example src/ethereum/exceptions.py
-                return all_forks
-        elif file_path.startswith(
-            "src/ethereum_spec_tools/evm_tools"
-        ) or file_path.startswith("tests/json_infra/"):
+        try:
+            # Normalize the path
+            file_path = Path(file_path_str)
+
+            # Convert absolute paths to relative
+            if file_path.is_absolute():
+                try:
+                    file_path = file_path.relative_to(repo_root)
+                except ValueError:
+                    # Path is outside repo, skip it
+                    continue
+
+        except (TypeError, ValueError, OSError):
+            # Skip invalid paths
+            continue
+
+        if file_path.is_relative_to("tests/json_infra/"):
+            # Run all forks if something changes in the test
+            # framework
             return all_forks
+        if file_path.is_relative_to("src/ethereum_spec_tools/evm_tools"):
+            # Run all forks if something changes in the evm
+            # tools
+            return all_forks
+
+        if file_path.is_relative_to("src/ethereum/"):
+            parts = Path(file_path).parts
+            if len(parts) < 4 or parts[2] != "forks":
+                # Run all tests if something changes in the
+                # non fork-specific part of src/ethereum
+                return all_forks
+
+            # Run tests for specific forks
+            fork_short_name = parts[3]
+            fork_json_name = FORK_MAPPING.get(fork_short_name)
+            if fork_json_name:
+                affected_forks.add(fork_json_name)
 
     return list(affected_forks)
