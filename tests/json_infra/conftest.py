@@ -280,6 +280,29 @@ def pytest_sessionstart(session: Session) -> None:
     if get_xdist_worker_id(session) != "master":
         return
 
+    # Clean up old log files (from previous format)
+    log_dir = session.config.rootpath / "json_infra_logs"
+    if log_dir.exists():
+        # Remove old .log files (except worker_master.log which we keep)
+        for log_file in log_dir.glob("worker_gw*.log"):
+            try:
+                log_file.unlink()
+            except FileNotFoundError:
+                pass
+        # Remove old .jsonl files to start fresh
+        for jsonl_file in log_dir.glob("worker_*.jsonl"):
+            try:
+                jsonl_file.unlink()
+            except FileNotFoundError:
+                pass
+        # Clear master log to start fresh
+        master_log = log_dir / "worker_master.log"
+        if master_log.exists():
+            try:
+                master_log.unlink()
+            except FileNotFoundError:
+                pass
+
     lock_path = session.config.rootpath.joinpath("tests/fixtures/.lock")
     stash = session.stash
     lock_file = FileLock(str(lock_path), timeout=0)
@@ -339,6 +362,144 @@ def pytest_collect_file(
         return FixturesFile.from_parent(parent, path=file_path)
     return None
 
+
+# Dictionary to store test start data temporarily
+_test_start_data = {}
+
+
+def pytest_runtest_logstart(nodeid: str, location: tuple) -> None:
+    """
+    Log the start of each test to a worker-specific file.
+    Called when a test is about to be executed.
+    """
+    import time
+
+    del location  # unused
+
+    # Get worker ID directly from environment variable set by xdist
+    worker_id = os.environ.get("PYTEST_XDIST_WORKER", "master")
+
+    # Get the rootpath from the current file location
+    # Navigate up from conftest.py -> json_infra -> tests -> root
+    root_path = Path(__file__).parent.parent.parent
+
+    # Create a log file path specific to this worker
+    log_dir = root_path / "json_infra_logs"
+    log_dir.mkdir(exist_ok=True)
+
+    # Master worker just logs test order
+    if worker_id == "master":
+        log_file = log_dir / "worker_master.log"
+        with open(log_file, "a") as f:
+            f.write(f"{nodeid}\n")
+        return
+
+    # Get current timestamp
+    start_time = time.time()
+
+    # Get memory usage (in MB)
+    try:
+        import psutil
+
+        process = psutil.Process()
+        memory_mb = process.memory_info().rss / (1024 * 1024)
+    except ImportError:
+        memory_mb = -1  # Indicate psutil not available
+
+    # Store start data for this test
+    _test_start_data[nodeid] = {
+        "start_time": start_time,
+        "start_memory_mb": memory_mb,
+        "worker": worker_id,
+    }
+
+
+def pytest_runtest_logfinish(nodeid: str, location: tuple) -> None:
+    """
+    Log the finish of each test to a worker-specific file.
+    Called when a test has finished executing.
+    """
+    import json
+    import time
+
+    del location  # unused
+
+    # Get worker ID directly from environment variable set by xdist
+    worker_id = os.environ.get("PYTEST_XDIST_WORKER", "master")
+    if worker_id == "master":
+        return
+
+    # Get the rootpath from the current file location
+    # Navigate up from conftest.py -> json_infra -> tests -> root
+    root_path = Path(__file__).parent.parent.parent
+
+    # Create a log file path specific to this worker
+    log_dir = root_path / "json_infra_logs"
+    log_file = log_dir / f"worker_{worker_id}.jsonl"
+
+    # Get current timestamp
+    end_time = time.time()
+
+    # Get memory usage (in MB)
+    try:
+        import psutil
+
+        process = psutil.Process()
+        end_memory_mb = process.memory_info().rss / (1024 * 1024)
+    except ImportError:
+        end_memory_mb = -1
+
+    # Get start data for this test
+    start_data = _test_start_data.pop(nodeid, {})
+
+    # Create complete test record
+    test_record = {
+        "test_id": nodeid,
+        "worker": worker_id,
+        "start_time": start_data.get("start_time", -1),
+        "end_time": end_time,
+        "duration": (
+            end_time - start_data["start_time"]
+            if "start_time" in start_data
+            else -1
+        ),
+        "start_memory_mb": start_data.get("start_memory_mb", -1),
+        "end_memory_mb": end_memory_mb,
+        "memory_delta_mb": (
+            end_memory_mb - start_data["start_memory_mb"]
+            if "start_memory_mb" in start_data
+            and start_data["start_memory_mb"] != -1
+            and end_memory_mb != -1
+            else None
+        ),
+    }
+
+    # Append as JSON line
+    with open(log_file, "a") as f:
+        f.write(json.dumps(test_record) + "\n")
+
+
+def pytest_collection_finish(session: Session) -> None:
+    """Write the list of tests that will actually run after all filtering."""
+    from pathlib import Path
+
+    log_dir = Path("json_infra_logs")
+    log_file = log_dir / "collected.log"
+
+    # Ensure directory exists
+    if log_dir.exists():
+        import shutil
+        shutil.rmtree(log_dir)
+    log_dir.mkdir()
+
+    try:
+        with open(log_file, "w") as f:
+            # session.items contains only the tests that will run
+            for item in session.items:
+                f.write(f"{item.nodeid}\n")
+        print(f"Will run {len(session.items)} tests, written to {log_file}")
+    except (OSError, IOError) as e:
+        print(f"Warning: Could not write collected tests to {log_file}: {e}")
 
 def pytest_runtest_teardown(item: Item, nextitem: Item) -> None:
     """
