@@ -82,7 +82,17 @@ jobs:
       - name: Run pypy3 tests
         run: tox -e pypy3
         env:
-          PYPY_GC_MAX: "2G"
+          # Note: This MAX used to be 2G (this is per-worker). We increased this
+          # because some workers were running into memory issues. If you give too
+          # much here, then the whole CI fails with OOM (combined RAM > what's
+          # on machine). Too little and a single worker ends up crashing out and
+          # failing some tests, revealed at the end of the CI run. Some balance
+          # here is needed.
+          # Currently using 5 workers x 3G each = 15G max on `size-xl-x64` (32G)
+          # This leaves 17G for OS and other processes.
+          # TODO: Next steps should probably be size-xl-x64 -> something bigger
+          # with 64G RAM (more workers + more RAM per)
+          PYPY_GC_MAX: "3G"
           PYPY_GC_MIN: "1G"
 
   json_infra:
