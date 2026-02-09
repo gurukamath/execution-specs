@@ -12,10 +12,10 @@ Entry point for the Ethereum specification.
 """
 
 from dataclasses import dataclass
-from typing import List, Optional, Tuple
+from typing import List, Optional, Set, Tuple
 
 from ethereum_rlp import rlp
-from ethereum_types.bytes import Bytes
+from ethereum_types.bytes import Bytes, Bytes0
 from ethereum_types.frozen import slotted_freezable
 from ethereum_types.numeric import U64, U256, Uint
 
@@ -24,12 +24,19 @@ from ethereum.exceptions import (
     EthereumException,
     GasUsedExceedsLimitError,
     InsufficientBalanceError,
+    InsufficientTransactionGasError,
     InvalidBlock,
     InvalidSenderError,
     NonceMismatchError,
 )
 from ethereum.forks.bpo5.blocks import Header as PreviousHeader
-from ethereum.state import EMPTY_CODE_HASH, Address, BlockDiff, PreState
+from ethereum.state import (
+    EMPTY_ACCOUNT,
+    EMPTY_CODE_HASH,
+    Address,
+    BlockDiff,
+    PreState,
+)
 
 from . import vm
 from .block_access_lists import (
@@ -52,7 +59,10 @@ from .exceptions import (
     PriorityFeeGreaterThanMaxFeeError,
     TransactionTypeContractCreationError,
 )
-from .fork_types import Authorization, VersionedHash
+from .fork_types import (
+    Authorization,
+    VersionedHash,
+)
 from .requests import (
     CONSOLIDATION_REQUEST_TYPE,
     DEPOSIT_REQUEST_TYPE,
@@ -482,7 +492,9 @@ def check_transaction(
     block_output: vm.BlockOutput,
     tx: Transaction,
     tx_state: TransactionState,
-) -> Tuple[Address, Uint, Tuple[VersionedHash, ...], U64]:
+) -> Tuple[
+    Address, Uint, Tuple[VersionedHash, ...], U64, Uint, Uint, Set, Set
+]:
     """
     Check if the transaction is includable in the block.
 
@@ -507,6 +519,14 @@ def check_transaction(
         The blob versioned hashes of the transaction.
     tx_blob_gas_used:
         The blob gas used by the transaction.
+    intrinsic_gas :
+        The total intrinsic gas cost including recipient cost.
+    calldata_floor_gas_cost :
+        The minimum gas cost based on calldata size.
+    access_list_addresses :
+        The set of addresses in the access list.
+    access_list_storage_keys :
+        The set of storage keys in the access list.
 
     Raises
     ------
@@ -541,8 +561,13 @@ def check_transaction(
     EmptyAuthorizationListError :
         If the transaction is a SetCodeTransaction and the authorization list
         is empty.
+    InsufficientTransactionGasError :
+        If the transaction gas is insufficient to cover intrinsic costs.
 
     """
+    # Validate transaction and get base intrinsic costs
+    intrinsic_gas, calldata_floor_gas_cost = validate_transaction(tx)
+
     gas_available = block_env.block_gas_limit - block_output.block_gas_used
     blob_gas_available = MAX_BLOB_GAS_PER_BLOCK - block_output.blob_gas_used
 
@@ -628,11 +653,43 @@ def check_transaction(
     ):
         raise InvalidSenderError("not EOA")
 
+    # Build access list for recipient cost calculation
+    access_list_addresses = set()
+    access_list_storage_keys = set()
+    access_list_addresses.add(block_env.coinbase)
+    if isinstance(
+        tx,
+        (
+            AccessListTransaction,
+            FeeMarketTransaction,
+            BlobTransaction,
+            SetCodeTransaction,
+        ),
+    ):
+        for access in tx.access_list:
+            access_list_addresses.add(access.account)
+            for slot in access.slots:
+                access_list_storage_keys.add((access.account, slot))
+
+    # Calculate recipient gas cost (EIP-2780)
+    recipient_gas_cost = calculate_recipient_gas_cost(
+        tx, tx_state, sender_address, access_list_addresses
+    )
+    intrinsic_gas += recipient_gas_cost
+
+    # Check if transaction has sufficient gas for intrinsic costs
+    if max(intrinsic_gas, calldata_floor_gas_cost) > tx.gas:
+        raise InsufficientTransactionGasError("Insufficient gas")
+
     return (
         sender_address,
         effective_gas_price,
         blob_versioned_hashes,
         tx_blob_gas_used,
+        intrinsic_gas,
+        calldata_floor_gas_cost,
+        access_list_addresses,
+        access_list_storage_keys,
     )
 
 
@@ -922,6 +979,99 @@ def process_general_purpose_requests(
         )
 
 
+def calculate_recipient_gas_cost(
+    tx: Transaction,
+    tx_state: TransactionState,
+    sender: Address,
+    access_list_addresses: Set[Address],
+) -> Uint:
+    """
+    Calculate the gas cost for accessing and updating the recipient account.
+
+    Post EIP-2780, the cost of accessing and updating the recipient involves
+    state access and is no longer included in TX_BASE_COST. This function
+    computes the recipient-specific costs based on:
+    - Account type (EOA, contract, delegated EOA, or precompile)
+    - Whether the recipient is in the access list (warm vs cold access)
+    - Transaction value (zero vs non-zero transfers)
+    - Account existence (new account creation vs existing account update)
+
+    Parameters
+    ----------
+    tx :
+        The transaction being processed.
+    tx_state :
+        The current transaction state.
+    sender :
+        The address of the transaction sender.
+    access_list_addresses :
+        Set of addresses that are pre-warmed via the access list.
+
+    Returns
+    -------
+    recipient_gas_cost : Uint
+        The total gas cost for accessing and updating the recipient account.
+        Returns 0 for contract creation or self-transfers.
+
+    """
+    from .vm.gas import (
+        GAS_COLD_ACCOUNT_COST_CODE,
+        GAS_COLD_ACCOUNT_COST_NOCODE,
+        GAS_NEW_ACCOUNT,
+        GAS_STATE_UPDATE,
+        GAS_WARM_ACCESS,
+    )
+    from .vm.precompiled_contracts.mapping import PRE_COMPILED_CONTRACTS
+
+    tx_recipient_cost = Uint(0)
+    if isinstance(tx.to, Bytes0) or tx.to == sender:
+        return tx_recipient_cost
+
+    if tx.to in PRE_COMPILED_CONTRACTS:
+        if tx.value > U256(0):
+            tx_recipient_cost += GAS_STATE_UPDATE
+        return tx_recipient_cost
+
+    recipient = get_account(tx_state, tx.to)
+
+    is_contract_or_delegated_eoa = False
+    if recipient.code_hash != EMPTY_CODE_HASH:
+        is_contract_or_delegated_eoa = True
+
+    if is_contract_or_delegated_eoa:
+        # For contracts, access costs are applied irrespective
+        # of value and update costs are applied only for non-zero
+        # transfers
+
+        # Access cost
+        if tx.to in access_list_addresses:
+            tx_recipient_cost += GAS_WARM_ACCESS
+        else:
+            tx_recipient_cost += GAS_COLD_ACCOUNT_COST_CODE
+
+        # Update cost
+        if tx.value > U256(0):
+            tx_recipient_cost += GAS_STATE_UPDATE
+
+    else:
+        # For EOAs, access and update costs are only applied for
+        # non-zero transfers
+        if tx.value > U256(0):
+            # Access cost
+            if tx.to in access_list_addresses:
+                tx_recipient_cost += GAS_WARM_ACCESS
+            else:
+                tx_recipient_cost += GAS_COLD_ACCOUNT_COST_NOCODE
+
+            # Update cost
+            if recipient == EMPTY_ACCOUNT:
+                tx_recipient_cost += GAS_NEW_ACCOUNT
+            else:
+                tx_recipient_cost += GAS_STATE_UPDATE
+
+    return tx_recipient_cost
+
+
 def process_transaction(
     block_env: vm.BlockEnvironment,
     block_output: vm.BlockOutput,
@@ -963,13 +1113,15 @@ def process_transaction(
         encode_transaction(tx),
     )
 
-    intrinsic_gas, calldata_floor_gas_cost = validate_transaction(tx)
-
     (
         sender,
         effective_gas_price,
         blob_versioned_hashes,
         tx_blob_gas_used,
+        intrinsic_gas,
+        calldata_floor_gas_cost,
+        access_list_addresses,
+        access_list_storage_keys,
     ) = check_transaction(
         block_env=block_env,
         block_output=block_output,
@@ -994,23 +1146,6 @@ def process_transaction(
         Uint(sender_account.balance) - effective_gas_fee - blob_gas_fee
     )
     set_account_balance(tx_state, sender, U256(sender_balance_after_gas_fee))
-
-    access_list_addresses = set()
-    access_list_storage_keys = set()
-    access_list_addresses.add(block_env.coinbase)
-    if isinstance(
-        tx,
-        (
-            AccessListTransaction,
-            FeeMarketTransaction,
-            BlobTransaction,
-            SetCodeTransaction,
-        ),
-    ):
-        for access in tx.access_list:
-            access_list_addresses.add(access.account)
-            for slot in access.slots:
-                access_list_storage_keys.add((access.account, slot))
 
     authorizations: Tuple[Authorization, ...] = ()
     if isinstance(tx, SetCodeTransaction):
