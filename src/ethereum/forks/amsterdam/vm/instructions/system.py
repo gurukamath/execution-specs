@@ -408,10 +408,7 @@ def call(evm: Evm) -> None:
     if is_cold_access:
         if call_target.code_hash != EMPTY_CODE_HASH:
             access_gas_cost = GAS_COLD_ACCOUNT_COST_CODE
-            check_gas(
-                evm,
-                access_gas_cost + extend_memory.cost,
-            )
+            check_gas(evm, access_gas_cost + extend_memory.cost)
         evm.accessed_addresses.add(to)
 
     call_value_cost = Uint(0)
@@ -507,19 +504,20 @@ def callcode(evm: Evm) -> None:
 
     is_cold_access = code_address not in evm.accessed_addresses
     if is_cold_access:
-        access_gas_cost = GAS_COLD_ACCOUNT_ACCESS
+        access_gas_cost = GAS_COLD_ACCOUNT_COST_NOCODE
     else:
         access_gas_cost = GAS_WARM_ACCESS
 
     # check static gas before state access
-    check_gas(
-        evm,
-        access_gas_cost + extend_memory.cost,
-    )
+    check_gas(evm, access_gas_cost + extend_memory.cost)
 
     # STATE ACCESS
     tx_state = evm.message.tx_env.state
+    call_target_code = get_account(tx_state, code_address)
     if is_cold_access:
+        if call_target_code.code_hash != EMPTY_CODE_HASH:
+            access_gas_cost = GAS_COLD_ACCOUNT_COST_CODE
+            check_gas(evm, access_gas_cost + extend_memory.cost)
         evm.accessed_addresses.add(code_address)
 
     call_value_cost = Uint(0)
@@ -675,7 +673,7 @@ def delegatecall(evm: Evm) -> None:
 
     is_cold_access = code_address not in evm.accessed_addresses
     if is_cold_access:
-        access_gas_cost = GAS_COLD_ACCOUNT_ACCESS
+        access_gas_cost = GAS_COLD_ACCOUNT_COST_NOCODE
     else:
         access_gas_cost = GAS_WARM_ACCESS
 
@@ -684,7 +682,12 @@ def delegatecall(evm: Evm) -> None:
 
     # STATE ACCESS
     tx_state = evm.message.tx_env.state
+    call_target = get_account(tx_state, code_address)
+
     if is_cold_access:
+        if call_target.code_hash != EMPTY_CODE_HASH:
+            access_gas_cost = GAS_COLD_ACCOUNT_COST_CODE
+            check_gas(evm, access_gas_cost + extend_memory.cost)
         evm.accessed_addresses.add(code_address)
 
     extra_gas = access_gas_cost
@@ -765,7 +768,7 @@ def staticcall(evm: Evm) -> None:
 
     is_cold_access = to not in evm.accessed_addresses
     if is_cold_access:
-        access_gas_cost = GAS_COLD_ACCOUNT_ACCESS
+        access_gas_cost = GAS_COLD_ACCOUNT_COST_NOCODE
     else:
         access_gas_cost = GAS_WARM_ACCESS
 
@@ -774,7 +777,12 @@ def staticcall(evm: Evm) -> None:
 
     # STATE ACCESS
     tx_state = evm.message.tx_env.state
+    call_target = get_account(tx_state, to)
+
     if is_cold_access:
+        if call_target.code_hash != EMPTY_CODE_HASH:
+            access_gas_cost = GAS_COLD_ACCOUNT_COST_CODE
+            check_gas(evm, access_gas_cost + extend_memory.cost)
         evm.accessed_addresses.add(to)
 
     extra_gas = access_gas_cost

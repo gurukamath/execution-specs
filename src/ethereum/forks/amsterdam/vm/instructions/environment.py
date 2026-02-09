@@ -14,7 +14,7 @@ Implementations of the EVM environment related instructions.
 from ethereum_types.bytes import Bytes32
 from ethereum_types.numeric import U256, Uint, ulen
 
-from ethereum.state import EMPTY_ACCOUNT
+from ethereum.state import EMPTY_ACCOUNT, EMPTY_CODE_HASH
 from ethereum.utils.numeric import ceil32
 
 from ...state_tracker import get_account, get_code
@@ -25,7 +25,8 @@ from ..exceptions import OutOfBoundsRead
 from ..gas import (
     GAS_BASE,
     GAS_BLOBHASH_OPCODE,
-    GAS_COLD_ACCOUNT_ACCESS,
+    GAS_COLD_ACCOUNT_COST_CODE,
+    GAS_COLD_ACCOUNT_COST_NOCODE,
     GAS_COPY,
     GAS_FAST_STEP,
     GAS_RETURN_DATA_COPY,
@@ -34,6 +35,7 @@ from ..gas import (
     calculate_blob_gas_price,
     calculate_gas_extend_memory,
     charge_gas,
+    check_gas,
 )
 from ..stack import pop, push
 
@@ -76,8 +78,21 @@ def balance(evm: Evm) -> None:
 
     # GAS
     is_cold_access = address not in evm.accessed_addresses
-    gas_cost = GAS_COLD_ACCOUNT_ACCESS if is_cold_access else GAS_WARM_ACCESS
     if is_cold_access:
+        gas_cost = GAS_COLD_ACCOUNT_COST_NOCODE
+    else:
+        gas_cost = GAS_WARM_ACCESS
+
+    check_gas(evm, gas_cost)
+
+    # STATE ACCESS
+    tx_state = evm.message.tx_env.state
+    account = get_account(tx_state, address)
+
+    if is_cold_access:
+        if account.code_hash != EMPTY_CODE_HASH:
+            gas_cost = GAS_COLD_ACCOUNT_COST_CODE
+            check_gas(evm, gas_cost)
         evm.accessed_addresses.add(address)
 
     charge_gas(evm, gas_cost)
@@ -343,10 +358,21 @@ def extcodesize(evm: Evm) -> None:
 
     # GAS
     is_cold_access = address not in evm.accessed_addresses
-    access_gas_cost = (
-        GAS_COLD_ACCOUNT_ACCESS if is_cold_access else GAS_WARM_ACCESS
-    )
     if is_cold_access:
+        access_gas_cost = GAS_COLD_ACCOUNT_COST_NOCODE
+    else:
+        access_gas_cost = GAS_WARM_ACCESS
+
+    check_gas(evm, access_gas_cost)
+
+    # STATE ACCESS
+    tx_state = evm.message.tx_env.state
+    account = get_account(tx_state, address)
+
+    if is_cold_access:
+        if account.code_hash != EMPTY_CODE_HASH:
+            access_gas_cost = GAS_COLD_ACCOUNT_COST_CODE
+            check_gas(evm, access_gas_cost)
         evm.accessed_addresses.add(address)
 
     charge_gas(evm, access_gas_cost)
@@ -387,15 +413,27 @@ def extcodecopy(evm: Evm) -> None:
     )
 
     is_cold_access = address not in evm.accessed_addresses
-    access_gas_cost = (
-        GAS_COLD_ACCOUNT_ACCESS if is_cold_access else GAS_WARM_ACCESS
-    )
-    total_gas_cost = access_gas_cost + copy_gas_cost + extend_memory.cost
+    if is_cold_access:
+        access_gas_cost = GAS_COLD_ACCOUNT_COST_NOCODE
+    else:
+        access_gas_cost = GAS_WARM_ACCESS
+
+    check_gas(evm, access_gas_cost + copy_gas_cost + extend_memory.cost)
+
+    # STATE ACCESS
+    tx_state = evm.message.tx_env.state
+    account = get_account(tx_state, address)
 
     if is_cold_access:
+        if account.code_hash != EMPTY_CODE_HASH:
+            access_gas_cost = GAS_COLD_ACCOUNT_COST_CODE
+            check_gas(
+                evm,
+                access_gas_cost + copy_gas_cost + extend_memory.cost,
+            )
         evm.accessed_addresses.add(address)
 
-    charge_gas(evm, total_gas_cost)
+    charge_gas(evm, access_gas_cost + copy_gas_cost + extend_memory.cost)
 
     # OPERATION
     evm.memory += b"\x00" * extend_memory.expand_by
@@ -483,10 +521,21 @@ def extcodehash(evm: Evm) -> None:
 
     # GAS
     is_cold_access = address not in evm.accessed_addresses
-    access_gas_cost = (
-        GAS_COLD_ACCOUNT_ACCESS if is_cold_access else GAS_WARM_ACCESS
-    )
     if is_cold_access:
+        access_gas_cost = GAS_COLD_ACCOUNT_COST_NOCODE
+    else:
+        access_gas_cost = GAS_WARM_ACCESS
+
+    check_gas(evm, access_gas_cost)
+
+    # STATE ACCESS
+    tx_state = evm.message.tx_env.state
+    account = get_account(tx_state, address)
+
+    if is_cold_access:
+        if account.code_hash != EMPTY_CODE_HASH:
+            access_gas_cost = GAS_COLD_ACCOUNT_COST_CODE
+            check_gas(evm, access_gas_cost)
         evm.accessed_addresses.add(address)
 
     charge_gas(evm, access_gas_cost)
