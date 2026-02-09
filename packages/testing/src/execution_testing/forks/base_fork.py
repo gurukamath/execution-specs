@@ -126,6 +126,12 @@ class TransactionIntrinsicCostCalculator(Protocol):
         access_list: List[AccessList] | None = None,
         authorization_list_or_count: Sized | int | None = None,
         return_cost_deducted_prior_execution: bool = False,
+        sends_value: bool = False,
+        recipient_is_sender: bool = False,
+        recipient_is_warm: bool = False,
+        recipient_is_precompile: bool = False,
+        recipient_is_contract_or_delegated_eoa: bool = False,
+        recipient_is_empty: bool = False,
     ) -> int:
         """
         Return the intrinsic gas cost of a transaction given its properties.
@@ -145,6 +151,13 @@ class TransactionIntrinsicCostCalculator(Protocol):
                                                 that is deducted from the gas
                                                 limit before the transaction
                                                 starts execution.
+          sends_value: Whether the transaction sends value.
+          recipient_is_sender: Whether the recipient is the sender.
+          recipient_is_warm: Whether the recipient is warm in access list.
+          recipient_is_precompile: Whether the recipient is a precompile.
+          recipient_is_contract_or_delegated_eoa: Whether the recipient is a
+                                                   contract or delegated EOA.
+          recipient_is_empty: Whether the recipient account is empty.
 
         Returns: Gas cost of a transaction
 

@@ -844,8 +844,17 @@ class Frontier(BaseFork, solc_name="homestead"):
             access_list: List[AccessList] | None = None,
             authorization_list_or_count: Sized | int | None = None,
             return_cost_deducted_prior_execution: bool = False,
+            sends_value: bool = False,
+            recipient_is_sender: bool = False,
+            recipient_is_warm: bool = False,
+            recipient_is_precompile: bool = False,
+            recipient_is_contract_or_delegated_eoa: bool = True,
+            recipient_is_empty: bool = False,
         ) -> int:
             del return_cost_deducted_prior_execution
+            del sends_value, recipient_is_sender, recipient_is_warm
+            del recipient_is_precompile, recipient_is_contract_or_delegated_eoa
+            del recipient_is_empty
 
             assert access_list is None, (
                 f"Access list is not supported in {cls.name()}"
@@ -1557,6 +1566,12 @@ class Homestead(Frontier):
             access_list: List[AccessList] | None = None,
             authorization_list_or_count: Sized | int | None = None,
             return_cost_deducted_prior_execution: bool = False,
+            sends_value: bool = False,
+            recipient_is_sender: bool = False,
+            recipient_is_warm: bool = False,
+            recipient_is_precompile: bool = False,
+            recipient_is_contract_or_delegated_eoa: bool = True,
+            recipient_is_empty: bool = False,
         ) -> int:
             del return_cost_deducted_prior_execution
 
@@ -1565,6 +1580,12 @@ class Homestead(Frontier):
                 contract_creation=contract_creation,
                 access_list=access_list,
                 authorization_list_or_count=authorization_list_or_count,
+                sends_value=sends_value,
+                recipient_is_sender=recipient_is_sender,
+                recipient_is_warm=recipient_is_warm,
+                recipient_is_precompile=recipient_is_precompile,
+                recipient_is_contract_or_delegated_eoa=recipient_is_contract_or_delegated_eoa,
+                recipient_is_empty=recipient_is_empty,
             )
             if contract_creation:
                 intrinsic_cost += gas_costs.GAS_TX_CREATE
@@ -1928,6 +1949,12 @@ class Berlin(Istanbul):
             access_list: List[AccessList] | None = None,
             authorization_list_or_count: Sized | int | None = None,
             return_cost_deducted_prior_execution: bool = False,
+            sends_value: bool = False,
+            recipient_is_sender: bool = False,
+            recipient_is_warm: bool = False,
+            recipient_is_precompile: bool = False,
+            recipient_is_contract_or_delegated_eoa: bool = True,
+            recipient_is_empty: bool = False,
         ) -> int:
             del return_cost_deducted_prior_execution
 
@@ -1935,6 +1962,12 @@ class Berlin(Istanbul):
                 calldata=calldata,
                 contract_creation=contract_creation,
                 authorization_list_or_count=authorization_list_or_count,
+                sends_value=sends_value,
+                recipient_is_sender=recipient_is_sender,
+                recipient_is_warm=recipient_is_warm,
+                recipient_is_precompile=recipient_is_precompile,
+                recipient_is_contract_or_delegated_eoa=recipient_is_contract_or_delegated_eoa,
+                recipient_is_empty=recipient_is_empty,
             )
             if access_list is not None:
                 for access in access_list:
@@ -2916,12 +2949,24 @@ class Prague(Cancun):
             access_list: List[AccessList] | None = None,
             authorization_list_or_count: Sized | int | None = None,
             return_cost_deducted_prior_execution: bool = False,
+            sends_value: bool = False,
+            recipient_is_sender: bool = False,
+            recipient_is_warm: bool = False,
+            recipient_is_precompile: bool = False,
+            recipient_is_contract_or_delegated_eoa: bool = True,
+            recipient_is_empty: bool = False,
         ) -> int:
             intrinsic_cost: int = super_fn(
                 calldata=calldata,
                 contract_creation=contract_creation,
                 access_list=access_list,
                 return_cost_deducted_prior_execution=False,
+                sends_value=sends_value,
+                recipient_is_sender=recipient_is_sender,
+                recipient_is_warm=recipient_is_warm,
+                recipient_is_precompile=recipient_is_precompile,
+                recipient_is_contract_or_delegated_eoa=recipient_is_contract_or_delegated_eoa,
+                recipient_is_empty=recipient_is_empty,
             )
             if authorization_list_or_count is not None:
                 if isinstance(authorization_list_or_count, Sized):
@@ -3500,3 +3545,104 @@ class Amsterdam(BPO2):
         """
         del block_number, timestamp
         return True
+
+    @classmethod
+    def gas_costs(
+        cls, *, block_number: int = 0, timestamp: int = 0
+    ) -> GasCosts:
+        """
+        At Amsterdam, the transaction base cost is reduced to 4500 (EIP-2780).
+        """
+        return replace(
+            super(Amsterdam, cls).gas_costs(
+                block_number=block_number, timestamp=timestamp
+            ),
+            G_TRANSACTION=4_500,
+            G_COLD_ACCOUNT_COST_CODE=2_600,
+            G_COLD_ACCOUNT_COST_NOCODE=500,
+            G_STATE_UPDATE=1000,
+        )
+
+    @classmethod
+    def transaction_intrinsic_cost_calculator(
+        cls, *, block_number: int = 0, timestamp: int = 0
+    ) -> TransactionIntrinsicCostCalculator:
+        """
+        At Prague, the transaction intrinsic cost needs to take the
+        authorizations into account.
+        """
+        super_fn = super(Prague, cls).transaction_intrinsic_cost_calculator(
+            block_number=block_number, timestamp=timestamp
+        )
+        gas_costs = cls.gas_costs(
+            block_number=block_number, timestamp=timestamp
+        )
+        transaction_data_floor_cost_calculator = (
+            cls.transaction_data_floor_cost_calculator(
+                block_number=block_number, timestamp=timestamp
+            )
+        )
+
+        def fn(
+            *,
+            calldata: BytesConvertible = b"",
+            contract_creation: bool = False,
+            access_list: List[AccessList] | None = None,
+            authorization_list_or_count: Sized | int | None = None,
+            return_cost_deducted_prior_execution: bool = False,
+            sends_value: bool = False,
+            recipient_is_sender: bool = False,
+            recipient_is_warm: bool = False,
+            recipient_is_precompile: bool = False,
+            recipient_is_contract_or_delegated_eoa: bool = True,
+            recipient_is_empty: bool = False,
+        ) -> int:
+            intrinsic_cost: int = super_fn(
+                calldata=calldata,
+                contract_creation=contract_creation,
+                access_list=access_list,
+                return_cost_deducted_prior_execution=False,
+            )
+            if authorization_list_or_count is not None:
+                if isinstance(authorization_list_or_count, Sized):
+                    authorization_list_or_count = len(
+                        authorization_list_or_count
+                    )
+                intrinsic_cost += (
+                    authorization_list_or_count * gas_costs.G_AUTHORIZATION
+                )
+
+            if contract_creation or recipient_is_sender:
+                intrinsic_cost += 0
+            elif recipient_is_precompile:
+                if sends_value:
+                    intrinsic_cost += gas_costs.G_STATE_UPDATE
+            elif recipient_is_contract_or_delegated_eoa:
+                if recipient_is_warm:
+                    intrinsic_cost += gas_costs.G_WARM_ACCOUNT_ACCESS
+                else:
+                    intrinsic_cost += gas_costs.G_COLD_ACCOUNT_COST_CODE
+
+                if sends_value:
+                    intrinsic_cost += gas_costs.G_STATE_UPDATE
+            else:
+                if sends_value:
+                    if recipient_is_warm:
+                        intrinsic_cost += gas_costs.G_WARM_ACCOUNT_ACCESS
+                    else:
+                        intrinsic_cost += gas_costs.G_COLD_ACCOUNT_COST_NOCODE
+                    # Update cost
+                    if recipient_is_empty:
+                        intrinsic_cost += gas_costs.G_NEW_ACCOUNT
+                    else:
+                        intrinsic_cost += gas_costs.G_STATE_UPDATE
+
+            if return_cost_deducted_prior_execution:
+                return intrinsic_cost
+
+            transaction_floor_data_cost = (
+                transaction_data_floor_cost_calculator(data=calldata)
+            )
+            return max(intrinsic_cost, transaction_floor_data_cost)
+
+        return fn
