@@ -673,7 +673,7 @@ def check_transaction(
 
     # Calculate recipient gas cost (EIP-2780)
     recipient_gas_cost = calculate_recipient_gas_cost(
-        tx, tx_state, sender_address, access_list_addresses
+        tx, tx_state, sender_address, intrinsic_gas, access_list_addresses
     )
     intrinsic_gas += recipient_gas_cost
 
@@ -983,6 +983,7 @@ def calculate_recipient_gas_cost(
     tx: Transaction,
     tx_state: TransactionState,
     sender: Address,
+    intrinsic_gas: Uint,
     access_list_addresses: Set[Address],
 ) -> Uint:
     """
@@ -1004,6 +1005,8 @@ def calculate_recipient_gas_cost(
         The current transaction state.
     sender :
         The address of the transaction sender.
+    intrinsic_gas:
+        The intrinsic gas of a transaction.
     access_list_addresses :
         Set of addresses that are pre-warmed via the access list.
 
@@ -1032,42 +1035,30 @@ def calculate_recipient_gas_cost(
             tx_recipient_cost += GAS_STATE_UPDATE
         return tx_recipient_cost
 
-    recipient = get_account(tx_state, tx.to)
-
-    is_contract_or_delegated_eoa = False
-    if recipient.code_hash != EMPTY_CODE_HASH:
-        is_contract_or_delegated_eoa = True
-
-    if is_contract_or_delegated_eoa:
-        # For contracts, access costs are applied irrespective
-        # of value and update costs are applied only for non-zero
-        # transfers
-
-        # Access cost
-        if tx.to in access_list_addresses:
-            tx_recipient_cost += GAS_WARM_ACCESS
-        else:
-            tx_recipient_cost += GAS_COLD_ACCOUNT_COST_CODE
-
-        # Update cost
-        if tx.value > U256(0):
-            tx_recipient_cost += GAS_STATE_UPDATE
-
+    is_cold_access = tx.to not in access_list_addresses
+    if is_cold_access:
+        access_gas_cost = GAS_COLD_ACCOUNT_COST_NOCODE
     else:
-        # For EOAs, access and update costs are only applied for
-        # non-zero transfers
-        if tx.value > U256(0):
-            # Access cost
-            if tx.to in access_list_addresses:
-                tx_recipient_cost += GAS_WARM_ACCESS
-            else:
-                tx_recipient_cost += GAS_COLD_ACCOUNT_COST_NOCODE
+        access_gas_cost = GAS_WARM_ACCESS
 
-            # Update cost
-            if recipient == EMPTY_ACCOUNT:
-                tx_recipient_cost += GAS_NEW_ACCOUNT
-            else:
-                tx_recipient_cost += GAS_STATE_UPDATE
+    # Make sure the gas is enough to at least pay cold EOA
+    # before actually accessing the account
+    if intrinsic_gas + access_gas_cost > tx.gas:
+        raise InsufficientTransactionGasError("Insufficient gas")
+
+    recipient = get_account(tx_state, tx.to)
+    if recipient.code_hash != EMPTY_CODE_HASH:
+        if is_cold_access:
+            access_gas_cost = GAS_COLD_ACCOUNT_COST_CODE
+
+    tx_recipient_cost += access_gas_cost
+
+    if tx.value > U256(0):
+        # Write cost for the recipient
+        if recipient == EMPTY_ACCOUNT:
+            tx_recipient_cost += GAS_NEW_ACCOUNT
+        else:
+            tx_recipient_cost += GAS_STATE_UPDATE
 
     return tx_recipient_cost
 

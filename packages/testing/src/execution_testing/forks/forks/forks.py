@@ -3613,29 +3613,32 @@ class Amsterdam(BPO2):
                 )
 
             if contract_creation or recipient_is_sender:
-                intrinsic_cost += 0
+                access_cost = 0
+                update_cost = 0
             elif recipient_is_precompile:
+                access_cost = 0
+                update_cost = 0
                 if sends_value:
-                    intrinsic_cost += gas_costs.G_STATE_UPDATE
-            elif recipient_is_contract_or_delegated_eoa:
-                if recipient_is_warm:
-                    intrinsic_cost += gas_costs.G_WARM_ACCOUNT_ACCESS
-                else:
-                    intrinsic_cost += gas_costs.G_COLD_ACCOUNT_COST_CODE
-
-                if sends_value:
-                    intrinsic_cost += gas_costs.G_STATE_UPDATE
+                    update_cost += gas_costs.G_STATE_UPDATE
             else:
+                # Access cost - always charged
+                if recipient_is_warm:
+                    access_cost = gas_costs.G_WARM_ACCOUNT_ACCESS
+                else:
+                    if recipient_is_contract_or_delegated_eoa:
+                        access_cost = gas_costs.G_COLD_ACCOUNT_COST_CODE
+                    else:
+                        access_cost = gas_costs.G_COLD_ACCOUNT_COST_NOCODE
+
+                # Update cost - only if sends value
+                update_cost = 0
                 if sends_value:
-                    if recipient_is_warm:
-                        intrinsic_cost += gas_costs.G_WARM_ACCOUNT_ACCESS
-                    else:
-                        intrinsic_cost += gas_costs.G_COLD_ACCOUNT_COST_NOCODE
-                    # Update cost
                     if recipient_is_empty:
-                        intrinsic_cost += gas_costs.G_NEW_ACCOUNT
+                        update_cost = gas_costs.G_NEW_ACCOUNT
                     else:
-                        intrinsic_cost += gas_costs.G_STATE_UPDATE
+                        update_cost = gas_costs.G_STATE_UPDATE
+
+            intrinsic_cost += access_cost + update_cost
 
             if return_cost_deducted_prior_execution:
                 return intrinsic_cost
