@@ -13,13 +13,18 @@ The builder follows a two-phase approach:
 [`BlockAccessList`]: ref:ethereum.forks.amsterdam.block_access_lists.rlp_types.BlockAccessList  # noqa: E501
 """
 
+from __future__ import annotations
+
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Dict, List, Set
+from typing import Dict, List, Optional, Set
 
-from ethereum_types.bytes import Bytes
-from ethereum_types.numeric import U64, U256
+from ethereum_types.bytes import Bytes, Bytes32
+from ethereum_types.numeric import U64, U256, Uint
 
-from ..fork_types import Address
+from ethereum.state import PreState
+
+from ..fork_types import Account, Address
+from ..state_tracking import BlockStateTracker, TxStateTracker
 from .rlp_types import (
     AccountChanges,
     BalanceChange,
@@ -30,9 +35,6 @@ from .rlp_types import (
     SlotChanges,
     StorageChange,
 )
-
-if TYPE_CHECKING:
-    from ..state_tracker import StateChanges
 
 
 @dataclass
@@ -87,6 +89,13 @@ class BlockAccessListBuilder:
     reconstruction of state changes.
 
     [`BlockAccessList`]: ref:ethereum.forks.amsterdam.block_access_lists.rlp_types.BlockAccessList  # noqa: E501
+    """
+
+    block_access_index: BlockAccessIndex = BlockAccessIndex(0)
+    """
+    Current block access index.  Set by the caller before each
+    ``incorporate_tx_into_block`` call (0 for system txs, i+1 for the
+    i-th user tx, N+1 for post-execution operations).
     """
 
     accounts: Dict[Address, AccountData] = field(default_factory=dict)
@@ -451,19 +460,141 @@ def _build_from_builder(
     return block_access_list
 
 
-def build_block_access_list(
-    state_changes: "StateChanges",
-) -> BlockAccessList:
+def _get_running_account(
+    running_accounts: Dict[Address, Optional[Account]],
+    pre_state: PreState,
+    address: Address,
+) -> Optional[Account]:
     """
-    Build a [`BlockAccessList`] from a StateChanges frame.
-
-    Converts the accumulated state changes from the frame-based architecture
-    into the final deterministic BlockAccessList format.
+    Look up an account in running state, falling back to pre_state.
 
     Parameters
     ----------
-    state_changes :
-        The block-level StateChanges frame containing all changes from the block.
+    running_accounts :
+        Cumulative account state up to (but not including) the
+        current transaction.
+    pre_state :
+        The read-only pre-state.
+    address :
+        The address to look up.
+
+    Returns
+    -------
+    account :
+        The account, or ``None`` if it does not exist.
+
+    """
+    if address in running_accounts:
+        return running_accounts[address]
+    return pre_state.get_account_optional(address)
+
+
+def _get_running_storage(
+    running_storage: Dict[Address, Dict[Bytes32, U256]],
+    pre_state: PreState,
+    address: Address,
+    key: Bytes32,
+) -> U256:
+    """
+    Look up a storage value in running state, falling back to pre_state.
+
+    Parameters
+    ----------
+    running_storage :
+        Cumulative storage state.
+    pre_state :
+        The read-only pre-state.
+    address :
+        The address to look up.
+    key :
+        The storage key.
+
+    Returns
+    -------
+    value :
+        The storage value, or ``U256(0)`` if not set.
+
+    """
+    if address in running_storage and key in running_storage[address]:
+        return running_storage[address][key]
+    return pre_state.get_storage(address, key)
+
+
+def update_builder_from_tx(
+    builder: BlockAccessListBuilder,
+    tx_tracker: TxStateTracker,
+) -> None:
+    """
+    Update the BAL builder with changes from a single transaction.
+
+    Diff the transaction's writes against the block's cumulative
+    state (falling back to ``pre_state``) to extract balance, nonce,
+    code, and storage changes.  Net-zero filtering is automatic: if
+    the pre-tx value equals the post-tx value, no change is recorded.
+
+    Must be called **before** the transaction's writes are merged into
+    the block tracker.
+
+    Parameters
+    ----------
+    builder :
+        The block access list builder to update.
+    tx_tracker :
+        The transaction state tracker whose writes are being committed.
+
+    """
+    block_tracker = tx_tracker.parent
+    pre_state = block_tracker.pre_state
+    idx = builder.block_access_index
+
+    # Diff account writes against block cumulative state
+    for address, post_account in tx_tracker.account_writes.items():
+        pre_account = _get_running_account(
+            block_tracker.account_writes, pre_state, address
+        )
+
+        pre_balance = pre_account.balance if pre_account else U256(0)
+        post_balance = post_account.balance if post_account else U256(0)
+        if pre_balance != post_balance:
+            add_balance_change(builder, address, idx, post_balance)
+
+        pre_nonce = pre_account.nonce if pre_account else Uint(0)
+        post_nonce = post_account.nonce if post_account else Uint(0)
+        if pre_nonce != post_nonce:
+            add_nonce_change(builder, address, idx, U64(post_nonce))
+
+        pre_code = pre_account.code if pre_account else b""
+        post_code = post_account.code if post_account else b""
+        if pre_code != post_code:
+            add_code_change(builder, address, idx, post_code)
+
+    # Diff storage writes against block cumulative state
+    for address, slots in tx_tracker.storage_writes.items():
+        for key, post_value in slots.items():
+            pre_value = _get_running_storage(
+                block_tracker.storage_writes, pre_state, address, key
+            )
+            if pre_value != post_value:
+                u256_slot = U256(int.from_bytes(key))
+                add_storage_write(builder, address, u256_slot, idx, post_value)
+
+
+def build_block_access_list(
+    builder: BlockAccessListBuilder,
+    block_tracker: BlockStateTracker,
+) -> BlockAccessList:
+    """
+    Build a [`BlockAccessList`] from the builder and block tracker.
+
+    Feed accumulated reads from the block tracker into the builder,
+    then produce the final sorted and encoded block access list.
+
+    Parameters
+    ----------
+    builder :
+        The block access list builder containing tracked write changes.
+    block_tracker :
+        The block state tracker containing accumulated reads.
 
     Returns
     -------
@@ -471,49 +602,14 @@ def build_block_access_list(
         The final sorted and encoded block access list.
 
     [`BlockAccessList`]: ref:ethereum.forks.amsterdam.block_access_lists.rlp_types.BlockAccessList  # noqa: E501
-    [`StateChanges`]: ref:ethereum.forks.amsterdam.state_tracker.StateChanges
 
     """
-    builder = BlockAccessListBuilder()
-
-    # Add all touched addresses
-    for address in state_changes.touched_addresses:
-        add_touched_account(builder, address)
-
-    # Add all storage reads
-    for address, slot in state_changes.storage_reads:
+    # Add storage reads
+    for address, slot in block_tracker.storage_reads:
         add_storage_read(builder, address, U256(int.from_bytes(slot)))
 
-    # Add all storage writes
-    # Net-zero filtering happens at transaction commit time, not here.
-    # At block level, we track ALL writes at their respective indices.
-    for (
-        address,
-        slot,
-        block_access_index,
-    ), value in state_changes.storage_writes.items():
-        u256_slot = U256(int.from_bytes(slot))
-        add_storage_write(
-            builder, address, u256_slot, block_access_index, value
-        )
-
-    # Add all balance changes (balance_changes is keyed by (address, index))
-    for (
-        address,
-        block_access_index,
-    ), new_balance in state_changes.balance_changes.items():
-        add_balance_change(builder, address, block_access_index, new_balance)
-
-    # Add all nonce changes
-    for address, block_access_index, new_nonce in state_changes.nonce_changes:
-        add_nonce_change(builder, address, block_access_index, new_nonce)
-
-    # Add all code changes
-    # Filtering happens at transaction level in eoa_delegation.py
-    for (
-        address,
-        block_access_index,
-    ), new_code in state_changes.code_changes.items():
-        add_code_change(builder, address, block_access_index, new_code)
+    # Add touched addresses
+    for address in block_tracker.account_reads:
+        add_touched_account(builder, address)
 
     return _build_from_builder(builder)

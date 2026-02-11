@@ -19,7 +19,7 @@ within a single transaction and supports copy-on-write rollback.
 """
 
 from dataclasses import dataclass, field
-from typing import Callable, Dict, Optional, Set, Tuple
+from typing import TYPE_CHECKING, Callable, Dict, Optional, Set, Tuple
 
 from ethereum_types.bytes import Bytes, Bytes32
 from ethereum_types.frozen import modify
@@ -29,6 +29,9 @@ from ethereum.state import PreState
 
 from .fork_types import EMPTY_ACCOUNT, Account, Address
 
+if TYPE_CHECKING:
+    from .block_access_lists.builder import BlockAccessListBuilder
+
 
 @dataclass
 class BlockStateTracker:
@@ -36,12 +39,17 @@ class BlockStateTracker:
     Accumulate committed transaction-level changes across a block.
 
     Read chain: block writes -> pre_state.
+
+    ``account_reads`` and ``storage_reads`` accumulate across all
+    transactions for BAL generation.
     """
 
     pre_state: PreState
+    account_reads: Set[Address] = field(default_factory=set)
     account_writes: Dict[Address, Optional[Account]] = field(
         default_factory=dict
     )
+    storage_reads: Set[Tuple[Address, Bytes32]] = field(default_factory=set)
     storage_writes: Dict[Address, Dict[Bytes32, U256]] = field(
         default_factory=dict
     )
@@ -53,12 +61,18 @@ class TxStateTracker:
     Track in-flight state changes within a single transaction.
 
     Read chain: tx writes -> block writes -> pre_state.
+
+    ``storage_reads`` and ``account_reads`` are shared references
+    that survive rollback (reads from failed calls still appear in the
+    Block Access List).
     """
 
     parent: BlockStateTracker
+    account_reads: Set[Address] = field(default_factory=set)
     account_writes: Dict[Address, Optional[Account]] = field(
         default_factory=dict
     )
+    storage_reads: Set[Tuple[Address, Bytes32]] = field(default_factory=set)
     storage_writes: Dict[Address, Dict[Bytes32, U256]] = field(
         default_factory=dict
     )
@@ -399,6 +413,10 @@ def destroy_storage(tracker: TxStateTracker, address: Address) -> None:
     """
     Completely remove the storage at ``address``.
 
+    Convert storage writes to reads before deleting so that accesses
+    from created-then-destroyed accounts appear in the Block Access
+    List.
+
     Parameters
     ----------
     tracker :
@@ -408,6 +426,8 @@ def destroy_storage(tracker: TxStateTracker, address: Address) -> None:
 
     """
     if address in tracker.storage_writes:
+        for key in tracker.storage_writes[address]:
+            tracker.storage_reads.add((address, key))
         del tracker.storage_writes[address]
 
 
@@ -602,8 +622,9 @@ def copy_tx_state_tracker(tracker: TxStateTracker) -> TxStateTracker:
     """
     Create a snapshot of the transaction state tracker for rollback.
 
-    Deep-copy writes and transient storage.  The parent reference and
-    ``created_accounts`` are shared (not rolled back).
+    Deep-copy writes and transient storage.  The parent reference,
+    ``created_accounts``, ``storage_reads``, and ``account_reads``
+    are shared (not rolled back).
 
     Parameters
     ----------
@@ -624,6 +645,8 @@ def copy_tx_state_tracker(tracker: TxStateTracker) -> TxStateTracker:
         },
         created_accounts=tracker.created_accounts,
         transient_storage=dict(tracker.transient_storage),
+        storage_reads=tracker.storage_reads,
+        account_reads=tracker.account_reads,
     )
 
 
@@ -649,18 +672,37 @@ def restore_tx_state_tracker(
 # -- Lifecycle --------------------------------------------------------------
 
 
-def incorporate_tx_into_block(tracker: TxStateTracker) -> None:
+def incorporate_tx_into_block(
+    tracker: TxStateTracker,
+    builder: "BlockAccessListBuilder",
+) -> None:
     """
     Merge transaction writes into the block tracker and clear for reuse.
+
+    Update the BAL builder incrementally by diffing this transaction's
+    writes against the block's cumulative state.  Merge reads and
+    touches into block-level sets.
 
     Parameters
     ----------
     tracker :
         The transaction state tracker to commit.
+    builder :
+        The BAL builder for incremental updates.
 
     """
+    from .block_access_lists.builder import update_builder_from_tx
+
     block = tracker.parent
 
+    # Update BAL builder before merging writes into block state
+    update_builder_from_tx(builder, tracker)
+
+    # Merge reads and touches into block-level sets
+    block.storage_reads.update(tracker.storage_reads)
+    block.account_reads.update(tracker.account_reads)
+
+    # Merge cumulative writes
     for address, account in tracker.account_writes.items():
         block.account_writes[address] = account
 
@@ -673,6 +715,8 @@ def incorporate_tx_into_block(tracker: TxStateTracker) -> None:
     tracker.storage_writes.clear()
     tracker.created_accounts.clear()
     tracker.transient_storage.clear()
+    tracker.storage_reads = set()
+    tracker.account_reads = set()
 
 
 def extract_block_diffs(
@@ -698,3 +742,40 @@ def extract_block_diffs(
 
     """
     return block_tracker.account_writes, block_tracker.storage_writes
+
+
+# -- BAL Tracking -----------------------------------------------------------
+
+
+def track_address(tracker: TxStateTracker, address: Address) -> None:
+    """
+    Record that an address was accessed.
+
+    Parameters
+    ----------
+    tracker :
+        The transaction state tracker.
+    address :
+        The address that was accessed.
+
+    """
+    tracker.account_reads.add(address)
+
+
+def track_storage_read(
+    tracker: TxStateTracker, address: Address, key: Bytes32
+) -> None:
+    """
+    Record a storage read operation.
+
+    Parameters
+    ----------
+    tracker :
+        The transaction state tracker.
+    address :
+        The address whose storage was read.
+    key :
+        The storage key that was read.
+
+    """
+    tracker.storage_reads.add((address, key))
