@@ -508,8 +508,11 @@ def callcode(evm: Evm) -> None:
     else:
         access_gas_cost = GAS_WARM_ACCESS
 
+    # Cost is simply dependent on value since the contract is always there
+    call_value_cost = Uint(0) if value == 0 else Uint(2) * GAS_STATE_UPDATE
+
     # check static gas before state access
-    check_gas(evm, access_gas_cost + extend_memory.cost)
+    check_gas(evm, access_gas_cost + extend_memory.cost + call_value_cost)
 
     # STATE ACCESS
     tx_state = evm.message.tx_env.state
@@ -519,14 +522,6 @@ def callcode(evm: Evm) -> None:
             access_gas_cost = GAS_COLD_ACCOUNT_COST_CODE
             check_gas(evm, access_gas_cost + extend_memory.cost)
         evm.accessed_addresses.add(code_address)
-
-    call_value_cost = Uint(0)
-    if value > U256(0):
-        call_target = get_account(tx_state, to)
-        if call_target == EMPTY_ACCOUNT:
-            call_value_cost += GAS_STATE_UPDATE + GAS_NEW_ACCOUNT
-        else:
-            call_value_cost += Uint(2) * GAS_STATE_UPDATE
 
     extra_gas = access_gas_cost + call_value_cost
     (
