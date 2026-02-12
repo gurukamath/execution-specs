@@ -5152,6 +5152,7 @@ class Opcodes(Opcode, Enum):
         kwargs_defaults={"gas": GAS},
         metadata={
             "address_warm": False,
+            "address_has_code": True,
             "value_transfer": False,
             "account_new": False,
             "new_memory_size": 0,
@@ -5230,6 +5231,7 @@ class Opcodes(Opcode, Enum):
         kwargs_defaults={"gas": GAS},
         metadata={
             "address_warm": False,
+            "address_has_code": True,
             "value_transfer": False,
             "account_new": False,
             "new_memory_size": 0,
@@ -5355,6 +5357,7 @@ class Opcodes(Opcode, Enum):
         kwargs_defaults={"gas": GAS},
         metadata={
             "address_warm": False,
+            "address_has_code": True,
             "value_transfer": False,
             "account_new": False,
             "new_memory_size": 0,
@@ -5487,6 +5490,7 @@ class Opcodes(Opcode, Enum):
         kwargs_defaults={"gas": GAS},
         metadata={
             "address_warm": False,
+            "address_has_code": True,
             "new_memory_size": 0,
             "old_memory_size": 0,
             "delegated_address": False,

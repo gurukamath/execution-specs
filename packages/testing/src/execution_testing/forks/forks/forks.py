@@ -3649,3 +3649,50 @@ class Amsterdam(BPO2):
             return max(intrinsic_cost, transaction_floor_data_cost)
 
         return fn
+
+    @classmethod
+    def _calculate_call_gas(
+        cls, opcode: OpcodeBase, gas_costs: GasCosts
+    ) -> int:
+        """
+        At Amsterdam (EIP-2780), the call gas cost uses split cold
+        access costs and restructured value transfer costs.
+
+        Cold access is split into:
+        - G_COLD_ACCOUNT_COST_NOCODE (500) for targets without code
+        - G_COLD_ACCOUNT_COST_CODE (2600) for targets with code
+
+        Value transfer replaces G_CALL_VALUE (9000) with:
+        - 2 * G_STATE_UPDATE (2000) for non-empty targets
+        - G_STATE_UPDATE + G_NEW_ACCOUNT (26000) for empty targets
+        """
+        metadata = opcode.metadata
+
+        # Access cost: warm vs cold (nocode vs code)
+        if metadata["address_warm"]:
+            access_cost = gas_costs.G_WARM_ACCOUNT_ACCESS
+        elif metadata.get("address_has_code", True):
+            access_cost = gas_costs.G_COLD_ACCOUNT_COST_CODE
+        else:
+            access_cost = gas_costs.G_COLD_ACCOUNT_COST_NOCODE
+
+        # Value transfer cost (replaces G_CALL_VALUE)
+        value_cost = 0
+        if "value_transfer" in metadata:
+            if metadata["value_transfer"]:
+                if metadata["account_new"]:
+                    value_cost = (
+                        gas_costs.G_STATE_UPDATE + gas_costs.G_NEW_ACCOUNT
+                    )
+                else:
+                    value_cost = 2 * gas_costs.G_STATE_UPDATE
+
+        # Delegation cost (from Prague semantics)
+        delegation_cost = 0
+        if metadata["delegated_address"] or metadata["delegated_address_warm"]:
+            if metadata["delegated_address_warm"]:
+                delegation_cost = gas_costs.G_WARM_ACCOUNT_ACCESS
+            else:
+                delegation_cost = gas_costs.G_COLD_ACCOUNT_ACCESS
+
+        return access_cost + value_cost + delegation_cost
