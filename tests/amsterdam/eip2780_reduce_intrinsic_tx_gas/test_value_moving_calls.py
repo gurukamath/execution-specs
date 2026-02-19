@@ -101,6 +101,7 @@ def _run_call_test(
 
     intrinsic_cost = fork.transaction_intrinsic_cost_calculator()(
         access_list=access_list,
+        recipient_is_contract=True,
         return_cost_deducted_prior_execution=True,
     )
     bytecode_cost = gsc.G_VERY_LOW * n_args

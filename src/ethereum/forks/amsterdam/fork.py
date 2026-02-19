@@ -103,7 +103,7 @@ from .trie import root, trie_set
 from .utils.hexadecimal import hex_to_address
 from .utils.message import prepare_message
 from .vm import Message
-from .vm.eoa_delegation import is_valid_delegation
+from .vm.eoa_delegation import get_delegated_code_address, is_valid_delegation
 from .vm.gas import (
     BLOB_SCHEDULE_MAX,
     GAS_PER_BLOB,
@@ -1050,6 +1050,13 @@ def calculate_recipient_gas_cost(
     if recipient.code_hash != EMPTY_CODE_HASH:
         if is_cold_access:
             access_gas_cost = GAS_COLD_ACCOUNT_COST_CODE
+
+        if is_valid_delegation(recipient.code):
+            delegated_address = get_delegated_code_address(recipient.code)
+            if delegated_address in access_list_addresses:
+                access_gas_cost += GAS_WARM_ACCESS
+            else:
+                access_gas_cost += GAS_COLD_ACCOUNT_COST_CODE
 
     tx_recipient_cost += access_gas_cost
 

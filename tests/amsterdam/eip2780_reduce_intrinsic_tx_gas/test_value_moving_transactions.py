@@ -41,7 +41,6 @@ class RecipientType(enum.Enum):
     "recipient_type",
     [
         RecipientType.EOA,
-        RecipientType.DELEGATION_7702,
         RecipientType.CONTRACT,
         RecipientType.EMPTY_ACCOUNT,
     ],
@@ -70,7 +69,7 @@ def test_value_moving_transactions(
     sender = pre.fund_eoa(sender_initial_balance)
 
     target_initial_balance = 0
-    recipient_is_contract_or_delegated_eoa = False
+    recipient_is_contract = False
     recipient_is_empty = False
     target: Address
 
@@ -80,18 +79,9 @@ def test_value_moving_transactions(
             target_initial_balance = 100
             target = pre.fund_eoa(amount=target_initial_balance)
 
-        case RecipientType.DELEGATION_7702:
-            # ETH transfer to 7702 delegation
-            delegated_to = pre.deploy_contract(code=Op.STOP)
-            recipient_is_contract_or_delegated_eoa = True
-
-            target = pre.deploy_contract(
-                code=Spec7702.delegation_designation(delegated_to)
-            )
-
         case RecipientType.CONTRACT:
             # ETH transfer to contract
-            recipient_is_contract_or_delegated_eoa = True
+            recipient_is_contract = True
 
             target = pre.deploy_contract(code=Op.STOP)
 
@@ -112,7 +102,7 @@ def test_value_moving_transactions(
     total_gas_cost = intrinsic_gas_calculator(
         access_list=access_list,
         sends_value=True if value else False,
-        recipient_is_contract_or_delegated_eoa=recipient_is_contract_or_delegated_eoa,
+        recipient_is_contract=recipient_is_contract,
         recipient_is_empty=recipient_is_empty,
         recipient_is_warm=warm_target,
         return_cost_deducted_prior_execution=True,
@@ -142,6 +132,87 @@ def test_value_moving_transactions(
     post = {
         sender: Account(nonce=1, balance=sender_final_balance),
         target: expected_target,
+    }
+
+    block = Block(txs=[tx])
+
+    blockchain_test(
+        pre=pre,
+        blocks=[block],
+        post=post,
+    )
+
+
+@pytest.mark.parametrize(
+    "warm_target",
+    [True, False],
+)
+@pytest.mark.parametrize(
+    "warm_delegation",
+    [True, False],
+)
+@pytest.mark.parametrize(
+    "value",
+    [
+        pytest.param(0, id="zero_value"),
+        pytest.param(1, id="non-zero_value"),
+    ],
+)
+def test_value_moving_transaction_to_delegated_eoa(
+    fork: Fork,
+    pre: Alloc,
+    blockchain_test: BlockchainTestFiller,
+    warm_target: bool,
+    warm_delegation: bool,
+    value: int,
+) -> None:
+    """
+    Ensure value moving transactions to 7702 delegated EOAs
+    charge gas correctly.
+    """
+    sender_initial_balance = 10**18
+    sender = pre.fund_eoa(sender_initial_balance)
+
+    delegated_to = pre.deploy_contract(code=Op.STOP)
+    target = pre.deploy_contract(
+        code=Spec7702.delegation_designation(delegated_to)
+    )
+
+    access_list = []
+    if warm_target:
+        access_list.append(AccessList(address=target, storage_keys=[]))
+    if warm_delegation:
+        access_list.append(AccessList(address=delegated_to, storage_keys=[]))
+
+    intrinsic_gas_calculator = fork.transaction_intrinsic_cost_calculator()
+    total_gas_cost = intrinsic_gas_calculator(
+        access_list=access_list,
+        sends_value=True if value else False,
+        recipient_is_delegated_eoa=True,
+        recipient_delegation_is_warm=warm_delegation,
+        recipient_is_warm=warm_target,
+        return_cost_deducted_prior_execution=True,
+    )
+
+    tx_gas_limit = total_gas_cost + 1000  # add a small buffer
+    gas_price = 1_000_000_000
+
+    tx = Transaction(
+        sender=sender,
+        to=target,
+        value=value,
+        access_list=access_list,
+        gas_limit=tx_gas_limit,
+        gas_price=gas_price,
+    )
+
+    sender_final_balance = (
+        sender_initial_balance - value - (total_gas_cost * gas_price)
+    )
+
+    post = {
+        sender: Account(nonce=1, balance=sender_final_balance),
+        target: Account(balance=value),
     }
 
     block = Block(txs=[tx])
