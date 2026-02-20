@@ -353,10 +353,33 @@ def test_tx_gas_limit_cap_full_calldata(
 ) -> None:
     """Test the transaction gas limit cap behavior for full calldata."""
     intrinsic_cost = fork.transaction_intrinsic_cost_calculator()
+    fork_gas_costs = fork.gas_costs()
     tx_gas_limit_cap = fork.transaction_gas_limit_cap()
     assert tx_gas_limit_cap is not None, (
         "Fork does not have a transaction gas limit cap"
     )
+    # call data gas will be much larger than any component of
+    # intrinsic gas in this test. So call_data_cost + BASE_COST
+    # will remain the only components
+    gas_available = tx_gas_limit_cap - fork_gas_costs.G_TRANSACTION
+
+    max_tokens_in_calldata = gas_available // total_cost_floor_per_token
+    num_of_bytes = (
+        max_tokens_in_calldata if zero_byte else max_tokens_in_calldata // 4
+    )
+
+    num_of_bytes += int(exceed_tx_gas_limit)
+
+    # Gas cost calculation based on EIP-7623:
+    # (https://eips.ethereum.org/EIPS/eip-7623)
+    #
+    # Simplified in this test case:
+    # - No execution gas used (no opcodes are executed)
+    # - Not a contract creation (no initcode)
+    #
+    # Token accounting:
+    #   tokens_in_calldata = zero_bytes + 4 * non_zero_bytes
+
     byte_data = b"\x00" if zero_byte else b"\xff"
     max_num_of_bytes = max_count_with_intrinsic_cost_at_most(
         lambda calldata_size: intrinsic_cost(
@@ -366,7 +389,10 @@ def test_tx_gas_limit_cap_full_calldata(
     )
     num_of_bytes = max_num_of_bytes + int(exceed_tx_gas_limit)
 
-    correct_intrinsic_cost = intrinsic_cost(calldata=byte_data * num_of_bytes)
+    correct_intrinsic_cost = intrinsic_cost(
+        calldata=byte_data * num_of_bytes,
+        recipient_is_contract=False,
+    )
     if exceed_tx_gas_limit:
         assert correct_intrinsic_cost > tx_gas_limit_cap, (
             "Correct intrinsic cost should exceed the tx gas limit cap"
@@ -492,6 +518,19 @@ def test_tx_gas_limit_cap_access_list_with_diff_keys(
     assert tx_gas_limit_cap is not None, (
         "Fork does not have a transaction gas limit cap"
     )
+    gas_available = tx_gas_limit_cap - intrinsic_cost(
+        recipient_is_contract=False
+    )
+
+    gas_costs = fork.gas_costs()
+    gas_per_address = gas_costs.G_ACCESS_LIST_ADDRESS
+    gas_per_storage_key = gas_costs.G_ACCESS_LIST_STORAGE
+
+    gas_after_address = gas_available - gas_per_address
+    num_storage_keys = gas_after_address // gas_per_storage_key + int(
+        exceed_tx_gas_limit
+    )
+
     access_address = Address("0x1234567890123456789012345678901234567890")
 
     def intrinsic_cost_for_num_storage_keys(storage_key_count: int) -> int:
@@ -516,7 +555,10 @@ def test_tx_gas_limit_cap_access_list_with_diff_keys(
         )
     ]
 
-    correct_intrinsic_cost = intrinsic_cost(access_list=access_list)
+    correct_intrinsic_cost = intrinsic_cost(
+        access_list=access_list,
+        recipient_is_contract=False,
+    )
     if exceed_tx_gas_limit:
         assert correct_intrinsic_cost > tx_gas_limit_cap, (
             "Correct intrinsic cost should exceed the tx gas limit cap"

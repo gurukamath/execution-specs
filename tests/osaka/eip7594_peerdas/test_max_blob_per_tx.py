@@ -54,18 +54,24 @@ def blob_gas_price(fork: Fork) -> int:
 
 @pytest.fixture
 def tx(
+    fork: Fork,
     sender: Address,
     destination: Address,
     blob_gas_price: int,
     blob_count: int,
 ) -> Transaction:
     """Blob transaction fixture."""
+    intrinsic_gas = fork.transaction_intrinsic_cost_calculator()(
+        recipient_is_contract=False,
+        recipient_is_empty=True,
+        sends_value=True,
+    )
     return Transaction(
         ty=3,
         sender=sender,
         to=destination,
         value=1,
-        gas_limit=21_000,
+        gas_limit=intrinsic_gas,
         max_fee_per_gas=10,
         max_priority_fee_per_gas=1,
         max_fee_per_blob_gas=blob_gas_price,
