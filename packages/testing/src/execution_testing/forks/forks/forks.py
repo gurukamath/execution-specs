@@ -848,7 +848,7 @@ class Frontier(BaseFork, solc_name="homestead"):
             recipient_is_sender: bool = False,
             recipient_is_warm: bool = False,
             recipient_is_precompile: bool = False,
-            recipient_is_contract: bool = False,
+            recipient_is_contract: bool = True,
             recipient_is_delegated_eoa: bool = False,
             recipient_delegation_is_warm: bool = False,
             recipient_is_empty: bool = False,
@@ -1573,7 +1573,7 @@ class Homestead(Frontier):
             recipient_is_sender: bool = False,
             recipient_is_warm: bool = False,
             recipient_is_precompile: bool = False,
-            recipient_is_contract: bool = False,
+            recipient_is_contract: bool = True,
             recipient_is_delegated_eoa: bool = False,
             recipient_delegation_is_warm: bool = False,
             recipient_is_empty: bool = False,
@@ -1960,7 +1960,7 @@ class Berlin(Istanbul):
             recipient_is_sender: bool = False,
             recipient_is_warm: bool = False,
             recipient_is_precompile: bool = False,
-            recipient_is_contract: bool = False,
+            recipient_is_contract: bool = True,
             recipient_is_delegated_eoa: bool = False,
             recipient_delegation_is_warm: bool = False,
             recipient_is_empty: bool = False,
@@ -2964,7 +2964,7 @@ class Prague(Cancun):
             recipient_is_sender: bool = False,
             recipient_is_warm: bool = False,
             recipient_is_precompile: bool = False,
-            recipient_is_contract: bool = False,
+            recipient_is_contract: bool = True,
             recipient_is_delegated_eoa: bool = False,
             recipient_delegation_is_warm: bool = False,
             recipient_is_empty: bool = False,
@@ -3609,7 +3609,7 @@ class Amsterdam(BPO2):
             recipient_is_sender: bool = False,
             recipient_is_warm: bool = False,
             recipient_is_precompile: bool = False,
-            recipient_is_contract: bool = False,
+            recipient_is_contract: bool = True,
             recipient_is_delegated_eoa: bool = False,
             recipient_delegation_is_warm: Optional[bool] = None,
             recipient_is_empty: bool = False,
@@ -3738,3 +3738,33 @@ class Amsterdam(BPO2):
                 delegation_cost = gas_costs.G_COLD_ACCOUNT_ACCESS
 
         return access_cost + value_cost + delegation_cost
+
+    @classmethod
+    def _with_account_access(
+        cls,
+        base_gas: int | Callable[[OpcodeBase], int],
+        gas_costs: "GasCosts",
+    ) -> Callable[[OpcodeBase], int]:
+        """
+        At Amsterdam (EIP-2780), split cold access cost by code presence.
+
+        - G_COLD_ACCOUNT_COST_NOCODE for accounts without code
+        - G_COLD_ACCOUNT_COST_CODE for accounts with code
+        """
+
+        def wrapper(opcode: OpcodeBase) -> int:
+            if callable(base_gas):
+                base_cost = base_gas(opcode)
+            else:
+                base_cost = base_gas
+
+            if opcode.metadata["address_warm"]:
+                access_cost = gas_costs.G_WARM_ACCOUNT_ACCESS
+            elif opcode.metadata["address_has_code"]:
+                access_cost = gas_costs.G_COLD_ACCOUNT_COST_CODE
+            else:
+                access_cost = gas_costs.G_COLD_ACCOUNT_COST_NOCODE
+
+            return base_cost + access_cost
+
+        return wrapper

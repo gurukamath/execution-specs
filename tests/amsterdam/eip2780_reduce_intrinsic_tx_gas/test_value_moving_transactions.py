@@ -190,6 +190,7 @@ def test_value_moving_transaction_to_delegated_eoa(
     total_gas_cost = intrinsic_gas_calculator(
         access_list=access_list,
         sends_value=True if value else False,
+        recipient_is_contract=False,
         recipient_is_delegated_eoa=True,
         recipient_delegation_is_warm=warm_delegation,
         recipient_is_warm=warm_target,
@@ -257,6 +258,7 @@ def test_value_transfer_to_self(
         access_list=access_list,
         sends_value=True if value else False,
         recipient_is_sender=True,
+        recipient_is_contract=False,
         return_cost_deducted_prior_execution=True,
     )
 

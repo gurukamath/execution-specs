@@ -1398,7 +1398,10 @@ class Opcodes(Opcode, Enum):
         popped_stack_items=1,
         pushed_stack_items=1,
         kwargs=["address"],
-        metadata={"address_warm": False},
+        metadata={
+            "address_warm": False,
+            "address_has_code": True,
+        },
     )
     """
     BALANCE(address) = balance
@@ -1720,7 +1723,10 @@ class Opcodes(Opcode, Enum):
         popped_stack_items=1,
         pushed_stack_items=1,
         kwargs=["address"],
-        metadata={"address_warm": False},
+        metadata={
+            "address_warm": False,
+            "address_has_code": True,
+        },
     )
     """
     EXTCODESIZE(address) = size
@@ -1760,6 +1766,7 @@ class Opcodes(Opcode, Enum):
         kwargs=["address", "dest_offset", "offset", "size"],
         metadata={
             "address_warm": False,
+            "address_has_code": True,
             "data_size": 0,
             "new_memory_size": 0,
             "old_memory_size": 0,

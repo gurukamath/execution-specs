@@ -110,6 +110,7 @@ def test_value_move_to_precompiles(
     intrinsic_gas_calculator(
         calldata=tx_data,
         sends_value=True if value else False,
+        recipient_is_contract=False,
         recipient_is_precompile=True,
         return_cost_deducted_prior_execution=True,
     )
