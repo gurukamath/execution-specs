@@ -81,6 +81,7 @@ def test_bal_withdrawal_empty_block(
 
 
 def test_bal_withdrawal_and_transaction(
+    fork: Fork,
     pre: Alloc,
     blockchain_test: BlockchainTestFiller,
 ) -> None:
@@ -96,10 +97,17 @@ def test_bal_withdrawal_and_transaction(
     bob = pre.fund_eoa(amount=0)
     charlie = pre.fund_eoa(amount=0)
 
+    intrinsic_gas = fork.transaction_intrinsic_cost_calculator()(
+        recipient_is_contract=False,
+        recipient_is_empty=True,
+        sends_value=True,
+    )
+
     tx = Transaction(
         sender=alice,
         to=bob,
         value=5,
+        gas_limit=intrinsic_gas,
         max_fee_per_gas=50,
         max_priority_fee_per_gas=5,
     )
@@ -325,6 +333,7 @@ def test_bal_withdrawal_and_state_access_same_account(
 
 
 def test_bal_withdrawal_and_value_transfer_same_address(
+    fork: Fork,
     pre: Alloc,
     blockchain_test: BlockchainTestFiller,
 ) -> None:
@@ -339,10 +348,17 @@ def test_bal_withdrawal_and_value_transfer_same_address(
     alice = pre.fund_eoa()
     bob = pre.fund_eoa(amount=0)
 
+    intrinsic_gas = fork.transaction_intrinsic_cost_calculator()(
+        recipient_is_contract=False,
+        recipient_is_empty=True,
+        sends_value=True,
+    )
+
     tx = Transaction(
         sender=alice,
         to=bob,
         value=5 * GWEI,
+        gas_limit=intrinsic_gas,
         gas_price=0xA,
     )
 
@@ -738,7 +754,11 @@ def test_bal_withdrawal_to_coinbase(
     coinbase = pre.fund_eoa(amount=0)
 
     intrinsic_gas_calculator = fork.transaction_intrinsic_cost_calculator()
-    intrinsic_gas = intrinsic_gas_calculator()
+    intrinsic_gas = intrinsic_gas_calculator(
+        recipient_is_contract=False,
+        recipient_is_empty=True,
+        sends_value=True,
+    )
     tx_gas_limit = intrinsic_gas + 1000
     gas_price = 0xA
 

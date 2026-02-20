@@ -48,6 +48,7 @@ def test_bal_nonce_changes(
     tx = Transaction(
         sender=alice,
         to=bob,
+        gas_limit=10**6,
         value=100,
     )
 
@@ -87,6 +88,9 @@ def test_bal_balance_changes(
     intrinsic_gas_cost = intrinsic_gas_calculator(
         calldata=b"",
         contract_creation=False,
+        recipient_is_contract=False,
+        recipient_is_empty=True,
+        sends_value=True,
         access_list=[],
     )
     tx_gas_limit = intrinsic_gas_cost + 1000  # add a small buffer
@@ -504,6 +508,9 @@ def test_bal_block_rewards(
     intrinsic_gas = intrinsic_gas_calculator(
         calldata=b"",
         contract_creation=False,
+        recipient_is_contract=False,
+        recipient_is_empty=True,
+        sends_value=True,
         access_list=[],
     )
     tx_gas_limit = intrinsic_gas + 1000  # add a small buffer
@@ -836,7 +843,9 @@ def test_bal_self_transfer(
     alice = pre.fund_eoa(amount=start_balance)
 
     intrinsic_gas_calculator = fork.transaction_intrinsic_cost_calculator()
-    intrinsic_gas_cost = intrinsic_gas_calculator()
+    intrinsic_gas_cost = intrinsic_gas_calculator(
+        recipient_is_contract=False, recipient_is_sender=True
+    )
 
     tx = Transaction(
         sender=alice,
@@ -880,7 +889,7 @@ def test_bal_zero_value_transfer(
     bob = pre.fund_eoa(amount=100)
 
     intrinsic_gas_calculator = fork.transaction_intrinsic_cost_calculator()
-    intrinsic_gas_cost = intrinsic_gas_calculator()
+    intrinsic_gas_cost = intrinsic_gas_calculator(recipient_is_contract=False)
 
     tx = Transaction(
         sender=alice,
@@ -1318,6 +1327,9 @@ def test_bal_coinbase_zero_tip(
     intrinsic_gas = intrinsic_gas_calculator(
         calldata=b"",
         contract_creation=False,
+        recipient_is_contract=False,
+        recipient_is_empty=True,
+        sends_value=True,
         access_list=[],
     )
     tx_gas_limit = intrinsic_gas + 1000
@@ -1820,7 +1832,13 @@ def test_bal_multiple_balance_changes_same_account(
     charlie = pre.fund_eoa(amount=0)
 
     intrinsic_gas_calculator = fork.transaction_intrinsic_cost_calculator()
-    tx_intrinsic_gas = intrinsic_gas_calculator(calldata=b"", access_list=[])
+    tx_intrinsic_gas = intrinsic_gas_calculator(
+        calldata=b"",
+        access_list=[],
+        recipient_is_contract=False,
+        recipient_is_empty=True,
+        sends_value=True,
+    )
 
     # bob receives funds in tx0, then spends everything in tx1
     gas_price = 10

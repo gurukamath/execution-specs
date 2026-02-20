@@ -21,6 +21,7 @@ from execution_testing import (
     BlockAccessListExpectation,
     BlockchainTestFiller,
     BlockException,
+    Fork,
     Initcode,
     Op,
     Storage,
@@ -58,6 +59,7 @@ REFERENCE_SPEC_VERSION = ref_spec_7928.version
 @pytest.mark.valid_from("Amsterdam")
 @pytest.mark.exception_test
 def test_bal_invalid_missing_nonce(
+    fork: Fork,
     blockchain_test: BlockchainTestFiller,
     pre: Alloc,
 ) -> None:
@@ -68,11 +70,17 @@ def test_bal_invalid_missing_nonce(
     sender = pre.fund_eoa(amount=10**18)
     receiver = pre.fund_eoa(amount=0)
 
+    intrinsic_gas = fork.transaction_intrinsic_cost_calculator()(
+        recipient_is_contract=False,
+        recipient_is_empty=True,
+        sends_value=True,
+    )
+
     tx = Transaction(
         sender=sender,
         to=receiver,
         value=10**15,
-        gas_limit=21_000,
+        gas_limit=intrinsic_gas,
     )
 
     blockchain_test(
@@ -104,6 +112,7 @@ def test_bal_invalid_missing_nonce(
 @pytest.mark.valid_from("Amsterdam")
 @pytest.mark.exception_test
 def test_bal_invalid_nonce_value(
+    fork: Fork,
     blockchain_test: BlockchainTestFiller,
     pre: Alloc,
 ) -> None:
@@ -113,11 +122,17 @@ def test_bal_invalid_nonce_value(
     sender = pre.fund_eoa(amount=10**18)
     receiver = pre.fund_eoa(amount=0)
 
+    intrinsic_gas = fork.transaction_intrinsic_cost_calculator()(
+        recipient_is_contract=False,
+        recipient_is_empty=True,
+        sends_value=True,
+    )
+
     tx = Transaction(
         sender=sender,
         to=receiver,
         value=10**15,
-        gas_limit=21_000,
+        gas_limit=intrinsic_gas,
     )
 
     blockchain_test(
@@ -229,6 +244,7 @@ def test_bal_invalid_storage_value(
 @pytest.mark.valid_from("Amsterdam")
 @pytest.mark.exception_test
 def test_bal_invalid_tx_order(
+    fork: Fork,
     blockchain_test: BlockchainTestFiller,
     pre: Alloc,
 ) -> None:
@@ -240,11 +256,17 @@ def test_bal_invalid_tx_order(
     sender2 = pre.fund_eoa(amount=10**18)
     receiver = pre.fund_eoa(amount=0)
 
+    intrinsic_gas = fork.transaction_intrinsic_cost_calculator()(
+        recipient_is_contract=False,
+        recipient_is_empty=True,
+        sends_value=True,
+    )
+
     tx1 = Transaction(
         sender=sender1,
         to=receiver,
         value=10**15,
-        gas_limit=21_000,
+        gas_limit=intrinsic_gas,
     )
 
     tx2 = Transaction(
@@ -302,6 +324,7 @@ def test_bal_invalid_tx_order(
 @pytest.mark.valid_from("Amsterdam")
 @pytest.mark.exception_test
 def test_bal_invalid_account(
+    fork: Fork,
     blockchain_test: BlockchainTestFiller,
     pre: Alloc,
 ) -> None:
@@ -313,11 +336,17 @@ def test_bal_invalid_account(
     receiver = pre.fund_eoa(amount=0)
     phantom = pre.fund_eoa(amount=0)
 
+    intrinsic_gas = fork.transaction_intrinsic_cost_calculator()(
+        recipient_is_contract=False,
+        recipient_is_empty=True,
+        sends_value=True,
+    )
+
     tx = Transaction(
         sender=sender,
         to=receiver,
         value=10**15,
-        gas_limit=21_000,
+        gas_limit=intrinsic_gas,
     )
 
     blockchain_test(
@@ -361,6 +390,7 @@ def test_bal_invalid_account(
 @pytest.mark.valid_from("Amsterdam")
 @pytest.mark.exception_test
 def test_bal_invalid_duplicate_account(
+    fork: Fork,
     blockchain_test: BlockchainTestFiller,
     pre: Alloc,
 ) -> None:
@@ -371,11 +401,17 @@ def test_bal_invalid_duplicate_account(
     sender = pre.fund_eoa(amount=10**18)
     receiver = pre.fund_eoa(amount=0)
 
+    intrinsic_gas = fork.transaction_intrinsic_cost_calculator()(
+        recipient_is_contract=False,
+        recipient_is_empty=True,
+        sends_value=True,
+    )
+
     tx = Transaction(
         sender=sender,
         to=receiver,
         value=10**15,
-        gas_limit=21_000,
+        gas_limit=intrinsic_gas,
     )
 
     blockchain_test(
@@ -414,6 +450,7 @@ def test_bal_invalid_duplicate_account(
 @pytest.mark.valid_from("Amsterdam")
 @pytest.mark.exception_test
 def test_bal_invalid_account_order(
+    fork: Fork,
     blockchain_test: BlockchainTestFiller,
     pre: Alloc,
 ) -> None:
@@ -423,11 +460,17 @@ def test_bal_invalid_account_order(
     sender = pre.fund_eoa(amount=10**18)
     receiver = pre.fund_eoa(amount=0)
 
+    intrinsic_gas = fork.transaction_intrinsic_cost_calculator()(
+        recipient_is_contract=False,
+        recipient_is_empty=True,
+        sends_value=True,
+    )
+
     tx = Transaction(
         sender=sender,
         to=receiver,
         value=10**15,
-        gas_limit=21_000,
+        gas_limit=intrinsic_gas,
     )
 
     blockchain_test(
@@ -466,6 +509,7 @@ def test_bal_invalid_account_order(
 @pytest.mark.valid_from("Amsterdam")
 @pytest.mark.exception_test
 def test_bal_invalid_complex_corruption(
+    fork: Fork,
     blockchain_test: BlockchainTestFiller,
     pre: Alloc,
 ) -> None:
@@ -485,11 +529,17 @@ def test_bal_invalid_complex_corruption(
         gas_limit=100_000,
     )
 
+    intrinsic_gas = fork.transaction_intrinsic_cost_calculator()(
+        recipient_is_contract=False,
+        recipient_is_empty=True,
+        sends_value=True,
+    )
+
     tx2 = Transaction(
         sender=sender,
         to=receiver,
         value=10**15,
-        gas_limit=21_000,
+        gas_limit=intrinsic_gas,
     )
 
     blockchain_test(
@@ -561,6 +611,7 @@ def test_bal_invalid_complex_corruption(
 @pytest.mark.valid_from("Amsterdam")
 @pytest.mark.exception_test
 def test_bal_invalid_missing_account(
+    fork: Fork,
     blockchain_test: BlockchainTestFiller,
     pre: Alloc,
 ) -> None:
@@ -570,11 +621,17 @@ def test_bal_invalid_missing_account(
     sender = pre.fund_eoa(amount=10**18)
     receiver = pre.fund_eoa(amount=0)
 
+    intrinsic_gas = fork.transaction_intrinsic_cost_calculator()(
+        recipient_is_contract=False,
+        recipient_is_empty=True,
+        sends_value=True,
+    )
+
     tx = Transaction(
         sender=sender,
         to=receiver,
         value=10**15,
-        gas_limit=21_000,
+        gas_limit=intrinsic_gas,
     )
 
     blockchain_test(
@@ -613,6 +670,7 @@ def test_bal_invalid_missing_account(
 @pytest.mark.valid_from("Amsterdam")
 @pytest.mark.exception_test
 def test_bal_invalid_balance_value(
+    fork: Fork,
     blockchain_test: BlockchainTestFiller,
     pre: Alloc,
 ) -> None:
@@ -622,11 +680,17 @@ def test_bal_invalid_balance_value(
     sender = pre.fund_eoa(amount=10**18)
     receiver = pre.fund_eoa(amount=0)
 
+    intrinsic_gas = fork.transaction_intrinsic_cost_calculator()(
+        recipient_is_contract=False,
+        recipient_is_empty=True,
+        sends_value=True,
+    )
+
     tx = Transaction(
         sender=sender,
         to=receiver,
         value=10**15,
-        gas_limit=21_000,
+        gas_limit=intrinsic_gas,
     )
 
     blockchain_test(
