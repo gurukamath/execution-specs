@@ -24,6 +24,7 @@ from execution_testing import (
     Hash,
     Header,
     Op,
+    RecipientType,
     Transaction,
     add_kzg_version,
     compute_create_address,
@@ -88,8 +89,7 @@ def test_bal_balance_changes(
     intrinsic_gas_cost = intrinsic_gas_calculator(
         calldata=b"",
         contract_creation=False,
-        recipient_is_contract=False,
-        recipient_is_empty=True,
+        recipient_type=RecipientType.EMPTY_ACCOUNT,
         sends_value=True,
         access_list=[],
     )
@@ -508,8 +508,7 @@ def test_bal_block_rewards(
     intrinsic_gas = intrinsic_gas_calculator(
         calldata=b"",
         contract_creation=False,
-        recipient_is_contract=False,
-        recipient_is_empty=True,
+        recipient_type=RecipientType.EMPTY_ACCOUNT,
         sends_value=True,
         access_list=[],
     )
@@ -844,7 +843,7 @@ def test_bal_self_transfer(
 
     intrinsic_gas_calculator = fork.transaction_intrinsic_cost_calculator()
     intrinsic_gas_cost = intrinsic_gas_calculator(
-        recipient_is_contract=False, recipient_is_sender=True
+        recipient_type=RecipientType.SELF
     )
 
     tx = Transaction(
@@ -889,7 +888,9 @@ def test_bal_zero_value_transfer(
     bob = pre.fund_eoa(amount=100)
 
     intrinsic_gas_calculator = fork.transaction_intrinsic_cost_calculator()
-    intrinsic_gas_cost = intrinsic_gas_calculator(recipient_is_contract=False)
+    intrinsic_gas_cost = intrinsic_gas_calculator(
+        recipient_type=RecipientType.EOA
+    )
 
     tx = Transaction(
         sender=alice,
@@ -1327,8 +1328,7 @@ def test_bal_coinbase_zero_tip(
     intrinsic_gas = intrinsic_gas_calculator(
         calldata=b"",
         contract_creation=False,
-        recipient_is_contract=False,
-        recipient_is_empty=True,
+        recipient_type=RecipientType.EMPTY_ACCOUNT,
         sends_value=True,
         access_list=[],
     )
@@ -1835,8 +1835,7 @@ def test_bal_multiple_balance_changes_same_account(
     tx_intrinsic_gas = intrinsic_gas_calculator(
         calldata=b"",
         access_list=[],
-        recipient_is_contract=False,
-        recipient_is_empty=True,
+        recipient_type=RecipientType.EMPTY_ACCOUNT,
         sends_value=True,
     )
 

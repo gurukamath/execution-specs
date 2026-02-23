@@ -20,6 +20,7 @@ from execution_testing import (
     Header,
     Initcode,
     Op,
+    RecipientType,
     Transaction,
     Withdrawal,
     compute_create_address,
@@ -98,8 +99,7 @@ def test_bal_withdrawal_and_transaction(
     charlie = pre.fund_eoa(amount=0)
 
     intrinsic_gas = fork.transaction_intrinsic_cost_calculator()(
-        recipient_is_contract=False,
-        recipient_is_empty=True,
+        recipient_type=RecipientType.EMPTY_ACCOUNT,
         sends_value=True,
     )
 
@@ -349,8 +349,7 @@ def test_bal_withdrawal_and_value_transfer_same_address(
     bob = pre.fund_eoa(amount=0)
 
     intrinsic_gas = fork.transaction_intrinsic_cost_calculator()(
-        recipient_is_contract=False,
-        recipient_is_empty=True,
+        recipient_type=RecipientType.EMPTY_ACCOUNT,
         sends_value=True,
     )
 
@@ -755,8 +754,7 @@ def test_bal_withdrawal_to_coinbase(
 
     intrinsic_gas_calculator = fork.transaction_intrinsic_cost_calculator()
     intrinsic_gas = intrinsic_gas_calculator(
-        recipient_is_contract=False,
-        recipient_is_empty=True,
+        recipient_type=RecipientType.EMPTY_ACCOUNT,
         sends_value=True,
     )
     tx_gas_limit = intrinsic_gas + 1000

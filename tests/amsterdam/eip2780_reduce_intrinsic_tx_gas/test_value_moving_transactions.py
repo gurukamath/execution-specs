@@ -4,8 +4,6 @@ Tests for EIP-2780 Reduce Transaction Intrinsic Cost.
 Tests that the value moving transactions charge gas appropriately.
 """
 
-import enum
-
 import pytest
 from execution_testing import (
     AccessList,
@@ -17,6 +15,7 @@ from execution_testing import (
     Fork,
     Initcode,
     Op,
+    RecipientType,
     Transaction,
     compute_create_address,
 )
@@ -28,15 +27,6 @@ REFERENCE_SPEC_GIT_PATH = ref_spec_2780.git_path
 REFERENCE_SPEC_VERSION = ref_spec_2780.version
 
 pytestmark = pytest.mark.valid_from("Amsterdam")
-
-
-class RecipientType(enum.Enum):
-    """They type of target for the transaction."""
-
-    EOA = 1
-    DELEGATION_7702 = 2
-    CONTRACT = 3
-    EMPTY_ACCOUNT = 4
 
 
 @pytest.mark.parametrize(
@@ -71,8 +61,6 @@ def test_value_moving_transactions(
     sender = pre.fund_eoa(sender_initial_balance)
 
     target_initial_balance = 0
-    recipient_is_contract = False
-    recipient_is_empty = False
     target: Address
 
     match recipient_type:
@@ -83,14 +71,10 @@ def test_value_moving_transactions(
 
         case RecipientType.CONTRACT:
             # ETH transfer to contract
-            recipient_is_contract = True
-
             target = pre.deploy_contract(code=Op.STOP)
 
         case RecipientType.EMPTY_ACCOUNT:
             # ETH transfer to empty account
-            recipient_is_empty = True
-
             target = pre.fund_eoa(amount=0)
 
         case _:
@@ -104,8 +88,7 @@ def test_value_moving_transactions(
     total_gas_cost = intrinsic_gas_calculator(
         access_list=access_list,
         sends_value=True if value else False,
-        recipient_is_contract=recipient_is_contract,
-        recipient_is_empty=recipient_is_empty,
+        recipient_type=recipient_type,
         recipient_is_warm=warm_target,
         return_cost_deducted_prior_execution=True,
     )
@@ -190,8 +173,7 @@ def test_value_moving_transaction_to_delegated_eoa(
     total_gas_cost = intrinsic_gas_calculator(
         access_list=access_list,
         sends_value=True if value else False,
-        recipient_is_contract=False,
-        recipient_is_delegated_eoa=True,
+        recipient_type=RecipientType.DELEGATION_7702,
         recipient_delegation_is_warm=warm_delegation,
         recipient_is_warm=warm_target,
         return_cost_deducted_prior_execution=True,
@@ -257,8 +239,7 @@ def test_value_transfer_to_self(
     total_gas_cost = intrinsic_gas_calculator(
         access_list=access_list,
         sends_value=True if value else False,
-        recipient_is_sender=True,
-        recipient_is_contract=False,
+        recipient_type=RecipientType.SELF,
         return_cost_deducted_prior_execution=True,
     )
 

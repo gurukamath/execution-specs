@@ -14,6 +14,7 @@ from execution_testing import (
     Environment,
     Fork,
     Hash,
+    RecipientType,
     StateTestFiller,
     Transaction,
     TransactionException,
@@ -62,8 +63,7 @@ def tx(
 ) -> Transaction:
     """Blob transaction fixture."""
     intrinsic_gas = fork.transaction_intrinsic_cost_calculator()(
-        recipient_is_contract=False,
-        recipient_is_empty=True,
+        recipient_type=RecipientType.EMPTY_ACCOUNT,
         sends_value=True,
     )
     return Transaction(

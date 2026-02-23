@@ -22,6 +22,7 @@ from execution_testing import (
     Hash,
     Op,
     ParameterSet,
+    RecipientType,
     StateTestFiller,
     Storage,
     Transaction,
@@ -391,7 +392,7 @@ def test_tx_gas_limit_cap_full_calldata(
 
     correct_intrinsic_cost = intrinsic_cost(
         calldata=byte_data * num_of_bytes,
-        recipient_is_contract=False,
+        recipient_type=RecipientType.EOA,
     )
     if exceed_tx_gas_limit:
         assert correct_intrinsic_cost > tx_gas_limit_cap, (
@@ -519,7 +520,7 @@ def test_tx_gas_limit_cap_access_list_with_diff_keys(
         "Fork does not have a transaction gas limit cap"
     )
     gas_available = tx_gas_limit_cap - intrinsic_cost(
-        recipient_is_contract=False
+        recipient_type=RecipientType.EOA
     )
 
     gas_costs = fork.gas_costs()
@@ -557,7 +558,7 @@ def test_tx_gas_limit_cap_access_list_with_diff_keys(
 
     correct_intrinsic_cost = intrinsic_cost(
         access_list=access_list,
-        recipient_is_contract=False,
+        recipient_type=RecipientType.EOA,
     )
     if exceed_tx_gas_limit:
         assert correct_intrinsic_cost > tx_gas_limit_cap, (

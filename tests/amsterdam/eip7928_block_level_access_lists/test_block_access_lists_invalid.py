@@ -24,6 +24,7 @@ from execution_testing import (
     Fork,
     Initcode,
     Op,
+    RecipientType,
     Storage,
     Transaction,
     compute_create_address,
@@ -71,8 +72,7 @@ def test_bal_invalid_missing_nonce(
     receiver = pre.fund_eoa(amount=0)
 
     intrinsic_gas = fork.transaction_intrinsic_cost_calculator()(
-        recipient_is_contract=False,
-        recipient_is_empty=True,
+        recipient_type=RecipientType.EMPTY_ACCOUNT,
         sends_value=True,
     )
 
@@ -123,8 +123,7 @@ def test_bal_invalid_nonce_value(
     receiver = pre.fund_eoa(amount=0)
 
     intrinsic_gas = fork.transaction_intrinsic_cost_calculator()(
-        recipient_is_contract=False,
-        recipient_is_empty=True,
+        recipient_type=RecipientType.EMPTY_ACCOUNT,
         sends_value=True,
     )
 
@@ -257,8 +256,7 @@ def test_bal_invalid_tx_order(
     receiver = pre.fund_eoa(amount=0)
 
     intrinsic_gas = fork.transaction_intrinsic_cost_calculator()(
-        recipient_is_contract=False,
-        recipient_is_empty=True,
+        recipient_type=RecipientType.EMPTY_ACCOUNT,
         sends_value=True,
     )
 
@@ -337,8 +335,7 @@ def test_bal_invalid_account(
     phantom = pre.fund_eoa(amount=0)
 
     intrinsic_gas = fork.transaction_intrinsic_cost_calculator()(
-        recipient_is_contract=False,
-        recipient_is_empty=True,
+        recipient_type=RecipientType.EMPTY_ACCOUNT,
         sends_value=True,
     )
 
@@ -402,8 +399,7 @@ def test_bal_invalid_duplicate_account(
     receiver = pre.fund_eoa(amount=0)
 
     intrinsic_gas = fork.transaction_intrinsic_cost_calculator()(
-        recipient_is_contract=False,
-        recipient_is_empty=True,
+        recipient_type=RecipientType.EMPTY_ACCOUNT,
         sends_value=True,
     )
 
@@ -461,8 +457,7 @@ def test_bal_invalid_account_order(
     receiver = pre.fund_eoa(amount=0)
 
     intrinsic_gas = fork.transaction_intrinsic_cost_calculator()(
-        recipient_is_contract=False,
-        recipient_is_empty=True,
+        recipient_type=RecipientType.EMPTY_ACCOUNT,
         sends_value=True,
     )
 
@@ -530,8 +525,7 @@ def test_bal_invalid_complex_corruption(
     )
 
     intrinsic_gas = fork.transaction_intrinsic_cost_calculator()(
-        recipient_is_contract=False,
-        recipient_is_empty=True,
+        recipient_type=RecipientType.EMPTY_ACCOUNT,
         sends_value=True,
     )
 
@@ -622,8 +616,7 @@ def test_bal_invalid_missing_account(
     receiver = pre.fund_eoa(amount=0)
 
     intrinsic_gas = fork.transaction_intrinsic_cost_calculator()(
-        recipient_is_contract=False,
-        recipient_is_empty=True,
+        recipient_type=RecipientType.EMPTY_ACCOUNT,
         sends_value=True,
     )
 
@@ -681,8 +674,7 @@ def test_bal_invalid_balance_value(
     receiver = pre.fund_eoa(amount=0)
 
     intrinsic_gas = fork.transaction_intrinsic_cost_calculator()(
-        recipient_is_contract=False,
-        recipient_is_empty=True,
+        recipient_type=RecipientType.EMPTY_ACCOUNT,
         sends_value=True,
     )
 

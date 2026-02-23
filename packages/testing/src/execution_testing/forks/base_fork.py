@@ -33,6 +33,7 @@ from execution_testing.vm import (
     Opcodes,
 )
 
+from ..recipient_type import RecipientType
 from .base_decorators import prefer_transition_to_method
 from .gas_costs import GasCosts
 
@@ -127,13 +128,9 @@ class TransactionIntrinsicCostCalculator(Protocol):
         authorization_list_or_count: Sized | int | None = None,
         return_cost_deducted_prior_execution: bool = False,
         sends_value: bool = False,
-        recipient_is_sender: bool = False,
+        recipient_type: RecipientType = RecipientType.CONTRACT,
         recipient_is_warm: bool = False,
-        recipient_is_precompile: bool = False,
-        recipient_is_contract: bool = False,
-        recipient_is_delegated_eoa: bool = False,
-        recipient_delegation_is_warm: bool = False,
-        recipient_is_empty: bool = False,
+        recipient_delegation_is_warm: Optional[bool] = None,
     ) -> int:
         """
         Return the intrinsic gas cost of a transaction given its properties.
@@ -154,13 +151,11 @@ class TransactionIntrinsicCostCalculator(Protocol):
                                                 limit before the transaction
                                                 starts execution.
           sends_value: Whether the transaction sends value.
-          recipient_is_sender: Whether the recipient is the sender.
-          recipient_is_warm: Whether the recipient is warm in access list.
-          recipient_is_precompile: Whether the recipient is a precompile.
-          recipient_is_contract: Whether the recipient is a contract
-          recipient_is_delegated_eoa: Whether the recipient is a delegated EOA.
-          recipient_delegation_is_warm: Whether the delegation is warm.
-          recipient_is_empty: Whether the recipient account is empty.
+          recipient_type: The type of the transaction recipient.
+          recipient_is_warm: Whether the recipient is warm in the access list.
+          recipient_delegation_is_warm: Whether the 7702 delegation target is
+                                        warm. Only applicable when
+                                        recipient_type is DELEGATION_7702.
 
         Returns: Gas cost of a transaction
 

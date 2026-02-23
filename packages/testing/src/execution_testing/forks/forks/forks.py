@@ -35,6 +35,7 @@ from execution_testing.vm import (
     Opcodes,
 )
 
+from ...recipient_type import RecipientType
 from ..base_fork import (
     BaseFeeChangeCalculator,
     BaseFeePerGasCalculator,
@@ -845,19 +846,13 @@ class Frontier(BaseFork, solc_name="homestead"):
             authorization_list_or_count: Sized | int | None = None,
             return_cost_deducted_prior_execution: bool = False,
             sends_value: bool = False,
-            recipient_is_sender: bool = False,
+            recipient_type: RecipientType = RecipientType.CONTRACT,
             recipient_is_warm: bool = False,
-            recipient_is_precompile: bool = False,
-            recipient_is_contract: bool = True,
-            recipient_is_delegated_eoa: bool = False,
-            recipient_delegation_is_warm: bool = False,
-            recipient_is_empty: bool = False,
+            recipient_delegation_is_warm: Optional[bool] = None,
         ) -> int:
             del return_cost_deducted_prior_execution
-            del sends_value, recipient_is_sender, recipient_is_warm
-            del recipient_is_precompile, recipient_is_contract
-            del recipient_is_delegated_eoa, recipient_delegation_is_warm
-            del recipient_is_empty
+            del sends_value, recipient_type, recipient_is_warm
+            del recipient_delegation_is_warm
 
             assert access_list is None, (
                 f"Access list is not supported in {cls.name()}"
@@ -1570,13 +1565,9 @@ class Homestead(Frontier):
             authorization_list_or_count: Sized | int | None = None,
             return_cost_deducted_prior_execution: bool = False,
             sends_value: bool = False,
-            recipient_is_sender: bool = False,
+            recipient_type: RecipientType = RecipientType.CONTRACT,
             recipient_is_warm: bool = False,
-            recipient_is_precompile: bool = False,
-            recipient_is_contract: bool = True,
-            recipient_is_delegated_eoa: bool = False,
-            recipient_delegation_is_warm: bool = False,
-            recipient_is_empty: bool = False,
+            recipient_delegation_is_warm: Optional[bool] = None,
         ) -> int:
             del return_cost_deducted_prior_execution
 
@@ -1586,13 +1577,9 @@ class Homestead(Frontier):
                 access_list=access_list,
                 authorization_list_or_count=authorization_list_or_count,
                 sends_value=sends_value,
-                recipient_is_sender=recipient_is_sender,
+                recipient_type=recipient_type,
                 recipient_is_warm=recipient_is_warm,
-                recipient_is_precompile=recipient_is_precompile,
-                recipient_is_contract=recipient_is_contract,
-                recipient_is_delegated_eoa=recipient_is_delegated_eoa,
                 recipient_delegation_is_warm=recipient_delegation_is_warm,
-                recipient_is_empty=recipient_is_empty,
             )
             if contract_creation:
                 intrinsic_cost += gas_costs.GAS_TX_CREATE
@@ -1957,13 +1944,9 @@ class Berlin(Istanbul):
             authorization_list_or_count: Sized | int | None = None,
             return_cost_deducted_prior_execution: bool = False,
             sends_value: bool = False,
-            recipient_is_sender: bool = False,
+            recipient_type: RecipientType = RecipientType.CONTRACT,
             recipient_is_warm: bool = False,
-            recipient_is_precompile: bool = False,
-            recipient_is_contract: bool = True,
-            recipient_is_delegated_eoa: bool = False,
-            recipient_delegation_is_warm: bool = False,
-            recipient_is_empty: bool = False,
+            recipient_delegation_is_warm: Optional[bool] = None,
         ) -> int:
             del return_cost_deducted_prior_execution
 
@@ -1972,13 +1955,9 @@ class Berlin(Istanbul):
                 contract_creation=contract_creation,
                 authorization_list_or_count=authorization_list_or_count,
                 sends_value=sends_value,
-                recipient_is_sender=recipient_is_sender,
+                recipient_type=recipient_type,
                 recipient_is_warm=recipient_is_warm,
-                recipient_is_precompile=recipient_is_precompile,
-                recipient_is_contract=recipient_is_contract,
-                recipient_is_delegated_eoa=recipient_is_delegated_eoa,
                 recipient_delegation_is_warm=recipient_delegation_is_warm,
-                recipient_is_empty=recipient_is_empty,
             )
             if access_list is not None:
                 for access in access_list:
@@ -2961,13 +2940,9 @@ class Prague(Cancun):
             authorization_list_or_count: Sized | int | None = None,
             return_cost_deducted_prior_execution: bool = False,
             sends_value: bool = False,
-            recipient_is_sender: bool = False,
+            recipient_type: RecipientType = RecipientType.CONTRACT,
             recipient_is_warm: bool = False,
-            recipient_is_precompile: bool = False,
-            recipient_is_contract: bool = True,
-            recipient_is_delegated_eoa: bool = False,
-            recipient_delegation_is_warm: bool = False,
-            recipient_is_empty: bool = False,
+            recipient_delegation_is_warm: Optional[bool] = None,
         ) -> int:
             intrinsic_cost: int = super_fn(
                 calldata=calldata,
@@ -2975,13 +2950,9 @@ class Prague(Cancun):
                 access_list=access_list,
                 return_cost_deducted_prior_execution=False,
                 sends_value=sends_value,
-                recipient_is_sender=recipient_is_sender,
+                recipient_type=recipient_type,
                 recipient_is_warm=recipient_is_warm,
-                recipient_is_precompile=recipient_is_precompile,
-                recipient_is_contract=recipient_is_contract,
-                recipient_is_delegated_eoa=recipient_is_delegated_eoa,
                 recipient_delegation_is_warm=recipient_delegation_is_warm,
-                recipient_is_empty=recipient_is_empty,
             )
             if authorization_list_or_count is not None:
                 if isinstance(authorization_list_or_count, Sized):
@@ -3606,13 +3577,9 @@ class Amsterdam(BPO2):
             authorization_list_or_count: Sized | int | None = None,
             return_cost_deducted_prior_execution: bool = False,
             sends_value: bool = False,
-            recipient_is_sender: bool = False,
+            recipient_type: RecipientType = RecipientType.CONTRACT,
             recipient_is_warm: bool = False,
-            recipient_is_precompile: bool = False,
-            recipient_is_contract: bool = True,
-            recipient_is_delegated_eoa: bool = False,
             recipient_delegation_is_warm: Optional[bool] = None,
-            recipient_is_empty: bool = False,
         ) -> int:
             intrinsic_cost: int = super_fn(
                 calldata=calldata,
@@ -3621,22 +3588,11 @@ class Amsterdam(BPO2):
                 return_cost_deducted_prior_execution=False,
             )
             assert (
-                sum(
-                    [
-                        recipient_is_sender,
-                        recipient_is_precompile,
-                        recipient_is_contract,
-                        recipient_is_delegated_eoa,
-                    ]
-                )
-                <= 1
-            ), "Only one recipient type flag can be True"
-            assert (
                 recipient_delegation_is_warm is None
-                or recipient_is_delegated_eoa
+                or recipient_type == RecipientType.DELEGATION_7702
             ), (
                 "recipient_delegation_is_warm requires"
-                " recipient_is_delegated_eoa"
+                " RecipientType.DELEGATION_7702"
             )
 
             if authorization_list_or_count is not None:
@@ -3648,10 +3604,10 @@ class Amsterdam(BPO2):
                     authorization_list_or_count * gas_costs.G_AUTHORIZATION
                 )
 
-            if contract_creation or recipient_is_sender:
+            if contract_creation or recipient_type == RecipientType.SELF:
                 access_cost = 0
                 update_cost = 0
-            elif recipient_is_precompile:
+            elif recipient_type == RecipientType.PRECOMPILE:
                 access_cost = 0
                 update_cost = 0
                 if sends_value:
@@ -3661,12 +3617,15 @@ class Amsterdam(BPO2):
                 if recipient_is_warm:
                     access_cost = gas_costs.G_WARM_ACCOUNT_ACCESS
                 else:
-                    if recipient_is_contract or recipient_is_delegated_eoa:
+                    if recipient_type in (
+                        RecipientType.CONTRACT,
+                        RecipientType.DELEGATION_7702,
+                    ):
                         access_cost = gas_costs.G_COLD_ACCOUNT_COST_CODE
                     else:
                         access_cost = gas_costs.G_COLD_ACCOUNT_COST_NOCODE
 
-                if recipient_is_delegated_eoa:
+                if recipient_type == RecipientType.DELEGATION_7702:
                     if recipient_delegation_is_warm:
                         access_cost += gas_costs.G_WARM_ACCOUNT_ACCESS
                     else:
@@ -3675,7 +3634,7 @@ class Amsterdam(BPO2):
                 # Update cost - only if sends value
                 update_cost = 0
                 if sends_value:
-                    if recipient_is_empty:
+                    if recipient_type == RecipientType.EMPTY_ACCOUNT:
                         update_cost = gas_costs.G_NEW_ACCOUNT
                     else:
                         update_cost = gas_costs.G_STATE_UPDATE

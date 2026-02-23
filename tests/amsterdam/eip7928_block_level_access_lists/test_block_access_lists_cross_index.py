@@ -23,6 +23,7 @@ from execution_testing import (
     Bytecode,
     Fork,
     Op,
+    RecipientType,
     Transaction,
 )
 
@@ -283,8 +284,7 @@ def test_bal_system_contract_noop_filtering(
     receiver = pre.fund_eoa(amount=0)
 
     intrinsic_gas = fork.transaction_intrinsic_cost_calculator()(
-        recipient_is_contract=False,
-        recipient_is_empty=True,
+        recipient_type=RecipientType.EMPTY_ACCOUNT,
         sends_value=True,
     )
 
