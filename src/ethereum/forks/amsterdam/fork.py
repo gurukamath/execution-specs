@@ -1051,8 +1051,9 @@ def calculate_recipient_gas_cost(
         if is_cold_access:
             access_gas_cost = GAS_COLD_ACCOUNT_COST_CODE
 
-        if is_valid_delegation(recipient.code):
-            delegated_address = get_delegated_code_address(recipient.code)
+        recipient_code = get_code(tx_state, recipient.code_hash)
+        if is_valid_delegation(recipient_code):
+            delegated_address = get_delegated_code_address(recipient_code)
             if delegated_address in access_list_addresses:
                 access_gas_cost += GAS_WARM_ACCESS
             else:
