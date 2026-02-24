@@ -1881,7 +1881,10 @@ class Opcodes(Opcode, Enum):
         popped_stack_items=1,
         pushed_stack_items=1,
         kwargs=["address"],
-        metadata={"address_warm": False},
+        metadata={
+            "address_warm": False,
+            "address_has_code": True,
+        },
     )
     """
     EXTCODEHASH(address) = hash
