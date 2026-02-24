@@ -47,6 +47,7 @@ from execution_testing import (
     Environment,
     Fork,
     Op,
+    RecipientType,
     StateTestFiller,
     Storage,
     Transaction,
@@ -579,7 +580,9 @@ def test_tx_entry_point(
         fork.transaction_intrinsic_cost_calculator()
     )
     intrinsic_gas_cost = tx_intrinsic_gas_cost_calculator(
-        calldata=precompile_input, access_list=access_list
+        calldata=precompile_input,
+        access_list=access_list,
+        recipient_type=RecipientType.PRECOMPILE,
     )
 
     # Consumed gas will only be the precompile gas if the proof is correct and
@@ -593,6 +596,7 @@ def test_tx_entry_point(
     ) + tx_intrinsic_gas_cost_calculator(
         calldata=precompile_input,
         access_list=access_list,
+        recipient_type=RecipientType.PRECOMPILE,
         return_cost_deducted_prior_execution=True,
     )
 

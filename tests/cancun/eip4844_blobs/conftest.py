@@ -339,7 +339,7 @@ def non_zero_blob_gas_used_genesis_block(
             sender=sender,
             to=empty_account_destination,
             value=1,
-            gas_limit=21_000,
+            gas_limit=45_000,
             max_fee_per_gas=tx_max_fee_per_gas,
             max_priority_fee_per_gas=0,
             max_fee_per_blob_gas=blob_gas_price_calculator(
