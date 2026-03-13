@@ -71,8 +71,20 @@ GAS_BLOBHASH_OPCODE = Uint(3)
 GAS_POINT_EVALUATION = Uint(50000)
 
 GAS_COLD_ACCOUNT_COST_CODE = Uint(2600)
-GAS_COLD_ACCOUNT_COST_NOCODE = Uint(500)
+"""
+Gas cost for a cold access to an account that has code deployed.
+7702 delegated accounts are also charged this for cold access.
+"""
+
+GAS_COLD_ACCOUNT_COST_NO_CODE = Uint(500)
+"""
+Gas cost for a cold access to an account without code.
+"""
+
 GAS_STATE_UPDATE = Uint(1000)
+"""
+Gas cost for a state-changing operation (e.g. value transfer).
+"""
 
 GAS_PER_BLOB = U64(2**17)
 BLOB_SCHEDULE_TARGET = U64(14)

@@ -56,7 +56,7 @@ def compute_scenario_gas(
         case AccessScenario.WARM:
             return gsc.GAS_WARM_ACCOUNT_ACCESS
         case AccessScenario.COLD_NOCODE:
-            return gsc.G_COLD_ACCOUNT_COST_NOCODE
+            return gsc.G_COLD_ACCOUNT_COST_NO_CODE
         case AccessScenario.COLD_CODE:
             return gsc.G_COLD_ACCOUNT_COST_CODE
 

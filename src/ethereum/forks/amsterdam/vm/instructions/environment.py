@@ -26,7 +26,7 @@ from ..gas import (
     GAS_BASE,
     GAS_BLOBHASH_OPCODE,
     GAS_COLD_ACCOUNT_COST_CODE,
-    GAS_COLD_ACCOUNT_COST_NOCODE,
+    GAS_COLD_ACCOUNT_COST_NO_CODE,
     GAS_COPY,
     GAS_FAST_STEP,
     GAS_RETURN_DATA_COPY,
@@ -78,10 +78,9 @@ def balance(evm: Evm) -> None:
 
     # GAS
     is_cold_access = address not in evm.accessed_addresses
+    gas_cost = GAS_WARM_ACCESS
     if is_cold_access:
-        gas_cost = GAS_COLD_ACCOUNT_COST_NOCODE
-    else:
-        gas_cost = GAS_WARM_ACCESS
+        gas_cost = GAS_COLD_ACCOUNT_COST_NO_CODE
 
     check_gas(evm, gas_cost)
 
@@ -358,10 +357,9 @@ def extcodesize(evm: Evm) -> None:
 
     # GAS
     is_cold_access = address not in evm.accessed_addresses
+    access_gas_cost = GAS_WARM_ACCESS
     if is_cold_access:
-        access_gas_cost = GAS_COLD_ACCOUNT_COST_NOCODE
-    else:
-        access_gas_cost = GAS_WARM_ACCESS
+        access_gas_cost = GAS_COLD_ACCOUNT_COST_NO_CODE
 
     check_gas(evm, access_gas_cost)
 
@@ -413,10 +411,9 @@ def extcodecopy(evm: Evm) -> None:
     )
 
     is_cold_access = address not in evm.accessed_addresses
+    access_gas_cost = GAS_WARM_ACCESS
     if is_cold_access:
-        access_gas_cost = GAS_COLD_ACCOUNT_COST_NOCODE
-    else:
-        access_gas_cost = GAS_WARM_ACCESS
+        access_gas_cost = GAS_COLD_ACCOUNT_COST_NO_CODE
 
     check_gas(evm, access_gas_cost + copy_gas_cost + extend_memory.cost)
 
@@ -521,10 +518,9 @@ def extcodehash(evm: Evm) -> None:
 
     # GAS
     is_cold_access = address not in evm.accessed_addresses
+    access_gas_cost = GAS_WARM_ACCESS
     if is_cold_access:
-        access_gas_cost = GAS_COLD_ACCOUNT_COST_NOCODE
-    else:
-        access_gas_cost = GAS_WARM_ACCESS
+        access_gas_cost = GAS_COLD_ACCOUNT_COST_NO_CODE
 
     check_gas(evm, access_gas_cost)
 

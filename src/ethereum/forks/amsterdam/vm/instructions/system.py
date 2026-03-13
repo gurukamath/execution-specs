@@ -45,7 +45,7 @@ from ..exceptions import OutOfGasError, Revert, WriteInStaticContext
 from ..gas import (
     GAS_COLD_ACCOUNT_ACCESS,
     GAS_COLD_ACCOUNT_COST_CODE,
-    GAS_COLD_ACCOUNT_COST_NOCODE,
+    GAS_COLD_ACCOUNT_COST_NO_CODE,
     GAS_CREATE,
     GAS_KECCAK256_PER_WORD,
     GAS_NEW_ACCOUNT,
@@ -390,10 +390,9 @@ def call(evm: Evm) -> None:
     )
 
     is_cold_access = to not in evm.accessed_addresses
+    access_gas_cost = GAS_WARM_ACCESS
     if is_cold_access:
-        access_gas_cost = GAS_COLD_ACCOUNT_COST_NOCODE
-    else:
-        access_gas_cost = GAS_WARM_ACCESS
+        access_gas_cost = GAS_COLD_ACCOUNT_COST_NO_CODE
 
     # check static gas before state access
     check_gas(
@@ -503,10 +502,9 @@ def callcode(evm: Evm) -> None:
     )
 
     is_cold_access = code_address not in evm.accessed_addresses
+    access_gas_cost = GAS_WARM_ACCESS
     if is_cold_access:
-        access_gas_cost = GAS_COLD_ACCOUNT_COST_NOCODE
-    else:
-        access_gas_cost = GAS_WARM_ACCESS
+        access_gas_cost = GAS_COLD_ACCOUNT_COST_NO_CODE
 
     # Cost is simply dependent on value since the contract is always there
     call_value_cost = Uint(0) if value == 0 else Uint(2) * GAS_STATE_UPDATE
@@ -667,10 +665,9 @@ def delegatecall(evm: Evm) -> None:
     )
 
     is_cold_access = code_address not in evm.accessed_addresses
+    access_gas_cost = GAS_WARM_ACCESS
     if is_cold_access:
-        access_gas_cost = GAS_COLD_ACCOUNT_COST_NOCODE
-    else:
-        access_gas_cost = GAS_WARM_ACCESS
+        access_gas_cost = GAS_COLD_ACCOUNT_COST_NO_CODE
 
     # check static gas before state access
     check_gas(evm, access_gas_cost + extend_memory.cost)
@@ -762,10 +759,9 @@ def staticcall(evm: Evm) -> None:
     )
 
     is_cold_access = to not in evm.accessed_addresses
+    access_gas_cost = GAS_WARM_ACCESS
     if is_cold_access:
-        access_gas_cost = GAS_COLD_ACCOUNT_COST_NOCODE
-    else:
-        access_gas_cost = GAS_WARM_ACCESS
+        access_gas_cost = GAS_COLD_ACCOUNT_COST_NO_CODE
 
     # check static gas before state access
     check_gas(evm, access_gas_cost + extend_memory.cost)

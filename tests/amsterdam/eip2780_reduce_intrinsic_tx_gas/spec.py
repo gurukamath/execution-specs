@@ -23,7 +23,7 @@ class Spec:
 
     # GAS constants
     GAS_COLD_ACCOUNT_COST_CODE: int = 2600
-    GAS_COLD_ACCOUNT_COST_NOCODE: int = 500
+    GAS_COLD_ACCOUNT_COST_NO_CODE: int = 500
     GAS_STATE_UPDATE: int = 1000
 
     # The base transaction cost

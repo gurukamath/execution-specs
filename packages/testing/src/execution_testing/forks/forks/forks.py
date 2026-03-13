@@ -3531,7 +3531,7 @@ class Amsterdam(BPO2):
             ),
             GAS_TX_BASE=4_500,
             G_COLD_ACCOUNT_COST_CODE=2_600,
-            G_COLD_ACCOUNT_COST_NOCODE=500,
+            G_COLD_ACCOUNT_COST_NO_CODE=500,
             G_STATE_UPDATE=1000,
             GAS_BLOCK_ACCESS_LIST_ITEM=2000,
         )
@@ -3611,7 +3611,7 @@ class Amsterdam(BPO2):
                     ):
                         access_cost = gas_costs.G_COLD_ACCOUNT_COST_CODE
                     else:
-                        access_cost = gas_costs.G_COLD_ACCOUNT_COST_NOCODE
+                        access_cost = gas_costs.G_COLD_ACCOUNT_COST_NO_CODE
 
                 if recipient_type == RecipientType.DELEGATION_7702:
                     if recipient_delegation_is_warm:
@@ -3648,7 +3648,7 @@ class Amsterdam(BPO2):
         access costs and restructured value transfer costs.
 
         Cold access is split into:
-        - G_COLD_ACCOUNT_COST_NOCODE (500) for targets without code
+        - G_COLD_ACCOUNT_COST_NO_CODE (500) for targets without code
         - G_COLD_ACCOUNT_COST_CODE (2600) for targets with code
 
         Value transfer replaces G_CALL_VALUE (9000) with:
@@ -3663,7 +3663,7 @@ class Amsterdam(BPO2):
         elif metadata.get("address_has_code", True):
             access_cost = gas_costs.G_COLD_ACCOUNT_COST_CODE
         else:
-            access_cost = gas_costs.G_COLD_ACCOUNT_COST_NOCODE
+            access_cost = gas_costs.G_COLD_ACCOUNT_COST_NO_CODE
 
         # Value transfer cost (replaces G_CALL_VALUE)
         value_cost = 0
@@ -3695,7 +3695,7 @@ class Amsterdam(BPO2):
         """
         At Amsterdam (EIP-2780), split cold access cost by code presence.
 
-        - G_COLD_ACCOUNT_COST_NOCODE for accounts without code
+        - G_COLD_ACCOUNT_COST_NO_CODE for accounts without code
         - G_COLD_ACCOUNT_COST_CODE for accounts with code
         """
 
@@ -3710,7 +3710,7 @@ class Amsterdam(BPO2):
             elif opcode.metadata["address_has_code"]:
                 access_cost = gas_costs.G_COLD_ACCOUNT_COST_CODE
             else:
-                access_cost = gas_costs.G_COLD_ACCOUNT_COST_NOCODE
+                access_cost = gas_costs.G_COLD_ACCOUNT_COST_NO_CODE
 
             return base_cost + access_cost
 

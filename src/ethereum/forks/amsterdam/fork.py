@@ -678,7 +678,7 @@ def check_transaction(
     intrinsic_gas += recipient_gas_cost
 
     # Check if transaction has sufficient gas for intrinsic costs
-    if max(intrinsic_gas, calldata_floor_gas_cost) > tx.gas:
+    if intrinsic_gas > tx.gas or calldata_floor_gas_cost > tx.gas:
         raise InsufficientTransactionGasError("Insufficient gas")
 
     return (
@@ -1019,7 +1019,7 @@ def calculate_recipient_gas_cost(
     """
     from .vm.gas import (
         GAS_COLD_ACCOUNT_COST_CODE,
-        GAS_COLD_ACCOUNT_COST_NOCODE,
+        GAS_COLD_ACCOUNT_COST_NO_CODE,
         GAS_NEW_ACCOUNT,
         GAS_STATE_UPDATE,
         GAS_WARM_ACCESS,
@@ -1036,10 +1036,9 @@ def calculate_recipient_gas_cost(
         return tx_recipient_cost
 
     is_cold_access = tx.to not in access_list_addresses
+    access_gas_cost = GAS_WARM_ACCESS
     if is_cold_access:
-        access_gas_cost = GAS_COLD_ACCOUNT_COST_NOCODE
-    else:
-        access_gas_cost = GAS_WARM_ACCESS
+        access_gas_cost = GAS_COLD_ACCOUNT_COST_NO_CODE
 
     # Make sure the gas is enough to at least pay cold EOA
     # before actually accessing the account

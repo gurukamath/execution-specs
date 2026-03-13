@@ -58,7 +58,7 @@ class GasCosts:
 
     # EIP-2780: Reduced intrinsic transaction gas costs (Amsterdam)
     G_COLD_ACCOUNT_COST_CODE: int = 0
-    G_COLD_ACCOUNT_COST_NOCODE: int = 0
+    G_COLD_ACCOUNT_COST_NO_CODE: int = 0
     G_STATE_UPDATE: int = 0
 
     # Precompiled contract gas constants

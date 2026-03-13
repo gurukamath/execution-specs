@@ -93,7 +93,7 @@ def test_account_access_opcode(
 
     EIP-2780 splits cold access cost by whether the target has code:
     - G_COLD_ACCOUNT_COST_CODE (2600) for accounts with code.
-    - G_COLD_ACCOUNT_COST_NOCODE (500) for accounts without.
+    - G_COLD_ACCOUNT_COST_NO_CODE (500) for accounts without.
 
     The checker stores the opcode result in slot 0, and a success
     marker (1) in slot 1. If the access opcode OOGs, neither SSTORE
@@ -233,7 +233,7 @@ def test_account_access_opcode(
         if accessed_address_warm
         else gsc.G_COLD_ACCOUNT_COST_CODE
         if address_has_code
-        else gsc.G_COLD_ACCOUNT_COST_NOCODE
+        else gsc.G_COLD_ACCOUNT_COST_NO_CODE
     )
     # EXTCODECOPY pushes 4 args (address, dest_offset, offset, size);
     # all other opcodes push 1 arg (address).
