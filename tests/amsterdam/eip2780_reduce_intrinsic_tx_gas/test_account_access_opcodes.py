@@ -229,7 +229,7 @@ def test_account_access_opcode(
 
     gsc = fork.gas_costs()
     cold_access = (
-        gsc.G_WARM_ACCOUNT_ACCESS
+        gsc.GAS_WARM_ACCOUNT_ACCESS
         if accessed_address_warm
         else gsc.G_COLD_ACCOUNT_COST_CODE
         if address_has_code
@@ -245,7 +245,7 @@ def test_account_access_opcode(
         # Push all opcode arguments onto the stack, then give one less gas
         # than the access cost — the opcode itself OOGs immediately.
         gas_limit = (
-            intrinsic_cost + gsc.G_VERY_LOW * n_push_args + cold_access - 1
+            intrinsic_cost + gsc.GAS_VERY_LOW * n_push_args + cold_access - 1
         )
         expected_storage = {0: 0, 1: 0}
     else:  # SUCCESS

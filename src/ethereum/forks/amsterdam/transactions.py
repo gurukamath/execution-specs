@@ -28,7 +28,7 @@ from .exceptions import (
 )
 from .fork_types import Authorization, VersionedHash
 
-TX_BASE_COST = Uint(4500)
+GAS_TX_BASE = Uint(4500)
 """
 Base cost of a transaction in gas units. This is the minimum amount of gas
 required to execute a transaction.

@@ -54,7 +54,7 @@ def compute_scenario_gas(
     """Return the gas threshold for the given access scenario."""
     match access:
         case AccessScenario.WARM:
-            return gsc.G_WARM_ACCOUNT_ACCESS
+            return gsc.GAS_WARM_ACCOUNT_ACCESS
         case AccessScenario.COLD_NOCODE:
             return gsc.G_COLD_ACCOUNT_COST_NOCODE
         case AccessScenario.COLD_CODE:
@@ -88,7 +88,7 @@ def _run_call_test(
     target_has_code = not account_new
 
     if account_new:
-        target = pre.empty_account()
+        target = Address(pre.fund_eoa(amount=0))
     else:
         target = pre.deploy_contract(code=Op.STOP)
 
@@ -107,13 +107,13 @@ def _run_call_test(
         recipient_type=RecipientType.CONTRACT,
         return_cost_deducted_prior_execution=True,
     )
-    bytecode_cost = gsc.G_VERY_LOW * n_args
+    bytecode_cost = gsc.GAS_VERY_LOW * n_args
 
     # Value cost depends on whether the target is new or existing.
     value_cost = 0
     if has_value_transfer and value > 0:
         if account_new:
-            value_cost = gsc.G_STATE_UPDATE + gsc.G_NEW_ACCOUNT
+            value_cost = gsc.G_STATE_UPDATE + gsc.GAS_NEW_ACCOUNT
         else:
             value_cost = 2 * gsc.G_STATE_UPDATE
 

@@ -293,7 +293,7 @@ def test_value_contract_creation_tx(
     call_data = Initcode(deploy_code=code_to_deploy)
     execution_gas = call_data.execution_gas(
         fork
-    ) + gsc.G_CODE_DEPOSIT_BYTE * len(code_to_deploy)
+    ) + gsc.GAS_CODE_DEPOSIT_PER_BYTE * len(code_to_deploy)
 
     intrinsic_gas_calculator = fork.transaction_intrinsic_cost_calculator()
     total_gas_cost = (
