@@ -970,10 +970,10 @@ def test_account_warming(
     # G_COLD_ACCOUNT_COST_CODE / G_COLD_ACCOUNT_COST_NO_CODE are 0 on pre-
     # Amsterdam forks; fall back to the unified G_COLD_ACCOUNT_ACCESS (2600).
     cold_account_cost_code = (
-        gsc.G_COLD_ACCOUNT_COST_CODE or gsc.GAS_COLD_ACCOUNT_ACCESS
+        gsc.GAS_COLD_ACCOUNT_COST_CODE or gsc.GAS_COLD_ACCOUNT_ACCESS
     )
     cold_account_cost_nocode = (
-        gsc.G_COLD_ACCOUNT_COST_NO_CODE or gsc.GAS_COLD_ACCOUNT_ACCESS
+        gsc.GAS_COLD_ACCOUNT_COST_NO_CODE or gsc.GAS_COLD_ACCOUNT_ACCESS
     )
     warm_account_cost = gsc.GAS_WARM_ACCOUNT_ACCESS
 

@@ -3530,9 +3530,9 @@ class Amsterdam(BPO2):
                 block_number=block_number, timestamp=timestamp
             ),
             GAS_TX_BASE=4_500,
-            G_COLD_ACCOUNT_COST_CODE=2_600,
-            G_COLD_ACCOUNT_COST_NO_CODE=500,
-            G_STATE_UPDATE=1000,
+            GAS_COLD_ACCOUNT_COST_CODE=2_600,
+            GAS_COLD_ACCOUNT_COST_NO_CODE=500,
+            GAS_STATE_UPDATE=1000,
             GAS_BLOCK_ACCESS_LIST_ITEM=2000,
         )
 
@@ -3541,8 +3541,8 @@ class Amsterdam(BPO2):
         cls, *, block_number: int = 0, timestamp: int = 0
     ) -> TransactionIntrinsicCostCalculator:
         """
-        At Prague, the transaction intrinsic cost needs to take the
-        authorizations into account.
+        At Amsterdam, the transaction intrinsic cost needs to take the
+        recipient costs into account.
         """
         super_fn = super(Prague, cls).transaction_intrinsic_cost_calculator(
             block_number=block_number, timestamp=timestamp
@@ -3599,7 +3599,7 @@ class Amsterdam(BPO2):
                 access_cost = 0
                 update_cost = 0
                 if sends_value:
-                    update_cost += gas_costs.G_STATE_UPDATE
+                    update_cost += gas_costs.GAS_STATE_UPDATE
             else:
                 # Access cost - always charged
                 if recipient_is_warm:
@@ -3609,15 +3609,15 @@ class Amsterdam(BPO2):
                         RecipientType.CONTRACT,
                         RecipientType.DELEGATION_7702,
                     ):
-                        access_cost = gas_costs.G_COLD_ACCOUNT_COST_CODE
+                        access_cost = gas_costs.GAS_COLD_ACCOUNT_COST_CODE
                     else:
-                        access_cost = gas_costs.G_COLD_ACCOUNT_COST_NO_CODE
+                        access_cost = gas_costs.GAS_COLD_ACCOUNT_COST_NO_CODE
 
                 if recipient_type == RecipientType.DELEGATION_7702:
                     if recipient_delegation_is_warm:
                         access_cost += gas_costs.GAS_WARM_ACCOUNT_ACCESS
                     else:
-                        access_cost += gas_costs.G_COLD_ACCOUNT_COST_CODE
+                        access_cost += gas_costs.GAS_COLD_ACCOUNT_COST_CODE
 
                 # Update cost - only if sends value
                 update_cost = 0
@@ -3625,7 +3625,7 @@ class Amsterdam(BPO2):
                     if recipient_type == RecipientType.EMPTY_ACCOUNT:
                         update_cost = gas_costs.GAS_NEW_ACCOUNT
                     else:
-                        update_cost = gas_costs.G_STATE_UPDATE
+                        update_cost = gas_costs.GAS_STATE_UPDATE
 
             intrinsic_cost += access_cost + update_cost
 
@@ -3661,9 +3661,9 @@ class Amsterdam(BPO2):
         if metadata["address_warm"]:
             access_cost = gas_costs.GAS_WARM_ACCOUNT_ACCESS
         elif metadata.get("address_has_code", True):
-            access_cost = gas_costs.G_COLD_ACCOUNT_COST_CODE
+            access_cost = gas_costs.GAS_COLD_ACCOUNT_COST_CODE
         else:
-            access_cost = gas_costs.G_COLD_ACCOUNT_COST_NO_CODE
+            access_cost = gas_costs.GAS_COLD_ACCOUNT_COST_NO_CODE
 
         # Value transfer cost (replaces G_CALL_VALUE)
         value_cost = 0
@@ -3671,10 +3671,10 @@ class Amsterdam(BPO2):
             if metadata["value_transfer"]:
                 if metadata["account_new"]:
                     value_cost = (
-                        gas_costs.G_STATE_UPDATE + gas_costs.GAS_NEW_ACCOUNT
+                        gas_costs.GAS_STATE_UPDATE + gas_costs.GAS_NEW_ACCOUNT
                     )
                 else:
-                    value_cost = 2 * gas_costs.G_STATE_UPDATE
+                    value_cost = 2 * gas_costs.GAS_STATE_UPDATE
 
         # Delegation cost (from Prague semantics)
         delegation_cost = 0
@@ -3682,7 +3682,7 @@ class Amsterdam(BPO2):
             if metadata["delegated_address_warm"]:
                 delegation_cost = gas_costs.GAS_WARM_ACCOUNT_ACCESS
             else:
-                delegation_cost = gas_costs.GAS_COLD_ACCOUNT_ACCESS
+                delegation_cost = gas_costs.GAS_COLD_ACCOUNT_COST_CODE
 
         return access_cost + value_cost + delegation_cost
 
@@ -3708,9 +3708,9 @@ class Amsterdam(BPO2):
             if opcode.metadata["address_warm"]:
                 access_cost = gas_costs.GAS_WARM_ACCOUNT_ACCESS
             elif opcode.metadata["address_has_code"]:
-                access_cost = gas_costs.G_COLD_ACCOUNT_COST_CODE
+                access_cost = gas_costs.GAS_COLD_ACCOUNT_COST_CODE
             else:
-                access_cost = gas_costs.G_COLD_ACCOUNT_COST_NO_CODE
+                access_cost = gas_costs.GAS_COLD_ACCOUNT_COST_NO_CODE
 
             return base_cost + access_cost
 

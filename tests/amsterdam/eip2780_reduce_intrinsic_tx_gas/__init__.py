@@ -1,1 +1,1 @@
-"""Tests for [EIP-2780: Block-level Access Lists](https://eips.ethereum.org/EIPS/eip-2780)."""
+"""Tests for [EIP-2780: Reduce intrinsic transaction gas](https://eips.ethereum.org/EIPS/eip-2780)."""

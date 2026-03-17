@@ -56,9 +56,9 @@ def compute_scenario_gas(
         case AccessScenario.WARM:
             return gsc.GAS_WARM_ACCOUNT_ACCESS
         case AccessScenario.COLD_NOCODE:
-            return gsc.G_COLD_ACCOUNT_COST_NO_CODE
+            return gsc.GAS_COLD_ACCOUNT_COST_NO_CODE
         case AccessScenario.COLD_CODE:
-            return gsc.G_COLD_ACCOUNT_COST_CODE
+            return gsc.GAS_COLD_ACCOUNT_COST_CODE
 
 
 PostFn = Callable[[Address, Address, int, bool], dict[Address, Account]]
@@ -113,9 +113,9 @@ def _run_call_test(
     value_cost = 0
     if has_value_transfer and value > 0:
         if account_new:
-            value_cost = gsc.G_STATE_UPDATE + gsc.GAS_NEW_ACCOUNT
+            value_cost = gsc.GAS_STATE_UPDATE + gsc.GAS_NEW_ACCOUNT
         else:
-            value_cost = 2 * gsc.G_STATE_UPDATE
+            value_cost = 2 * gsc.GAS_STATE_UPDATE
 
     # Gas for the tested threshold, minus 1 for OOG.
     scenario_gas = compute_scenario_gas(access, gsc)

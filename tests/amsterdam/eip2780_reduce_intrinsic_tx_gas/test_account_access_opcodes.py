@@ -231,9 +231,9 @@ def test_account_access_opcode(
     cold_access = (
         gsc.GAS_WARM_ACCOUNT_ACCESS
         if accessed_address_warm
-        else gsc.G_COLD_ACCOUNT_COST_CODE
+        else gsc.GAS_COLD_ACCOUNT_COST_CODE
         if address_has_code
-        else gsc.G_COLD_ACCOUNT_COST_NO_CODE
+        else gsc.GAS_COLD_ACCOUNT_COST_NO_CODE
     )
     # EXTCODECOPY pushes 4 args (address, dest_offset, offset, size);
     # all other opcodes push 1 arg (address).

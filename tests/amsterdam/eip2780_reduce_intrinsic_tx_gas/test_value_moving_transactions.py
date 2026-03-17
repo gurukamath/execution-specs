@@ -87,7 +87,7 @@ def test_value_moving_transactions(
     intrinsic_gas_calculator = fork.transaction_intrinsic_cost_calculator()
     total_gas_cost = intrinsic_gas_calculator(
         access_list=access_list,
-        sends_value=True if value else False,
+        sends_value=bool(value),
         recipient_type=recipient_type,
         recipient_is_warm=warm_target,
         return_cost_deducted_prior_execution=True,
@@ -172,7 +172,7 @@ def test_value_moving_transaction_to_delegated_eoa(
     intrinsic_gas_calculator = fork.transaction_intrinsic_cost_calculator()
     total_gas_cost = intrinsic_gas_calculator(
         access_list=access_list,
-        sends_value=True if value else False,
+        sends_value=bool(value),
         recipient_type=RecipientType.DELEGATION_7702,
         recipient_delegation_is_warm=warm_delegation,
         recipient_is_warm=warm_target,
@@ -238,7 +238,7 @@ def test_value_transfer_to_self(
     intrinsic_gas_calculator = fork.transaction_intrinsic_cost_calculator()
     total_gas_cost = intrinsic_gas_calculator(
         access_list=access_list,
-        sends_value=True if value else False,
+        sends_value=bool(value),
         recipient_type=RecipientType.SELF,
         return_cost_deducted_prior_execution=True,
     )
@@ -300,7 +300,7 @@ def test_value_contract_creation_tx(
         intrinsic_gas_calculator(
             calldata=call_data,
             contract_creation=True,
-            sends_value=True if value else False,
+            sends_value=bool(value),
             return_cost_deducted_prior_execution=True,
         )
         + execution_gas

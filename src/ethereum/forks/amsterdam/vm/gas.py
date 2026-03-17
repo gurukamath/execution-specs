@@ -48,7 +48,6 @@ GAS_CREATE = Uint(32000)
 GAS_CODE_DEPOSIT_PER_BYTE = Uint(200)
 GAS_ZERO = Uint(0)
 GAS_NEW_ACCOUNT = Uint(25000)
-GAS_CALL_VALUE = Uint(9000)
 GAS_CALL_STIPEND = Uint(2300)
 GAS_SELF_DESTRUCT = Uint(5000)
 GAS_SELF_DESTRUCT_NEW_ACCOUNT = Uint(25000)
@@ -73,7 +72,9 @@ GAS_POINT_EVALUATION = Uint(50000)
 GAS_COLD_ACCOUNT_COST_CODE = Uint(2600)
 """
 Gas cost for a cold access to an account that has code deployed.
-7702 delegated accounts are also charged this for cold access.
+[EIP-7702] delegated accounts are also charged this for cold access.
+
+[EIP-7702]: https://eips.ethereum.org/EIPS/eip-7702
 """
 
 GAS_COLD_ACCOUNT_COST_NO_CODE = Uint(500)
