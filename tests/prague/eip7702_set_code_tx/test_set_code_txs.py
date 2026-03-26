@@ -3848,7 +3848,8 @@ def test_many_delegations(
         max_gas = tx_gas_limit_cap
     else:
         max_gas = env.gas_limit
-    gas_for_delegations = max_gas - 21_000 - 20_000 - (3 * 2)
+    intrinsic_gas = fork.transaction_intrinsic_cost_calculator()()
+    gas_for_delegations = max_gas - intrinsic_gas - 20_000 - (3 * 2)
 
     delegation_count = gas_for_delegations // Spec.GAS_AUTH_PER_EMPTY_ACCOUNT
 

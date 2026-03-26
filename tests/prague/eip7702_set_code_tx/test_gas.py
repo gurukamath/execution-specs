@@ -795,7 +795,8 @@ def gas_test_parameter_args(
 
     if include_many:
         # Fit as many authorizations as possible within the transaction gas
-        # limit.
+        # limit. 21,000 is a conservative overestimate of the base intrinsic
+        # cost (fork is unavailable at parametrization time).
         max_gas = 16_777_216 - 21_000
         if execution_gas_allowance:
             # Leave some gas for the execution of the test code.
