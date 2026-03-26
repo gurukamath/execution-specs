@@ -911,7 +911,7 @@ def test_withdrawal_requests_negative(
         post={},
         blocks=[
             Block(
-                txs=sum((r.transactions() for r in requests), []),
+                txs=sum((r.transactions(_fork=fork) for r in requests), []),
                 header_verify=Header(
                     requests_hash=Requests(
                         *included_requests,
