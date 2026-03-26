@@ -697,14 +697,15 @@ def test_tx_gas_limit_cap_authorized_tx(
     ) + int(exceed_tx_gas_limit)
 
     # EIP-7702 authorization transaction cost:
-    # 21000 + 16 * non-zero calldata bytes + 4 * zero calldata bytes + 1900 *
-    # access list storage key count + 2400 * access list address count + access
-    # list data cost + GAS_AUTH_PER_EMPTY_ACCOUNT_COST * authorization list
-    # length
+    # intrinsic gas base cost + calldata cost + access list
+    # storage key cost + access list address cost + access
+    # list data cost + GAS_AUTH_PER_EMPTY_ACCOUNT_COST *
+    # authorization list length
     #
-    # There is no calldata and no storage keys in this test case.
-    # However, each access-list address includes data bytes that may contribute
-    # additional cost depending on fork repricing.
+    # There is no calldata and no storage keys in this
+    # test case. Each access-list address includes data
+    # bytes that may contribute additional cost depending
+    # on fork repricing.
 
     auth_address = pre.deploy_contract(code=Op.STOP)
 
