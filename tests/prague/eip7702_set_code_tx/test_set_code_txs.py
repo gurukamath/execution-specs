@@ -3895,6 +3895,7 @@ def test_many_delegations(
 @pytest.mark.exception_test
 def test_invalid_transaction_after_authorization(
     blockchain_test: BlockchainTestFiller,
+    fork: Fork,
     pre: Alloc,
 ) -> None:
     """
@@ -3903,6 +3904,10 @@ def test_invalid_transaction_after_authorization(
     """
     auth_signer = pre.fund_eoa()
     recipient = pre.fund_eoa(amount=0)
+    intrinsic_gas = fork.transaction_intrinsic_cost_calculator()(
+        recipient_type=RecipientType.EMPTY_ACCOUNT,
+        sends_value=True,
+    )
 
     txs = [
         Transaction(
@@ -3921,7 +3926,7 @@ def test_invalid_transaction_after_authorization(
         Transaction(
             sender=auth_signer,
             nonce=0,
-            gas_limit=21_000,
+            gas_limit=intrinsic_gas,
             to=recipient,
             value=1,
             error=TransactionException.NONCE_MISMATCH_TOO_LOW,
