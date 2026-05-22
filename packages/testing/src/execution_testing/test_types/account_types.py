@@ -368,6 +368,17 @@ class Alloc(BaseAlloc):
             address for address, account in self.root.items() if not account
         ]
 
+    def get(self) -> "Alloc":
+        """
+        Return self.
+
+        ``TransitionToolOutput.alloc`` is typed ``LazyAlloc | Alloc``;
+        callers iterate it via ``.get()`` so they don't need to branch
+        on the concrete type. This satisfies that contract for an
+        already-materialized ``Alloc``.
+        """
+        return self
+
     def state_root(self) -> Hash:
         """Return state root of the allocation."""
         state = State()

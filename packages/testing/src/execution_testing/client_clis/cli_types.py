@@ -664,7 +664,12 @@ class EnginePayloadMetadata:
 class TransitionToolOutput:
     """Transition tool output."""
 
-    alloc: LazyAlloc
+    # External t8ns return JSON; the testing framework wraps them in a
+    # ``LazyAlloc`` subclass so the multi-MB alloc isn't parsed until a
+    # consumer asks. The in-process EELS path materializes ``Alloc``
+    # eagerly and hands it through directly — no lazy wrapper needed.
+    # Consumers iterate via ``.get()``, which both branches satisfy.
+    alloc: LazyAlloc | Alloc
     result: Result
     body: Bytes | None = None
     # Populated by ``ClientBackend.evaluate`` (live-client path). Always
