@@ -3,17 +3,14 @@ Ethereum Specs EVM Transition Tool Interface.
 """
 
 import tempfile
-from io import StringIO
 from pathlib import Path
 from typing import Any, ClassVar, Dict, Optional
 
 import ethereum
-from ethereum_spec_tools.evm_tools import create_parser
 from ethereum_spec_tools.evm_tools.t8n import T8N, ForkCache
 from ethereum_spec_tools.evm_tools.utils import get_supported_forks
 from typing_extensions import override
 
-from execution_testing.base_types import Bytes
 from execution_testing.client_clis.cli_types import (
     TransitionToolOutput,
 )
@@ -76,65 +73,51 @@ class ExecutionSpecsTransitionTool(TransitionTool):
         """
         Evaluate using the EELS T8N entry point in-process.
 
-        The testing pydantic types flow into ``T8N`` directly via the
-        ``t8n_data`` kwarg — no JSON serialize / parse round-trip — and
-        the result is read out of ``T8N``'s in-memory state.
+        ``transition_tool_data`` is handed to ``T8N`` as-is — fork,
+        chain_id, reward, state_test, blob_schedule all flow through
+        — and ``T8N.run()`` returns the ``TransitionToolOutput``
+        directly.
         """
         del slow_request, profiler
 
         temp_dir = tempfile.TemporaryDirectory()
-        t8n_args = [
-            "t8n",
-            f"--output.basedir={temp_dir.name}",
-            f"--state.fork={transition_tool_data.fork_name}",
-            f"--state.chainid={transition_tool_data.chain_id}",
-            f"--state.reward={transition_tool_data.reward}",
-        ]
-        if transition_tool_data.state_test:
-            t8n_args.append("--state-test")
+
+        tracers = None
         if self.trace:
-            t8n_args.extend(
-                [
-                    "--trace",
-                    "--trace.memory",
-                    "--trace.returndata",
-                ]
+            from ethereum_spec_tools.evm_tools.t8n.evm_trace.eip3155 import (
+                Eip3155Tracer,
+            )
+            from ethereum_spec_tools.evm_tools.t8n.evm_trace.group import (
+                GroupTracer,
             )
 
-        parser = create_parser()
-        t8n_options = parser.parse_args(t8n_args)
+            tracers = GroupTracer()
+            tracers.add(
+                Eip3155Tracer(
+                    trace_memory=True,
+                    trace_stack=True,
+                    trace_return_data=True,
+                    output_basedir=temp_dir.name,
+                )
+            )
 
-        t8n_input = transition_tool_data.to_input()
         t8n = T8N(
-            t8n_options,
-            StringIO(),
-            StringIO(),
-            self.fork_cache,
-            t8n_data=t8n_input,
+            transition_tool_data,
+            cache=self.fork_cache,
+            tracers=tracers,
             exception_mapper=self.exception_mapper,
         )
-        t8n.run()
-
-        # ``TransitionToolOutput.alloc`` accepts ``LazyAlloc | Alloc``;
-        # hand the materialized post-state alloc directly rather than
-        # wrapping it in a ``LazyAllocJson`` with a fake ``raw={}``
-        # placeholder. Consumers use ``.get()`` to retrieve the alloc;
-        # ``Alloc.get()`` returns ``self``.
-        output = TransitionToolOutput(
-            alloc=t8n.alloc,
-            result=t8n.result,
-            body=Bytes(t8n.body),
-        )
+        output = t8n.run()
 
         if debug_output_path:
             dump_files_to_directory(
                 debug_output_path,
                 {
-                    "input/alloc.json": t8n_input.alloc,
-                    "input/env.json": t8n_input.env,
+                    "input/alloc.json": transition_tool_data.alloc,
+                    "input/env.json": transition_tool_data.env,
                     "input/txs.json": [
                         tx.model_dump(mode="json", **model_dump_config)
-                        for tx in t8n_input.txs
+                        for tx in transition_tool_data.txs
                     ],
                 },
             )
