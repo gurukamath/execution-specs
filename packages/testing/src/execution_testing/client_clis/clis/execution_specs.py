@@ -8,6 +8,8 @@ from typing import Any, ClassVar, Dict, Optional
 
 import ethereum
 from ethereum_spec_tools.evm_tools.t8n import T8N, ForkCache
+from ethereum_spec_tools.evm_tools.t8n.evm_trace.eip3155 import Eip3155Tracer
+from ethereum_spec_tools.evm_tools.t8n.evm_trace.group import GroupTracer
 from ethereum_spec_tools.evm_tools.utils import get_supported_forks
 from typing_extensions import override
 
@@ -84,13 +86,6 @@ class ExecutionSpecsTransitionTool(TransitionTool):
 
         tracers = None
         if self.trace:
-            from ethereum_spec_tools.evm_tools.t8n.evm_trace.eip3155 import (
-                Eip3155Tracer,
-            )
-            from ethereum_spec_tools.evm_tools.t8n.evm_trace.group import (
-                GroupTracer,
-            )
-
             tracers = GroupTracer()
             tracers.add(
                 Eip3155Tracer(
