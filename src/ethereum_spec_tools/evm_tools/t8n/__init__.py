@@ -311,13 +311,7 @@ class T8N(Load):
         # tests that contain an invalid block would observe a mutated
         # pre-state — the testing framework expects ``previous_alloc``
         # to remain unchanged when ``block.exception`` is set.
-        from execution_testing.client_clis.cli_types import LazyAlloc
-
-        raw_alloc = t8n_data.alloc
-        input_alloc = (
-            raw_alloc.get() if isinstance(raw_alloc, LazyAlloc) else raw_alloc
-        )
-        self.alloc = input_alloc.model_copy(deep=True)
+        self.alloc = t8n_data.alloc.get().model_copy(deep=True)
         self.env = t8n_data.env
         self.txs = list(t8n_data.txs)
         self.ommers = list(ommers)
@@ -345,7 +339,6 @@ class T8N(Load):
             env=self.env,
             pre_state=self.alloc,
             chain_id=self.chain_id,
-            ommers=tuple(self.ommers),
             state_test=self.state_test,
         )
         self._block_state = block_env.state
