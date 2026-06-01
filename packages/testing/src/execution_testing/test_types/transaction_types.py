@@ -4,7 +4,17 @@ import numbers
 from dataclasses import dataclass
 from enum import IntEnum
 from functools import cached_property
-from typing import Any, ClassVar, Dict, Generic, List, Literal, Self, Sequence
+from typing import (
+    Any,
+    Callable,
+    ClassVar,
+    Dict,
+    Generic,
+    List,
+    Literal,
+    Self,
+    Sequence,
+)
 
 import ethereum_rlp as eth_rlp
 from coincurve.keys import PrivateKey, PublicKey
@@ -330,6 +340,17 @@ class Transaction(
     protected: bool = Field(True, exclude=True)
 
     expected_receipt: TransactionReceipt | None = Field(None, exclude=True)
+
+    # Fill-time-only checks over this transaction's reference execution
+    # trace. Each callable receives a ``TransactionTraceView`` and raises
+    # on failure. Excluded from serialization, like ``error`` /
+    # ``expected_receipt``: verified during filling, never shipped to a
+    # consumer. The precise element type is ``TraceAssertion`` from
+    # ``specs.trace_assertions``; typed loosely here to keep the field a
+    # plain ``Callable`` and avoid a package import cycle.
+    trace_expectations: List[Callable[..., None]] = Field(
+        default_factory=list, exclude=True
+    )
 
     zero: ClassVar[Literal[0]] = 0
 

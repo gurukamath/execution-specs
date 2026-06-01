@@ -17,7 +17,7 @@ from typing import Final, List, Tuple
 from ethereum_types.numeric import U64, U256, Uint, ulen
 
 from ethereum.forks.bpo5.blocks import Header as PreviousHeader
-from ethereum.trace import GasAndRefund, evm_trace
+from ethereum.trace import GasAndRefund, GasCheck, evm_trace
 from ethereum.utils.numeric import ceil32, taylor_exponential
 
 from ..blocks import Header
@@ -243,6 +243,7 @@ def check_gas(evm: Evm, amount: Uint) -> None:
         The amount of gas to check.
 
     """
+    evm_trace(evm, GasCheck(int(amount)))
     if evm.gas_left < amount:
         raise OutOfGasError
 

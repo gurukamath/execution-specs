@@ -85,23 +85,28 @@ class ExecutionSpecsTransitionTool(TransitionTool):
         temp_dir = tempfile.TemporaryDirectory()
 
         tracers = None
-        if self.trace:
-            # TODO: Eip3155 traces still round-trip through tempfile
-            # JSON — the tracer writes one ``trace-<i>.jsonl`` per tx
-            # to ``output_basedir`` and ``collect_traces`` reads them
-            # back. Same JSON round-trip we eliminated for alloc /
-            # result / body; a follow-up should wire the tracer
-            # output through memory like the rest of the in-process
-            # path.
+        if self.trace or self._assertion_tracer is not None:
             tracers = GroupTracer()
-            tracers.add(
-                Eip3155Tracer(
-                    trace_memory=True,
-                    trace_stack=True,
-                    trace_return_data=True,
-                    output_basedir=temp_dir.name,
+            if self.trace:
+                # TODO: Eip3155 traces still round-trip through tempfile
+                # JSON — the tracer writes one ``trace-<i>.jsonl`` per tx
+                # to ``output_basedir`` and ``collect_traces`` reads them
+                # back. Same JSON round-trip we eliminated for alloc /
+                # result / body; a follow-up should wire the tracer
+                # output through memory like the rest of the in-process
+                # path.
+                tracers.add(
+                    Eip3155Tracer(
+                        trace_memory=True,
+                        trace_stack=True,
+                        trace_return_data=True,
+                        output_basedir=temp_dir.name,
+                    )
                 )
-            )
+            # The assertion tracer is in-memory only (no file output) and
+            # accumulates across blocks on the same tool-held instance.
+            if self._assertion_tracer is not None:
+                tracers.add(self._assertion_tracer)
 
         t8n = T8N(
             transition_tool_data,

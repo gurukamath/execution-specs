@@ -929,6 +929,15 @@ class BlockchainTest(BaseTest):
         invalid_blocks = 0
         benchmark_gas_used: int | None = None
         benchmark_opcode_count: OpcodeCount | None = None
+        # Enable assertion tracing (and bypass the cache) when any
+        # transaction declares trace expectations, so every block's
+        # evaluate feeds the same assertion tracer. Teardown is handled
+        # per-test by the t8n fixture, so no try/finally is needed here.
+        # Collect the signed transactions to match each to its trace.
+        self.enable_trace_assertions(
+            t8n, [tx for block in self.blocks for tx in block.txs]
+        )
+        signed_transactions: List[Transaction] = []
         for block in self.blocks:
             # This is the most common case, the RLP needs to be constructed
             # based on the transactions to be included in the block.
@@ -939,6 +948,9 @@ class BlockchainTest(BaseTest):
                 previous_env=env,
                 previous_alloc=alloc,
             )
+            # built_block.txs are the signed txs that executed; their
+            # hashes match the reference trace for assertion mapping.
+            signed_transactions.extend(built_block.txs)
             block_number = int(built_block.header.number)
             is_last_block = block is self.blocks[-1]
             if is_last_block and self.operation_mode == OpMode.BENCHMARKING:
@@ -983,6 +995,10 @@ class BlockchainTest(BaseTest):
         self.check_exception_test(exception=invalid_blocks > 0)
         alloc = alloc.get() if isinstance(alloc, LazyAlloc) else alloc
         self.verify_post_state(t8n, t8n_state=alloc)
+
+        # Verify each transaction's intended execution path against its
+        # reference trace (fail-closed if a trace is missing).
+        self.verify_trace_assertions(t8n, signed_transactions)
         fixture = BlockchainFixture(
             fork=self.fork,
             genesis=genesis.header,

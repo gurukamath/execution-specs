@@ -43,6 +43,7 @@ from execution_testing.forks.helpers import (
 )
 from execution_testing.test_types import Alloc, Environment, Transaction
 
+from .assertion_tracer import AssertionTracer, TraceStep
 from .cli_types import (
     LazyAlloc,
     LazyAllocFile,
@@ -187,6 +188,16 @@ class TransitionTool(EthereumCLI):
 
     traces: List[Traces] | None = None
 
+    # Purpose-built tracer for fill-time assertions, independent of the
+    # EIP-3155 trace path. Set by ``enable_assertion_tracing`` for tests
+    # that declare trace assertions; ``None`` otherwise.
+    _assertion_tracer: Optional[AssertionTracer] = None
+
+    # Whether the regression guard runs: when False (default), a test's
+    # trace_expectations are not collected or verified. Set per-test from
+    # the --run-regression-guard CLI flag.
+    run_regression_guard: bool = False
+
     registered_tools: List[Type["TransitionTool"]] = []
     default_tool: Optional[Type["TransitionTool"]] = None
 
@@ -260,6 +271,30 @@ class TransitionTool(EthereumCLI):
     def get_traces(self) -> List[Traces] | None:
         """Return the accumulated traces."""
         return self.traces
+
+    def enable_assertion_tracing(self) -> None:
+        """
+        Install a fresh assertion tracer for the current test.
+
+        A tool that drives the EVM in-process (e.g. EELS) wires this
+        tracer into its run so ``get_assertion_traces`` returns the
+        reference trace. Other tools leave it unused; assertions then
+        fail closed in ``get_assertion_traces`` (empty result).
+        """
+        self._assertion_tracer = AssertionTracer()
+
+    def disable_assertion_tracing(self) -> None:
+        """Remove the assertion tracer once the current test is done."""
+        self._assertion_tracer = None
+
+    def get_assertion_traces(self) -> Dict[str, List[TraceStep]] | None:
+        """
+        Return per-transaction assertion traces keyed by tx hash, or
+        ``None`` if assertion tracing was not enabled for this run.
+        """
+        if self._assertion_tracer is None:
+            return None
+        return self._assertion_tracer.transaction_traces()
 
     def collect_traces(
         self,

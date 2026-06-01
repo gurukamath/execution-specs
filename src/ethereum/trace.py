@@ -151,6 +151,19 @@ class GasAndRefund:
     """
 
 
+@dataclass
+class GasCheck:
+    """
+    Trace event triggered when gas sufficiency is checked without being
+    deducted, such as a pre-charge `check_gas` gate.
+    """
+
+    gas_cost: int
+    """
+    Amount of gas checked for availability.
+    """
+
+
 TraceEvent = (
     TransactionStart
     | TransactionEnd
@@ -161,6 +174,7 @@ TraceEvent = (
     | OpException
     | EvmStop
     | GasAndRefund
+    | GasCheck
 )
 """
 All possible types of events that an [`EvmTracer`] is expected to handle.

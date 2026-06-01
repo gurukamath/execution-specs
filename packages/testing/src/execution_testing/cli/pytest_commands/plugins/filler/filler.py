@@ -603,6 +603,18 @@ def pytest_addoption(parser: pytest.Parser) -> None:
         help="Collect traces of execution info from the transition tool.",
     )
     evm_group.addoption(
+        "--run-regression-guard",
+        action="store_true",
+        dest="run_regression_guard",
+        default=False,
+        help=(
+            "Run the regression guard: verify each transaction's "
+            "trace_expectations against its reference execution trace. "
+            "Off by default, since it collects per-opcode traces and "
+            "bypasses the t8n output cache, which is expensive."
+        ),
+    )
+    evm_group.addoption(
         "--verify-fixtures",
         action="store_true",
         dest="verify_fixtures",
@@ -1288,6 +1300,12 @@ def t8n(
         session_t8n.remove_cache()
     # Reset the traces
     session_t8n.reset_traces()
+    # Clear any assertion tracer from a prior test so a failed test cannot
+    # leak its tracer into the next one on the shared session tool.
+    session_t8n.disable_assertion_tracing()
+    session_t8n.run_regression_guard = request.config.getoption(
+        "run_regression_guard"
+    )
     session_t8n.call_counter = 0
     session_t8n.debug_dump_dir = dump_dir_parameter_level
     # TODO: Configure the transition tool to count opcodes only when required.

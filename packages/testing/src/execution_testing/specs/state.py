@@ -364,6 +364,11 @@ class StateTest(BaseTest):
         if empty_accounts := pre_alloc.empty_accounts():
             raise Exception(f"Empty accounts in pre state: {empty_accounts}")
 
+        # Enable assertion tracing (and bypass the cache) when the
+        # transaction declares trace expectations. Teardown is handled
+        # per-test by the t8n fixture, so no try/finally is needed here.
+        self.enable_trace_assertions(t8n, [tx])
+
         transition_tool_output = t8n.evaluate(
             transition_tool_data=TransitionTool.TransitionToolData(
                 alloc=pre_alloc,
@@ -396,6 +401,10 @@ class StateTest(BaseTest):
             pprint(transition_tool_output.result)
             pprint(output_alloc)
             raise e
+
+        # Verify the intended execution path against the reference
+        # trace (fail-closed if no trace was collected).
+        self.verify_trace_assertions(t8n, [tx])
 
         gas_optimization: int | None = None
 

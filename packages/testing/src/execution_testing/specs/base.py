@@ -11,6 +11,7 @@ from typing import (
     ClassVar,
     Dict,
     Generator,
+    Iterable,
     List,
     Sequence,
     Type,
@@ -36,7 +37,12 @@ from execution_testing.fixtures import (
 from execution_testing.fixtures.post_verifications import PostVerifications
 from execution_testing.forks import Fork, TransitionFork
 from execution_testing.forks.base_fork import BaseFork
-from execution_testing.test_types import Environment, Withdrawal
+from execution_testing.specs.trace_assertions import TransactionTraceView
+from execution_testing.test_types import (
+    Environment,
+    Transaction,
+    Withdrawal,
+)
 from execution_testing.test_types.receipt_types import (
     TransactionReceipt,
 )
@@ -137,6 +143,79 @@ class BaseTest(BaseModel):
         assert self.fork != BaseFork, (
             "Fork was not provided by the filler/executor."
         )
+
+    def enable_trace_assertions(
+        self, t8n: TransitionTool, transactions: Iterable[Transaction]
+    ) -> None:
+        """
+        Enable assertion tracing if the regression guard is on and any
+        transaction declares expectations.
+
+        Off by default (``t8n.run_regression_guard`` is ``False``): a
+        test's ``trace_expectations`` are then neither collected nor
+        verified, and the tool runs exactly as a normal fill — no
+        per-opcode tracing and no cache bypass.
+
+        When the guard is on, install a fresh, in-memory assertion tracer
+        (independent of the EIP-3155 trace path) and drop the output
+        cache, so the run is not served a stale, trace-less cached result
+        — which would leave ``get_assertion_traces`` empty and trip the
+        fail-closed guard in ``verify_trace_assertions``. Teardown
+        (clearing the tracer) is handled per-test by the ``t8n`` fixture,
+        so callers need no ``finally``.
+
+        ``transactions`` are the authored transactions (their
+        ``trace_expectations`` survive signing).
+        """
+        if not t8n.run_regression_guard:
+            return
+        if any(tx.trace_expectations for tx in transactions):
+            t8n.enable_assertion_tracing()
+            t8n.remove_cache()
+
+    def verify_trace_assertions(
+        self, t8n: TransitionTool, transactions: Iterable[Transaction]
+    ) -> None:
+        """
+        Run each transaction's trace expectations against its trace.
+
+        ``transactions`` must be the *signed* transactions (their hash
+        matches the reference trace). Each expectation is matched to its
+        transaction's trace by hash.
+
+        No-op unless the regression guard is on
+        (``t8n.run_regression_guard``); off by default.
+
+        Fail-closed twice over: if any transaction declares expectations
+        but no trace was collected (tracing unavailable, or a cached
+        trace-less result), raise; and if a specific transaction has no
+        trace (e.g. it was rejected before execution), raise for it
+        rather than skip — the intended path would otherwise go
+        unverified.
+        """
+        if not t8n.run_regression_guard:
+            return
+        expecting = [tx for tx in transactions if tx.trace_expectations]
+        if not expecting:
+            return
+        traces = t8n.get_assertion_traces()
+        if not traces:
+            raise AssertionError(
+                "transactions declared trace_expectations but no execution "
+                "trace was collected; the intended path was not verified."
+            )
+        for tx in expecting:
+            tx_hash_key = bytes(tx.hash).hex()
+            steps = traces.get(tx_hash_key)
+            if steps is None:
+                raise AssertionError(
+                    f"transaction {tx_hash_key} declared trace_expectations "
+                    "but produced no trace (was it rejected before "
+                    "execution?); the intended path was not verified."
+                )
+            trace_view = TransactionTraceView(steps)
+            for expectation in tx.trace_expectations:
+                expectation(trace_view)
 
     @classmethod
     def discard_fixture_format_by_marks(
