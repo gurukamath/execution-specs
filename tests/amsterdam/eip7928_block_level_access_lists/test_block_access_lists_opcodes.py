@@ -40,6 +40,7 @@ from execution_testing import (
     Transaction,
     compute_create_address,
 )
+from execution_testing.specs.trace_assertions import TraceExpectation
 
 from .spec import ref_spec_7928
 from .test_block_access_lists_eip4788 import SYSTEM_ADDRESS
@@ -137,23 +138,46 @@ def test_bal_sstore_and_oog(
     # Keep from gas_costs
     stipend = fork.gas_costs().CALL_STIPEND
 
+    tx_trace_expectations = []
     if out_of_gas_at == OutOfGasAt.EIP_2200_STIPEND:
         # 2300 after PUSHes (fails stipend check: 2300 <= 2300)
         tx_gas_limit = intrinsic_gas_cost + push_cost + stipend
+        tx_trace_expectations = [
+            TraceExpectation(
+                "SSTORE",
+                error="OutOfGasError",
+                charged=False,
+                gas_short_by=1,
+            )
+        ]
     elif out_of_gas_at == OutOfGasAt.EIP_2200_STIPEND_PLUS_1:
         # 2301 after PUSHes (passes stipend, does SLOAD, fails charge_gas)
         tx_gas_limit = intrinsic_gas_cost + push_cost + stipend + 1
+        tx_trace_expectations = [
+            TraceExpectation(
+                "SSTORE",
+                error="OutOfGasError",
+                gas_short_by=full_cost - push_cost - stipend - 1,
+            )
+        ]
     elif out_of_gas_at == OutOfGasAt.EXACT_GAS_MINUS_1:
         # fail at charge_gas() at exact gas - 1 (boundary condition)
         tx_gas_limit = intrinsic_gas_cost + full_cost - 1
+        tx_trace_expectations = [
+            TraceExpectation("SSTORE", error="OutOfGasError", gas_short_by=1)
+        ]
     else:
         # exact gas for successful SSTORE
+        tx_trace_expectations = [
+            TraceExpectation("SSTORE", charged=True, gas_short_by=0)
+        ]
         tx_gas_limit = intrinsic_gas_cost + full_cost
 
     tx = Transaction(
         sender=alice,
         to=storage_contract,
         gas_limit=tx_gas_limit,
+        trace_expectations=tx_trace_expectations,
     )
 
     # Storage read recorded only if we pass the stipend check and reach
@@ -598,6 +622,22 @@ def test_bal_call_no_delegation_and_oog_before_target_access(
             if target_is_empty
             else Account(balance=0, code=Op.STOP)
         )
+
+    if oog_boundary == OutOfGasBoundary.OOG_BEFORE_TARGET_ACCESS:
+        # OOG at the pre-state-access check_gas: one gas short of the
+        # requirement, and nothing was charged.
+        tx.trace_expectations = [
+            TraceExpectation(
+                "CALL",
+                error="OutOfGasError",
+                charged=False,
+                gas_short_by=1,
+            )
+        ]
+    else:
+        # Success: the pre-access check passes and the call cost is
+        # charged; here gas left equals the requirement exactly.
+        tx.trace_expectations = [TraceExpectation("CALL", gas_short_by=0)]
 
     blockchain_test(
         pre=pre,
