@@ -51,13 +51,16 @@ def test_sstore_via_delegation_pointer(
     # EOA with pre-existing delegation to the contract
     delegator = pre.fund_eoa(delegation=contract)
 
+    # The authorization re-targets an already-delegated authority whose
+    # nonce (1, from the delegation setup) no longer matches nonce=0, so
+    # it is invalid and charges no top-frame state gas.
     authorization = AuthorizationTuple(
         address=contract,
         nonce=0,
         signer=delegator,
         creates_account=False,
-        writes_delegation=True,
-        first_write=True,
+        writes_delegation=False,
+        first_write=False,
     )
     auth_state_gas = fork.transaction_top_frame_state_gas(
         authorizations=[authorization]
@@ -137,13 +140,16 @@ def test_delegation_pointer_new_account_state_gas(
     # EOA delegates to the contract
     delegator = pre.fund_eoa(delegation=contract, amount=1)
 
+    # The authorization re-targets an already-delegated authority whose
+    # nonce (1, from the delegation setup) no longer matches nonce=0, so
+    # it is invalid and charges no top-frame state gas.
     authorization = AuthorizationTuple(
         address=contract,
         nonce=0,
         signer=delegator,
         creates_account=False,
-        writes_delegation=True,
-        first_write=True,
+        writes_delegation=False,
+        first_write=False,
     )
     auth_state_gas = fork.transaction_top_frame_state_gas(
         authorizations=[authorization]
@@ -153,13 +159,7 @@ def test_delegation_pointer_new_account_state_gas(
     tx = Transaction(
         to=delegator,
         state_gas_reservoir=auth_state_gas + new_account_state_gas,
-        authorization_list=[
-            AuthorizationTuple(
-                address=contract,
-                nonce=0,
-                signer=delegator,
-            ),
-        ],
+        authorization_list=[authorization],
         sender=sender,
     )
 
