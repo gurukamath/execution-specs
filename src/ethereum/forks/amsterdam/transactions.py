@@ -25,12 +25,7 @@ from .exceptions import (
     InitCodeTooLargeError,
     TransactionTypeError,
 )
-from .fork_types import (
-    Authorization,
-    RegularGas,
-    StateGas,
-    VersionedHash,
-)
+from .fork_types import Authorization, RegularGas, VersionedHash
 
 
 @final
@@ -40,14 +35,6 @@ class IntrinsicGasCost:
 
     regular: RegularGas
     """Regular execution gas (calldata, base cost, access list, etc.)."""
-
-    state: StateGas
-    """
-    State growth gas (account creation, storage set, authorization) per
-    [EIP-8037].
-
-    [EIP-8037]: https://eips.ethereum.org/EIPS/eip-8037
-    """
 
     calldata_floor: RegularGas
     """
@@ -610,7 +597,7 @@ def validate_transaction(tx: Transaction, sender: Address) -> IntrinsicGasCost:
     from .vm.interpreter import MAX_INIT_CODE_SIZE
 
     intrinsic = calculate_intrinsic_cost(tx, sender)
-    intrinsic_gas = Uint(intrinsic.regular) + Uint(intrinsic.state)
+    intrinsic_gas = Uint(intrinsic.regular)
     if intrinsic_gas > tx.gas:
         raise InsufficientTransactionGasError("Insufficient intrinsic gas")
     if intrinsic.calldata_floor > tx.gas:
@@ -665,13 +652,10 @@ def calculate_intrinsic_cost(
     charges.
 
     This function takes a transaction and gas_limit as parameters and
-    returns the intrinsic regular gas cost, intrinsic state gas cost, and the
-    minimum gas cost used by the transaction based on the calldata size.
+    returns the intrinsic regular gas cost and the minimum gas cost used by
+    the transaction based on the calldata size.
     """
-    from .vm.gas import (
-        GasCosts,
-        init_code_cost,
-    )
+    from .vm.gas import GasCosts, init_code_cost
 
     tokens_in_calldata = count_tokens_in_data(tx.data)
 
@@ -680,18 +664,15 @@ def calculate_intrinsic_cost(
     is_create = tx.to == Bytes0(b"")
     is_self_transfer = tx.to == sender
 
-    recipient_regular_gas = Uint(0)
-    recipient_state_gas = Uint(0)
+    recipient_gas = Uint(0)
     if is_create:
-        recipient_regular_gas = GasCosts.CREATE_ACCESS + init_code_cost(
-            ulen(tx.data)
-        )
+        recipient_gas = GasCosts.CREATE_ACCESS + init_code_cost(ulen(tx.data))
         if tx.value > U256(0):
-            recipient_regular_gas += GasCosts.TRANSFER_LOG_COST
+            recipient_gas += GasCosts.TRANSFER_LOG_COST
     elif not is_self_transfer:
-        recipient_regular_gas = GasCosts.COLD_ACCOUNT_ACCESS
+        recipient_gas = GasCosts.COLD_ACCOUNT_ACCESS
         if tx.value > U256(0):
-            recipient_regular_gas += (
+            recipient_gas += (
                 GasCosts.TRANSFER_LOG_COST + GasCosts.TX_VALUE_COST
             )
 
@@ -711,10 +692,9 @@ def calculate_intrinsic_cost(
     # Data token floor cost for access list bytes.
     access_list_cost += tokens_in_access_list * GasCosts.TX_DATA_TOKEN_FLOOR
 
-    auth_regular_gas = Uint(0)
-    auth_state_gas = Uint(0)
+    auth_cost = Uint(0)
     if isinstance(tx, SetCodeTransaction):
-        auth_regular_gas = GasCosts.REGULAR_PER_AUTH_BASE_COST * ulen(
+        auth_cost = GasCosts.REGULAR_PER_AUTH_BASE_COST * ulen(
             tx.authorizations
         )
 
@@ -729,19 +709,14 @@ def calculate_intrinsic_cost(
         total_floor_tokens * GasCosts.TX_DATA_TOKEN_FLOOR + GasCosts.TX_BASE
     )
 
-    intrinsic_regular_gas = (
-        GasCosts.TX_BASE
-        + data_cost
-        + recipient_regular_gas
-        + access_list_cost
-        + auth_regular_gas
-    )
-
-    intrinsic_state_gas = recipient_state_gas + auth_state_gas
-
     return IntrinsicGasCost(
-        regular=RegularGas(intrinsic_regular_gas),
-        state=StateGas(intrinsic_state_gas),
+        regular=RegularGas(
+            GasCosts.TX_BASE
+            + data_cost
+            + recipient_gas
+            + access_list_cost
+            + auth_cost
+        ),
         calldata_floor=RegularGas(data_floor_gas_cost),
     )
 
