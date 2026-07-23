@@ -438,6 +438,18 @@ class LazyAlloc(Generic[TRaw]):
         """Return state root of the allocation."""
         return self._state_root
 
+    def serialize_to_file(
+        self, file_path: Path, **model_dump_config: Any
+    ) -> None:
+        """
+        Serialize the allocation to ``file_path`` as JSON.
+
+        The default materializes the ``Alloc`` and dumps it. Subclasses
+        backed by already-serialized data override this to write their
+        cache directly and skip the round trip through ``Alloc``.
+        """
+        file_path.write_text(self.get().model_dump_json(**model_dump_config))
+
 
 JSONDict = Dict[str, Any]
 
@@ -453,6 +465,23 @@ class LazyAllocJson(LazyAlloc[JSONDict]):
         """Validate the alloc."""
         return Alloc.model_validate(self.raw)
 
+    def serialize_to_file(
+        self, file_path: Path, **model_dump_config: Any
+    ) -> None:
+        """
+        Dump the cached JSON dict without round-tripping through ``Alloc``.
+
+        Only ``indent`` applies; the dict is already-serialized data, so
+        pydantic options such as ``by_alias`` / ``exclude_none`` are moot.
+        """
+        with open(file_path, "w") as f:
+            json.dump(
+                self.raw,
+                f,
+                ensure_ascii=True,
+                indent=model_dump_config.get("indent"),
+            )
+
 
 class LazyAllocStr(LazyAlloc[str]):
     """
@@ -464,6 +493,13 @@ class LazyAllocStr(LazyAlloc[str]):
     def validate(self) -> Alloc:
         """Validate the alloc."""
         return Alloc.model_validate_json(self.raw)
+
+    def serialize_to_file(
+        self, file_path: Path, **model_dump_config: Any
+    ) -> None:
+        """Write the cached JSON string verbatim (no re-serialization)."""
+        del model_dump_config  # raw already encodes its own formatting
+        file_path.write_text(self.raw)
 
 
 @dataclass(kw_only=True)
@@ -513,6 +549,22 @@ class LazyAllocFile(LazyAlloc[Path]):
                         account_data
                     )
         return Alloc.model_validate(accumulated)
+
+    def serialize_to_file(
+        self, file_path: Path, **model_dump_config: Any
+    ) -> None:
+        """
+        Copy the backing file byte-for-byte, avoiding a parse/dump cycle.
+
+        If the backing temp dir was already cleaned up (e.g. a
+        chained-block t8n consumed it on the next block), fall back to
+        dumping the cached ``Alloc`` so debug output still captures the
+        input.
+        """
+        if Path(self.raw).exists():
+            shutil.copyfile(self.raw, file_path)
+        else:
+            super().serialize_to_file(file_path, **model_dump_config)
 
 
 @dataclass(kw_only=True)
