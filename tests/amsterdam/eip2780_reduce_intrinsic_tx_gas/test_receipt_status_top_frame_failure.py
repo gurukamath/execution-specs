@@ -23,6 +23,8 @@ producing ``status=1`` receipts for such transactions on
 glamsterdam-devnet-7 and rejecting finalized canonical blocks.
 """
 
+from enum import Enum, auto
+
 import pytest
 from execution_testing import (
     Account,
@@ -46,19 +48,36 @@ REFERENCE_SPEC_VERSION = ref_spec_2780.version
 pytestmark = pytest.mark.valid_from("Amsterdam")
 
 
+class TopFrameFailureMode(Enum):
+    """The top-frame charge the failing transaction out-of-gases on."""
+
+    CREATE_STATE_OOG = auto()
+    NEW_ACCOUNT_STATE_OOG = auto()
+    DELEGATED_REGULAR_OOG = auto()
+
+
 @pytest.mark.parametrize(
     "failure_mode",
     [
-        "create_state_oog",
-        "new_account_state_oog",
-        "delegated_regular_oog",
+        pytest.param(
+            TopFrameFailureMode.CREATE_STATE_OOG,
+            id="create_state_oog",
+        ),
+        pytest.param(
+            TopFrameFailureMode.NEW_ACCOUNT_STATE_OOG,
+            id="new_account_state_oog",
+        ),
+        pytest.param(
+            TopFrameFailureMode.DELEGATED_REGULAR_OOG,
+            id="delegated_regular_oog",
+        ),
     ],
 )
 def test_receipt_status_top_frame_oog_between_successful_txs(
     fork: Fork,
     pre: Alloc,
     blockchain_test: BlockchainTestFiller,
-    failure_mode: str,
+    failure_mode: TopFrameFailureMode,
 ) -> None:
     """
     Pin the failed receipt status of a top-frame OOG transaction that
@@ -98,7 +117,7 @@ def test_receipt_status_top_frame_oog_between_successful_txs(
 
     fail_target: Address | None = None
     fail_target_post: Account | None = None
-    if failure_mode == "create_state_oog":
+    if failure_mode is TopFrameFailureMode.CREATE_STATE_OOG:
         intrinsic_gas = intrinsic_cost(
             contract_creation=True,
             return_cost_deducted_prior_execution=True,
@@ -111,7 +130,7 @@ def test_receipt_status_top_frame_oog_between_successful_txs(
         )
         fail_gas_limit = intrinsic_gas + top_frame_state_gas - 1
         fail_to: Address | None = None
-    elif failure_mode == "new_account_state_oog":
+    elif failure_mode is TopFrameFailureMode.NEW_ACCOUNT_STATE_OOG:
         intrinsic_gas = intrinsic_cost(
             sends_value=True,
             recipient_type=RecipientType.EMPTY_ACCOUNT,
@@ -131,7 +150,7 @@ def test_receipt_status_top_frame_oog_between_successful_txs(
         # The rolled-back transfer must not bring the recipient into
         # existence.
         fail_target_post = None
-    else:
+    elif failure_mode is TopFrameFailureMode.DELEGATED_REGULAR_OOG:
         delegated_to = pre.deploy_contract(code=Op.STOP)
         target_code = Spec7702.delegation_designation(delegated_to)
         fail_to = pre.deploy_contract(code=target_code)
@@ -149,6 +168,8 @@ def test_receipt_status_top_frame_oog_between_successful_txs(
         fail_gas_limit = intrinsic_gas + top_frame_gas - 1
         fail_target = fail_to
         fail_target_post = Account(balance=0, code=target_code)
+    else:
+        raise ValueError(f"unhandled failure mode: {failure_mode}")
 
     # The successful transfers go to an alive EOA: no top-frame charge,
     # no EVM execution, so each consumes exactly its intrinsic gas.
@@ -179,7 +200,11 @@ def test_receipt_status_top_frame_oog_between_successful_txs(
     fail_tx = Transaction(
         sender=fail_sender,
         to=fail_to,
-        value=value if failure_mode == "new_account_state_oog" else 0,
+        value=(
+            value
+            if failure_mode is TopFrameFailureMode.NEW_ACCOUNT_STATE_OOG
+            else 0
+        ),
         gas_limit=fail_gas_limit,
         gas_price=gas_price,
         expected_receipt=TransactionReceipt(
@@ -214,7 +239,7 @@ def test_receipt_status_top_frame_oog_between_successful_txs(
             balance=sender_initial_balance - fail_gas_limit * gas_price,
         ),
     }
-    if failure_mode == "create_state_oog":
+    if failure_mode is TopFrameFailureMode.CREATE_STATE_OOG:
         post[fail_tx.created_contract] = None
     else:
         assert fail_target is not None
