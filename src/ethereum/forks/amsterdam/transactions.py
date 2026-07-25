@@ -836,9 +836,7 @@ def validate_frame_transaction(tx: FrameTransaction) -> None:
                 raise InvalidFrameError("last frame cannot have atomic flag")
 
 
-def validate_transaction(
-    tx: Transaction, sender: Address
-) -> IntrinsicGasCost:
+def validate_transaction(tx: Transaction, sender: Address) -> IntrinsicGasCost:
     """
     Verifies a transaction.
 

@@ -15,7 +15,7 @@ from dataclasses import dataclass
 from typing import Final, List, Optional, Tuple, final
 
 from ethereum_rlp import rlp
-from ethereum_types.bytes import Bytes
+from ethereum_types.bytes import Bytes, Bytes0
 from ethereum_types.frozen import slotted_freezable
 from ethereum_types.numeric import U64, U256, Uint, ulen
 
@@ -91,9 +91,8 @@ from .transactions import (
     recover_sender,
     validate_transaction,
 )
+from .utils.address import compute_contract_address
 from .utils.hexadecimal import hex_to_address
-from .utils.message import prepare_message
-from .vm import Message
 from .vm.eoa_delegation import is_valid_delegation
 from .vm.gas import (
     GasCosts,
@@ -105,7 +104,7 @@ from .vm.gas import (
     calculate_total_blob_gas,
     settle_transaction_gas,
 )
-from .vm.interpreter import MessageCallOutput, process_message_call
+from .vm.interpreter import TransactionOutput, process_top_level
 
 BASE_FEE_MAX_CHANGE_DENOMINATOR = Uint(8)
 ELASTICITY_MULTIPLIER = Uint(2)
@@ -700,7 +699,7 @@ def process_checked_system_transaction(
     block_env: vm.BlockEnvironment,
     target_address: Address,
     data: Bytes,
-) -> MessageCallOutput:
+) -> TransactionOutput:
     """
     Process a system transaction and raise an error if the contract does not
     contain code or if the transaction fails.
@@ -716,8 +715,8 @@ def process_checked_system_transaction(
 
     Returns
     -------
-    system_tx_output : `MessageCallOutput`
-        Output of processing the system transaction.
+    system_tx_output : `TransactionOutput`
+        The settled output of the system transaction.
 
     """
     # Pre-check that the system contract has code. We use a throwaway
@@ -759,7 +758,7 @@ def process_unchecked_system_transaction(
     block_env: vm.BlockEnvironment,
     target_address: Address,
     data: Bytes,
-) -> MessageCallOutput:
+) -> TransactionOutput:
     """
     Process a system transaction without checking if the contract contains
     code or if the transaction fails.
@@ -775,19 +774,17 @@ def process_unchecked_system_transaction(
 
     Returns
     -------
-    system_tx_output : `MessageCallOutput`
-        Output of processing the system transaction.
+    system_tx_output : `TransactionOutput`
+        The settled output of the system transaction.
 
     """
     system_tx_state = TransactionState(parent=block_env.state)
-    system_contract_code = get_code(
-        system_tx_state,
-        get_account(system_tx_state, target_address).code_hash,
-    )
 
     tx_env = vm.TransactionEnvironment(
         origin=SYSTEM_ADDRESS,
         recipient=target_address,
+        is_create=False,
+        data=data,
         value=U256(0),
         gas_price=block_env.base_fee_per_gas,
         gas=SYSTEM_TRANSACTION_GAS,
@@ -796,6 +793,8 @@ def process_unchecked_system_transaction(
         ),
         access_list_addresses=set(),
         access_list_storage_keys=set(),
+        # A system transaction charges no gas, so no write is paid for.
+        accounts_with_paid_writes=set(),
         state=system_tx_state,
         blob_versioned_hashes=(),
         authorizations=(),
@@ -803,30 +802,7 @@ def process_unchecked_system_transaction(
         tx_hash=None,
     )
 
-    system_tx_message = Message(
-        block_env=block_env,
-        tx_env=tx_env,
-        caller=SYSTEM_ADDRESS,
-        target=target_address,
-        gas=SYSTEM_TRANSACTION_GAS,
-        state_gas_reservoir=(
-            StateGasCosts.STORAGE_SET * SYSTEM_MAX_SSTORES_PER_CALL
-        ),
-        value=U256(0),
-        data=data,
-        code=system_contract_code,
-        depth=Uint(0),
-        current_target=target_address,
-        code_address=target_address,
-        should_transfer_value=False,
-        is_static=False,
-        accessed_addresses=set(),
-        accessed_storage_keys=set(),
-        disable_precompiles=False,
-        parent_evm=None,
-    )
-
-    system_tx_output = process_message_call(system_tx_message)
+    system_tx_output = process_top_level(block_env, tx_env)
 
     incorporate_tx_into_block(
         system_tx_state, block_env.block_access_list_builder
@@ -1072,15 +1048,31 @@ def process_transaction(
     if isinstance(tx, SetCodeTransaction):
         authorizations = tx.authorizations
 
+    if isinstance(tx.to, Bytes0):
+        is_create = True
+        # A creation's frame runs at the address the contract
+        # deploys to.
+        recipient = compute_contract_address(sender, sender_account.nonce)
+    else:
+        is_create = False
+        recipient = tx.to
+
+    accounts_with_paid_writes = {sender}
+    if is_create or tx.value > U256(0):
+        accounts_with_paid_writes.add(recipient)
+
     tx_env = vm.TransactionEnvironment(
         origin=sender,
-        recipient=tx.to,
+        recipient=recipient,
+        is_create=is_create,
+        data=tx.data,
         value=tx.value,
         gas_price=effective_gas_price,
         gas=allocation.regular_gas,
         state_gas_reservoir=allocation.state_gas_reservoir,
         access_list_addresses=access_list_addresses,
         access_list_storage_keys=access_list_storage_keys,
+        accounts_with_paid_writes=accounts_with_paid_writes,
         state=tx_state,
         blob_versioned_hashes=blob_versioned_hashes,
         authorizations=authorizations,
@@ -1088,9 +1080,7 @@ def process_transaction(
         tx_hash=get_transaction_hash(encode_transaction(tx)),
     )
 
-    message = prepare_message(block_env, tx_env, tx)
-
-    tx_output = process_message_call(message)
+    tx_output = process_top_level(block_env, tx_env)
 
     settlement = settle_transaction_gas(
         tx.gas,

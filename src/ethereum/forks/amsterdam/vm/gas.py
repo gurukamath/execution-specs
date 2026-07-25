@@ -390,6 +390,23 @@ def check_gas(evm: "Evm", amount: Uint) -> None:
         raise OutOfGasError
 
 
+def charge_gas_from_meter(gas_meter: GasMeter, amount: Uint) -> None:
+    """
+    Subtracts `amount` from `gas_left` (regular gas).
+
+    Parameters
+    ----------
+    gas_meter :
+        The gas meter.
+    amount :
+        The amount of regular gas the current operation requires.
+
+    """
+    if gas_meter.gas_left < amount:
+        raise OutOfGasError
+    gas_meter.gas_left -= amount
+
+
 def charge_gas(evm: "Evm", amount: Uint) -> None:
     """
     Subtracts `amount` from `gas_left` (regular gas).
@@ -404,10 +421,33 @@ def charge_gas(evm: "Evm", amount: Uint) -> None:
     """
     evm_trace(evm, GasAndRefund(int(amount)))
 
-    gas_meter = evm.gas_meter
-    if gas_meter.gas_left < amount:
+    charge_gas_from_meter(evm.gas_meter, amount)
+
+
+def charge_state_gas_from_meter(gas_meter: GasMeter, amount: StateGas) -> None:
+    """
+    Subtracts `amount` from the state gas reservoir, then from
+    `gas_left` when the reservoir is empty, tracking any [spill].
+
+    Parameters
+    ----------
+    gas_meter :
+        The gas meter.
+    amount :
+        The amount of state gas the current operation requires.
+
+    [spill]: ref:ethereum.forks.amsterdam.vm.gas.GasMeter.state_gas_spilled
+
+    """
+    if gas_meter.state_gas_left >= amount:
+        gas_meter.state_gas_left -= amount
+    elif gas_meter.state_gas_left + gas_meter.gas_left >= amount:
+        remainder = amount - gas_meter.state_gas_left
+        gas_meter.state_gas_left = Uint(0)
+        gas_meter.gas_left -= remainder
+        gas_meter.state_gas_spilled += remainder
+    else:
         raise OutOfGasError
-    gas_meter.gas_left -= amount
 
 
 def charge_state_gas(evm: "Evm", amount: StateGas) -> None:
@@ -427,16 +467,7 @@ def charge_state_gas(evm: "Evm", amount: StateGas) -> None:
     """
     evm_trace(evm, StateGasAndRefund(int(amount)))
 
-    gas_meter = evm.gas_meter
-    if gas_meter.state_gas_left >= amount:
-        gas_meter.state_gas_left -= amount
-    elif gas_meter.state_gas_left + gas_meter.gas_left >= amount:
-        remainder = amount - gas_meter.state_gas_left
-        gas_meter.state_gas_left = Uint(0)
-        gas_meter.gas_left -= remainder
-        gas_meter.state_gas_spilled += remainder
-    else:
-        raise OutOfGasError
+    charge_state_gas_from_meter(evm.gas_meter, amount)
 
 
 def commit_state_gas(gas_meter: GasMeter) -> None:
@@ -517,9 +548,9 @@ def restore_state_gas_to_entry(
         The frame's immutable state gas grant.
 
     [commit]: ref:ethereum.forks.amsterdam.vm.gas.commit_state_gas
-    [grant]: ref:ethereum.forks.amsterdam.vm.Message.state_gas_reservoir
+    [grant]: ref:ethereum.forks.amsterdam.vm.TransactionEnvironment.state_gas_reservoir
 
-    """
+    """  # noqa: E501
     # The baseline starts at the grant and only ever moves down.
     assert gas_meter.state_gas_baseline <= state_gas_reservoir
     # Only pre-dispatch failures roll back to entry, and no refund

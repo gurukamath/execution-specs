@@ -3,6 +3,7 @@ EVM trace implementation that counts how many times each opcode is executed.
 """
 
 from collections import defaultdict
+from typing import Any
 
 from ethereum.trace import EvmTracer, OpStart, TraceEvent
 
@@ -31,9 +32,15 @@ class CountTracer(EvmTracer):
 
         assert isinstance(evm, Evm)
 
-        if self.transaction_environment is not evm.message.tx_env:
+        # TODO: Rethink the tracer interface so it does not probe
+        # fork-specific frame layouts. Recent forks merge the message
+        # fields into the frame itself; older forks keep them on
+        # `evm.message`.
+        message: Any = getattr(evm, "message", evm)
+
+        if self.transaction_environment is not message.tx_env:
             self.active_traces = defaultdict(lambda: 0)
-            self.transaction_environment = evm.message.tx_env
+            self.transaction_environment = message.tx_env
 
         self.active_traces[event.op.name] += 1
 

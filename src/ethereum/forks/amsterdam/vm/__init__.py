@@ -15,7 +15,7 @@ The abstract computer which runs the code stored in an
 from dataclasses import dataclass, field
 from typing import List, Optional, Set, Tuple, final
 
-from ethereum_types.bytes import Bytes, Bytes0, Bytes32
+from ethereum_types.bytes import Bytes, Bytes32
 from ethereum_types.numeric import U64, U256, Uint
 
 from ethereum.crypto.hash import Hash32, keccak256
@@ -31,7 +31,7 @@ from ..state_tracker import BlockState, TransactionState
 from ..transactions import LegacyTransaction
 from .gas import GasMeter
 
-__all__ = ("Environment", "Evm", "Message")
+__all__ = ("Environment", "Evm")
 TRANSFER_TOPIC = keccak256(b"Transfer(address,address,uint256)")
 SYSTEM_ADDRESS = Address(
     bytes.fromhex("fffffffffffffffffffffffffffffffffffffffe")
@@ -124,13 +124,17 @@ class TransactionEnvironment:
     """
 
     origin: Address
-    recipient: Bytes0 | Address
+    # For a creation, the address the contract deploys to.
+    recipient: Address
+    is_create: bool
+    data: Bytes
     value: U256
     gas_price: Uint
     gas: Uint
     state_gas_reservoir: Uint
     access_list_addresses: Set[Address]
     access_list_storage_keys: Set[Tuple[Address, Bytes32]]
+    accounts_with_paid_writes: Set[Address]
     state: TransactionState
     blob_versioned_hashes: Tuple[VersionedHash, ...]
     authorizations: Tuple[Authorization, ...]
@@ -140,51 +144,53 @@ class TransactionEnvironment:
 
 @final
 @dataclass
-class Message:
+class Evm:
     """
-    Items that are used by contract creation or message call.
+    A single call frame: its parameters, gas meter, machine state, and
+    accrued effects.
+
+    A call spawns a child frame and each top-level call is a frame at
+    depth zero, so one dataclass describes them all.
     """
 
+    # Context: where this frame sits.
     block_env: BlockEnvironment
     tx_env: TransactionEnvironment
-    caller: Address
-    target: Bytes0 | Address
-    current_target: Address
-    gas: Uint
-    state_gas_reservoir: Uint
-    value: U256
-    data: Bytes
-    code_address: Optional[Address]
-    code: Optional[Bytes]
+    parent_evm: Optional["Evm"]
     depth: Uint
+
+    # Call Parameters: fixed at frame creation.
+    caller: Address
+    current_target: Address
+    value: U256
+    call_data: Bytes
     should_transfer_value: bool
     is_static: bool
-    accessed_addresses: Set[Address]
-    accessed_storage_keys: Set[Tuple[Address, Bytes32]]
     disable_precompiles: bool
-    parent_evm: Optional["Evm"]
 
+    # Code: what this frame executes, resolved at frame creation.
+    code_address: Optional[Address]
+    # Init code for a creation; the resolved code for a call.
+    code: Bytes
+    valid_jump_destinations: Set[Uint]
 
-@final
-@dataclass
-class Evm:
-    """The internal state of the virtual machine."""
-
+    # Machine State: mutated as instructions execute.
+    gas_meter: GasMeter
     pc: Uint
     stack: List[U256]
     memory: bytearray
-    code: Bytes
-    gas_meter: GasMeter
-    valid_jump_destinations: Set[Uint]
-    logs: Tuple[Log, ...]
-    running: bool
-    message: Message
-    output: Bytes
-    accounts_to_delete: Set[Address]
     return_data: Bytes
-    error: Optional[EthereumException]
+
+    # Accrued Effects: merged into the parent on success.
+    logs: Tuple[Log, ...]
+    accounts_to_delete: Set[Address]
     accessed_addresses: Set[Address]
     accessed_storage_keys: Set[Tuple[Address, Bytes32]]
+
+    # Outcome: whether the frame ended, and how.
+    running: bool
+    output: Bytes
+    error: Optional[EthereumException]
 
 
 def incorporate_child(evm: Evm, child_evm: Evm) -> None:
