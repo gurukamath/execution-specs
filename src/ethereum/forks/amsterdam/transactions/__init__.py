@@ -4,22 +4,15 @@ submitted to be executed. If Ethereum is viewed as a state machine,
 transactions are the events that move between states.
 """
 
-from dataclasses import dataclass, replace
-from enum import STRICT
-from typing import Final, Tuple, TypeGuard, assert_never, final
+from dataclasses import dataclass
+from typing import Tuple, TypeGuard, final
 
 from ethereum_rlp import rlp
 from ethereum_types.bytes import Bytes, Bytes0, Bytes32
-from ethereum_types.enum import UintEnum, UintFlag
 from ethereum_types.frozen import slotted_freezable
 from ethereum_types.numeric import U64, U256, Uint, ulen
 
-from ethereum.crypto.elliptic_curve import (
-    SECP256K1N,
-    SECP256R1N,
-    secp256k1_recover,
-    secp256r1_verify,
-)
+from ethereum.crypto.elliptic_curve import SECP256K1N, secp256k1_recover
 from ethereum.crypto.hash import Hash32, keccak256
 from ethereum.exceptions import (
     InsufficientTransactionGasError,
@@ -28,20 +21,24 @@ from ethereum.exceptions import (
 )
 from ethereum.state import Address
 
-from .exceptions import (
+from ..exceptions import (
     BlobCountExceededError,
     EmptyAuthorizationListError,
-    FrameCountError,
     InitCodeTooLargeError,
     InvalidBlobVersionedHashError,
-    InvalidFrameError,
     InvalidMaxFeePerBlobGas,
     NoBlobDataError,
     PriorityFeeGreaterThanMaxFeeError,
     TransactionTypeContractCreationError,
     TransactionTypeError,
 )
-from .fork_types import Authorization, RegularGas, VersionedHash
+from ..fork_types import Authorization, RegularGas, VersionedHash
+from .frame_transaction import (
+    FrameTransaction,
+    calculate_frame_transaction_gas_limit,
+    calculate_frame_transaction_intrinsic_cost,
+    validate_frame_transaction,
+)
 
 
 @final
@@ -86,36 +83,6 @@ Floor data tokens contributed by a single access list storage key per
 [EIP-7981].
 
 [EIP-7981]: https://eips.ethereum.org/EIPS/eip-7981
-"""
-
-MAX_FRAMES_PER_TX: Final[Uint] = Uint(64)
-"""
-Maximum number of [`Frame`]s allowed per [`FrameTransaction`][ftx].
-
-[`Frame`]: ref:ethereum.forks.amsterdam.transactions.Frame
-[ftx]: ref:ethereum.forks.amsterdam.transactions.FrameTransaction
-"""
-
-EXPIRY_VERIFIER: Final[Address] = Address(
-    bytes.fromhex("0000000000000000000000000000000000008141")
-)
-"""
-Address of the expiry verifier contract.
-
-A [`VERIFY`][v] frame targeting this address is an _expiry verifier frame_:
-its data holds an unsigned big-endian expiry timestamp, and the frame
-reverts unless the block timestamp is at or before that expiry. Such frames
-are subject to additional validity constraints, checked in
-[`validate_frame_transaction`][vft].
-
-[v]: ref:ethereum.forks.amsterdam.transactions.FrameMode.VERIFY
-[vft]: ref:ethereum.forks.amsterdam.transactions.validate_frame_transaction
-"""
-
-EXPIRY_DATA_LENGTH: Final[int] = 8
-"""
-Exact length, in bytes, of an expiry verifier frame's data: an unsigned
-big-endian expiry timestamp.
 """
 
 
@@ -526,261 +493,6 @@ class SetCodeTransaction:
     """
 
 
-@final
-class FrameMode(UintEnum, boundary=STRICT):
-    """
-    Indicates the purpose of a [`Frame`].
-
-    The strict boundary rejects values other than the modes defined here as
-    the enum is constructed — notably while decoding a transaction — so a
-    frame with an undefined mode never decodes and no separate validity
-    check is required.
-
-    [`Frame`]: ref:ethereum.forks.amsterdam.transactions.Frame
-    """
-
-    DEFAULT = Uint(0)
-    """
-    Execute frame as [`FRAME_ENTRY_POINT`][fep].
-
-    [fep]: ref:ethereum.forks.amsterdam.vm.FRAME_ENTRY_POINT
-    """
-
-    VERIFY = Uint(1)
-    """
-    Identify frame as transaction validation.
-    """
-
-    SENDER = Uint(2)
-    """
-    Execute frame as [`sender`][s].
-
-    [s]: ref:ethereum.forks.amsterdam.transactions.FrameTransaction.sender
-    """
-
-
-@final
-class FrameFlag(UintFlag, boundary=STRICT):
-    """
-    Frame or mode features.
-
-    Each member represents a single bit, and any combination of the bits
-    defined here is a valid set of flags. The strict boundary rejects values
-    with any other bit set as the flag is constructed — notably while
-    decoding a transaction — so a frame carrying a reserved flag bit never
-    decodes and no separate validity check is required.
-    """
-
-    APPROVE_PAYMENT = Uint(1)
-    """
-    [`Frame`] has permission to approve payment.
-
-    [`Frame`]: ref:ethereum.forks.amsterdam.transactions.Frame
-    """
-
-    APPROVE_EXECUTION = Uint(2)
-    """
-    [`Frame`] has permission to approve execution.
-
-    [`Frame`]: ref:ethereum.forks.amsterdam.transactions.Frame
-    """
-
-    ATOMIC_BATCH = Uint(4)
-    """
-    [`Frame`] belongs to an atomic batch.
-
-    All frames within an atomic batch either all succeed or are all reverted.
-
-    [`Frame`]: ref:ethereum.forks.amsterdam.transactions.Frame
-    """
-
-
-@final
-@slotted_freezable
-@dataclass
-class Frame:
-    """
-    Unit of execution defined in a [`FrameTransaction`][ft].
-
-    [ft]: ref:ethereum.forks.amsterdam.transactions.FrameTransaction
-    """
-
-    mode: FrameMode
-    """
-    Purpose of this frame.
-
-    Specifies the specific execution semantics this frame will execute with.
-    """
-
-    flags: FrameFlag
-    """
-    Enable optional frame or mode features.
-    """
-
-    to: Bytes0 | Address
-    """
-    Destination or target account for the frame.
-    """
-
-    gas: U64
-    """
-    Maximum amount of gas that can be used by this frame.
-    """
-
-    value: U256
-    """
-    Amount of ether (in wei) to transfer from the [`sender`][s] as part of the
-    frame execution.
-
-    [s]: ref:ethereum.forks.amsterdam.transactions.FrameTransaction.sender
-    """
-
-    data: Bytes
-    """
-    The data payload of the frame, which can be used to call functions on
-    contracts.
-    """
-
-
-@final
-class FrameSignatureScheme(UintEnum, boundary=STRICT):
-    """
-    Algorithm used to authenticate [`FrameSignature`][fs]s.
-
-    The strict boundary rejects values other than the schemes defined here
-    as the enum is constructed — notably while decoding a transaction — so
-    a signature using a reserved scheme never decodes and no separate
-    validity check is required.
-
-    [fs]: ref:ethereum.forks.amsterdam.transactions.FrameSignature
-    """
-
-    ARBITRARY = Uint(0)
-    """
-    Arbitrary bytes that the protocol does not cryptographically validate.
-    """
-
-    SECP256K1 = Uint(1)
-    """
-    ECDSA signature over the secp256k1 curve, as used by other transaction
-    types.
-    """
-
-    P256 = Uint(2)
-    """
-    Signature over the NIST P-256 (secp256r1) curve.
-    """
-
-
-@final
-@slotted_freezable
-@dataclass
-class FrameSignature:
-    """
-    A signature provided to [`VERIFY`][v] frames.
-
-    [v]: ref:ethereum.forks.amsterdam.transactions.FrameMode.VERIFY
-    """
-
-    scheme: FrameSignatureScheme
-    """
-    Algorithm used to construct the signature.
-    """
-
-    signer: Bytes
-    """
-    Scheme-dependent signer metadata.
-
-    For [`SECP256K1`] and [`P256`], this is a 20-byte address.
-
-    [`SECP256K1`]: ref:ethereum.forks.amsterdam.transactions.FrameSignatureScheme.SECP256K1
-    [`P256`]: ref:ethereum.forks.amsterdam.transactions.FrameSignatureScheme.P256
-    """  # noqa: E501
-
-    message: Bytes0 | Bytes32
-    """
-    Either empty, indicating the canonical transaction signature hash, or an
-    explicit 32-byte digest.
-    """
-
-    signature: Bytes
-    """
-    Raw signature bytes, to be interpreted according to [`scheme`].
-
-    [`scheme`]: ref:ethereum.forks.amsterdam.transactions.FrameSignature.scheme
-    """
-
-
-@final
-@slotted_freezable
-@dataclass
-class FrameTransaction:
-    """
-    Transaction type constructed from a series of frames, abstractly defining
-    validity conditions and gas payment. Introduced in [EIP-8141].
-
-    [EIP-8141]: https://eips.ethereum.org/EIPS/eip-8141
-    """
-
-    chain_id: U64
-    """
-    The ID of the chain on which this transaction is executed.
-    """
-
-    nonce: U256
-    """
-    A scalar value equal to the number of transactions sent by the
-    [`sender`][s].
-
-    [s]: ref:ethereum.forks.amsterdam.transactions.FrameTransaction.sender
-    """
-
-    sender: Address
-    """
-    Address of the account intended to be the sender of the transaction.
-    """
-
-    frames: Tuple[Frame, ...]
-    """
-    List of frames to execute.
-    """
-
-    signatures: Tuple[FrameSignature, ...]
-    """
-    Validated signatures available to the transaction.
-
-    The `signatures` list contains signatures that may be referenced by
-    [`VERIFY`][v] frames and by ordinary EVM execution. Every signature in the
-    list must validate successfully before any [`Frame`] is executed. If any
-    signature is malformed or invalid, the whole transaction is invalid.
-
-    [v]: ref:ethereum.forks.amsterdam.transactions.FrameMode.VERIFY
-    [`Frame`]: ref:ethereum.forks.amsterdam.transactions.Frame
-    """
-
-    max_priority_fee_per_gas: Uint
-    """
-    The maximum priority fee per gas that the sender is willing to pay.
-    """
-
-    max_fee_per_gas: Uint
-    """
-    The maximum fee per gas that the sender is willing to pay, including the
-    base fee and priority fee.
-    """
-
-    max_fee_per_blob_gas: U256
-    """
-    The maximum fee per blob gas that the sender is willing to pay.
-    """
-
-    blob_versioned_hashes: Tuple[VersionedHash, ...]
-    """
-    A tuple of objects that represent the versioned hashes of the blobs
-    included in the transaction.
-    """
-
-
 Transaction = (
     LegacyTransaction
     | AccessListTransaction
@@ -894,189 +606,6 @@ def decode_transaction(tx: LegacyTransaction | Bytes) -> Transaction:
         return tx
 
 
-def compute_frame_signature_hash(tx: FrameTransaction) -> Hash32:
-    """
-    Compute the canonical signature hash of a frame transaction.
-
-    The raw `signature` bytes of every entry with an empty `msg` are
-    elided before hashing, since a signature over the canonical hash
-    cannot commit to its own bytes.
-    """
-    elided_signatures = []
-    for signature in tx.signatures:
-        if len(signature.message) == 0:
-            elided_signatures.append(replace(signature, signature=Bytes(b"")))
-        else:
-            elided_signatures.append(signature)
-
-    elided_tx = replace(tx, signatures=tuple(elided_signatures))
-    return keccak256(b"\x06" + rlp.encode(elided_tx))
-
-
-def validate_signature(
-    frame_signature: FrameSignature, sender: Address, sig_hash: Hash32
-) -> None:
-    """
-    Validate a single [`FrameSignature`] entry.
-
-    The entry's `message` selects what the signature authorizes: empty
-    means the canonical signature hash `sig_hash` (see
-    [`compute_frame_signature_hash`][csh]), while a 32-byte value is an
-    explicit digest. The all-zero digest is invalid, reserving the zero
-    stack value as the EVM-visible representation of the canonical-hash
-    case.
-
-    An empty `signer` resolves to `sender`. For the protocol-validated
-    schemes ([`SECP256K1`][k1] and [`P256`][p256]) the raw signature
-    bytes must be canonical — one unique encoding per signature, with
-    low-`s` — and must authenticate the resolved signer. The protocol
-    does not cryptographically validate [`ARBITRARY`][arb] entries and
-    assigns them no resolved signer, so their `signer` must be empty.
-
-    [`FrameSignature`]: ref:ethereum.forks.amsterdam.transactions.FrameSignature
-    [csh]: ref:ethereum.forks.amsterdam.transactions.compute_frame_signature_hash
-    [k1]: ref:ethereum.forks.amsterdam.transactions.FrameSignatureScheme.SECP256K1
-    [p256]: ref:ethereum.forks.amsterdam.transactions.FrameSignatureScheme.P256
-    [arb]: ref:ethereum.forks.amsterdam.transactions.FrameSignatureScheme.ARBITRARY
-    """  # noqa: E501
-    signature_scheme = frame_signature.scheme
-    signer = frame_signature.signer
-    signature = frame_signature.signature
-
-    if len(frame_signature.message) == 0:
-        message = sig_hash
-    elif len(frame_signature.message) == 32:
-        if frame_signature.message == b"\0" * 32:
-            raise InvalidFrameError(
-                "frame signature message cannot be all zeros"
-            )
-        message = Hash32(frame_signature.message)
-    else:
-        raise InvalidFrameError("Invalid signature message length")
-
-    if len(signer) not in [0, Address.LENGTH]:
-        raise InvalidFrameError("invalid frame signer length")
-    resolved_signer: Bytes
-    if len(signer) == 0:
-        resolved_signer = sender
-    else:
-        resolved_signer = signer
-
-    match signature_scheme:
-        case FrameSignatureScheme.SECP256K1:
-            if len(signature) != 65:
-                raise InvalidSignatureError(
-                    "SECP256K1 signature must be 65 bytes"
-                )
-
-            v = U256(signature[0])
-            r = U256.from_be_bytes(signature[1:33])
-            s = U256.from_be_bytes(signature[33:65])
-            if v not in (U256(0), U256(1)):
-                raise InvalidSignatureError("bad v in secp256k1 scheme")
-            if U256(0) >= r or r >= SECP256K1N:
-                raise InvalidSignatureError("bad r in secp256k1 scheme")
-            if U256(0) >= s or s > SECP256K1N // U256(2):
-                raise InvalidSignatureError("bad s in secp256k1 scheme")
-
-            public_key = secp256k1_recover(r, s, v, message)
-
-            if resolved_signer != keccak256(public_key)[12:]:
-                raise InvalidFrameError(
-                    "signer does not match in secp256k1 scheme"
-                )
-
-        case FrameSignatureScheme.P256:
-            if len(signature) != 128:
-                raise InvalidSignatureError("P256 signature must be 128 bytes")
-
-            r = U256.from_be_bytes(signature[0:32])
-            s = U256.from_be_bytes(signature[32:64])
-            qx = U256.from_be_bytes(signature[64:96])
-            qy = U256.from_be_bytes(signature[96:128])
-
-            if U256(0) >= r or r >= SECP256R1N:
-                raise InvalidSignatureError("bad r in p256 scheme")
-            if U256(0) >= s or s > SECP256R1N // U256(2):
-                raise InvalidSignatureError("bad s in p256 scheme")
-            if resolved_signer != keccak256(signature[64:128])[12:]:
-                raise InvalidFrameError("signer does not match in p256 scheme")
-            try:
-                secp256r1_verify(r, s, qx, qy, message)
-            except ValueError as e:
-                raise InvalidSignatureError("invalid p256 public key") from e
-
-        case FrameSignatureScheme.ARBITRARY:
-            if len(signer) != 0:
-                raise InvalidFrameError(
-                    "signer length should be zero for arbitrary schemes"
-                )
-        case _ as unreachable:
-            assert_never(unreachable)
-
-
-def validate_frame_transaction(tx: FrameTransaction) -> None:
-    """
-    Check the statically determinable validity constraints of a
-    [`FrameTransaction`][ftx].
-
-    Constraints on individual fields — frame modes and flags, signature
-    schemes, and field lengths — are enforced by their types while the
-    transaction is decoded, so only the constraints that span several
-    fields are checked here.
-
-    [ftx]: ref:ethereum.forks.amsterdam.transactions.FrameTransaction
-    """
-    frame_count = ulen(tx.frames)
-    if frame_count < Uint(1) or frame_count > MAX_FRAMES_PER_TX:
-        raise FrameCountError(actual=frame_count, maximum=MAX_FRAMES_PER_TX)
-
-    signature_hash = compute_frame_signature_hash(tx)
-    for signature in tx.signatures:
-        validate_signature(signature, tx.sender, signature_hash)
-
-    has_expiry_verifier_frame = False
-    total_frame_gas = Uint(0)
-    for index, frame in enumerate(tx.frames):
-        total_frame_gas += Uint(frame.gas)
-        if total_frame_gas > Uint(U64.MAX_VALUE):
-            raise InvalidFrameError("total frame gas overflows")
-
-        if frame.mode != FrameMode.SENDER and frame.value != U256(0):
-            raise InvalidFrameError("only sender frames can transfer value")
-
-        if FrameFlag.APPROVE_EXECUTION in frame.flags:
-            if isinstance(frame.to, Address) and frame.to != tx.sender:
-                raise InvalidFrameError(
-                    "approve execution frame must target sender"
-                )
-
-        if FrameFlag.ATOMIC_BATCH in frame.flags:
-            if frame.mode == FrameMode.VERIFY:
-                raise InvalidFrameError(
-                    "atomic batches cannot contain verify frames"
-                )
-            if index + 1 >= len(tx.frames):
-                raise InvalidFrameError("last frame cannot have atomic flag")
-            if tx.frames[index + 1].mode == FrameMode.VERIFY:
-                raise InvalidFrameError(
-                    "atomic batches cannot contain verify frames"
-                )
-
-        if frame.mode == FrameMode.VERIFY and frame.to == EXPIRY_VERIFIER:
-            if has_expiry_verifier_frame:
-                raise InvalidFrameError("multiple expiry verifier frames")
-            has_expiry_verifier_frame = True
-            if frame.flags != FrameFlag(0):
-                raise InvalidFrameError("expiry verifier frame with flags")
-            if frame.value != U256(0):
-                raise InvalidFrameError("expiry verifier frame with value")
-            if len(frame.data) != EXPIRY_DATA_LENGTH:
-                raise InvalidFrameError(
-                    "expiry verifier frame data must be an expiry timestamp"
-                )
-
-
 def validate_transaction(tx: Transaction, sender: Address) -> IntrinsicGasCost:
     """
     Verifies a transaction.
@@ -1107,7 +636,7 @@ def validate_transaction(tx: Transaction, sender: Address) -> IntrinsicGasCost:
     [EIP-2681]: https://eips.ethereum.org/EIPS/eip-2681
     [EIP-7623]: https://eips.ethereum.org/EIPS/eip-7623
     """
-    from .vm.interpreter import MAX_INIT_CODE_SIZE
+    from ..vm.interpreter import MAX_INIT_CODE_SIZE
 
     if U256(tx.nonce) >= U256(U64.MAX_VALUE):
         raise NonceOverflowError("Nonce too high")
@@ -1156,13 +685,20 @@ def validate_transaction(tx: Transaction, sender: Address) -> IntrinsicGasCost:
 
     if isinstance(tx, FrameTransaction):
         validate_frame_transaction(tx)
+        intrinsic = calculate_frame_transaction_intrinsic_cost(tx)
 
-    intrinsic = calculate_intrinsic_cost(tx, sender)
-
-    if isinstance(tx, FrameTransaction):
-        # TODO: validate intrinsic gas?
-        pass
+        # The derived gas limit includes the intrinsic cost by
+        # construction, so only the calldata floor needs checking
+        # against it.
+        gas_limit = calculate_frame_transaction_gas_limit(
+            tx, intrinsic.regular
+        )
+        if intrinsic.calldata_floor > gas_limit:
+            raise InsufficientTransactionGasError(
+                "Insufficient calldata floor"
+            )
     else:
+        intrinsic = calculate_intrinsic_cost(tx, sender)
         intrinsic_gas = Uint(intrinsic.regular)
         if intrinsic_gas > tx.gas:
             raise InsufficientTransactionGasError("Insufficient intrinsic gas")
@@ -1222,10 +758,11 @@ def calculate_intrinsic_cost(
     regular-gas portion of items 1 to 3 above rather than `TX_BASE`
     alone, so it never undercuts the transaction's own intrinsic base.
     """
-    from .vm.gas import GasCosts, init_code_cost
+    from ..vm.gas import GasCosts, init_code_cost
 
-    if isinstance(tx, FrameTransaction):
-        raise NotImplementedError
+    # Frame transactions never reach this function; their intrinsic cost
+    # is calculated by `calculate_frame_transaction_intrinsic_cost`.
+    assert not isinstance(tx, FrameTransaction)
 
     tokens_in_calldata = count_tokens_in_data(tx.data)
 

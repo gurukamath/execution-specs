@@ -157,16 +157,16 @@ class GasCosts:
     """
     Base gas cost for [`FrameTransaction`][ftx]s.
 
-    [ftx]: ref:ethereum.forks.amsterdam.transactions.FrameTransaction
-    """
+    [ftx]: ref:ethereum.forks.amsterdam.transactions.frame_transaction.FrameTransaction
+    """  # noqa: E501
 
     TX_PER_FRAME: Final[Uint] = Uint(475)
     """
     Additional per-[`Frame`] gas cost for [`FrameTransaction`][ftx]s.
 
-    [ftx]: ref:ethereum.forks.amsterdam.transactions.FrameTransaction
-    [`Frame`]: ref:ethereum.forks.amsterdam.transactions.Frame
-    """
+    [ftx]: ref:ethereum.forks.amsterdam.transactions.frame_transaction.FrameTransaction
+    [`Frame`]: ref:ethereum.forks.amsterdam.transactions.frame_transaction.Frame
+    """  # noqa: E501
 
     # Frames
     FRAME_SIGNATURE_SCHEME_SECP256K1: Final[Uint] = Uint(2800)
@@ -174,17 +174,28 @@ class GasCosts:
     Cost for verifying a [`SECP256K1`][s] signature in a
     [`FrameTransaction`][ftx].
 
-    [s]: ref:ethereum.forks.amsterdam.transactions.FrameSignatureScheme.SECP256K1
-    [ftx]: ref:ethereum.forks.amsterdam.transactions.FrameTransaction
+    [s]: ref:ethereum.forks.amsterdam.transactions.frame_transaction.FrameSignatureScheme.SECP256K1
+    [ftx]: ref:ethereum.forks.amsterdam.transactions.frame_transaction.FrameTransaction
     """  # noqa: E501
 
     FRAME_SIGNATURE_SCHEME_P256: Final[Uint] = Uint(6700)
     """
     Cost for verifying a [`P256`][s] signature in a [`FrameTransaction`][ftx].
 
-    [s]: ref:ethereum.forks.amsterdam.transactions.FrameSignatureScheme.P256
-    [ftx]: ref:ethereum.forks.amsterdam.transactions.FrameTransaction
+    [s]: ref:ethereum.forks.amsterdam.transactions.frame_transaction.FrameSignatureScheme.P256
+    [ftx]: ref:ethereum.forks.amsterdam.transactions.frame_transaction.FrameTransaction
+    """  # noqa: E501
+
+    FRAME_SIGNATURE_SCHEME_ARBITRARY: Final[Uint] = Uint(100)
     """
+    Cost charged for an [`ARBITRARY`][s] signature entry in a
+    [`FrameTransaction`][ftx]. The protocol does not cryptographically
+    validate these entries; the charge covers making the bytes available
+    for introspection.
+
+    [s]: ref:ethereum.forks.amsterdam.transactions.frame_transaction.FrameSignatureScheme.ARBITRARY
+    [ftx]: ref:ethereum.forks.amsterdam.transactions.frame_transaction.FrameTransaction
+    """  # noqa: E501
 
     # Block
     LIMIT_ADJUSTMENT_FACTOR: Final[Uint] = Uint(1024)

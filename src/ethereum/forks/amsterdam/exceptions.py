@@ -156,8 +156,8 @@ class FrameCountError(InvalidTransaction):
     """
     The transaction has either too many or two few [`Frame`]s to be valid.
 
-    [`Frame`]: ref:ethereum.forks.amsterdam.transactions.Frame
-    """
+    [`Frame`]: ref:ethereum.forks.amsterdam.transactions.frame_transaction.Frame
+    """  # noqa: E501
 
     maximum: Final[Uint]
     """
@@ -188,8 +188,8 @@ class InvalidFrameError(InvalidTransaction):
     """
     A [`Frame`] did not pass validation.
 
-    [`Frame`]: ref:ethereum.forks.amsterdam.transactions.Frame
-    """
+    [`Frame`]: ref:ethereum.forks.amsterdam.transactions.frame_transaction.Frame
+    """  # noqa: E501
 
 
 class BlockAccessListGasLimitExceededError(InvalidBlock):
