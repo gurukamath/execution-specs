@@ -24,9 +24,15 @@ from ethereum.exceptions import (
 from ethereum.state import Address
 
 from .exceptions import (
+    BlobCountExceededError,
+    EmptyAuthorizationListError,
     FrameCountError,
     InitCodeTooLargeError,
+    InvalidBlobVersionedHashError,
     InvalidFrameError,
+    NoBlobDataError,
+    PriorityFeeGreaterThanMaxFeeError,
+    TransactionTypeContractCreationError,
     TransactionTypeError,
 )
 from .fork_types import Authorization, RegularGas, VersionedHash
@@ -49,6 +55,16 @@ class IntrinsicGasCost:
 
 
 TX_MAX_GAS_LIMIT = Uint(16_777_216)
+
+BLOB_COUNT_LIMIT = 6
+"""
+Maximum number of blobs a single transaction may carry.
+"""
+
+VERSIONED_HASH_VERSION_KZG = b"\x01"
+"""
+Version byte that every blob versioned hash must start with.
+"""
 
 ACCESS_LIST_ADDRESS_FLOOR_TOKENS = Uint(80)
 """
@@ -868,6 +884,40 @@ def validate_transaction(tx: Transaction, sender: Address) -> IntrinsicGasCost:
     """
     from .vm.interpreter import MAX_INIT_CODE_SIZE
 
+    if U256(tx.nonce) >= U256(U64.MAX_VALUE):
+        raise NonceOverflowError("Nonce too high")
+
+    if tx.to == Bytes0(b"") and len(tx.data) > MAX_INIT_CODE_SIZE:
+        raise InitCodeTooLargeError("Code size too large")
+
+    if isinstance(tx, FeeMarketCapableTransaction):
+        if tx.max_fee_per_gas < tx.max_priority_fee_per_gas:
+            raise PriorityFeeGreaterThanMaxFeeError(
+                "priority fee greater than max fee"
+            )
+
+    if isinstance(tx, BlobTransaction):
+        blob_count = len(tx.blob_versioned_hashes)
+        if blob_count == 0:
+            raise NoBlobDataError("no blob data in transaction")
+        if blob_count > BLOB_COUNT_LIMIT:
+            raise BlobCountExceededError(
+                f"Tx has {blob_count} blobs. Max allowed: {BLOB_COUNT_LIMIT}"
+            )
+        for blob_versioned_hash in tx.blob_versioned_hashes:
+            if blob_versioned_hash[0:1] != VERSIONED_HASH_VERSION_KZG:
+                raise InvalidBlobVersionedHashError(
+                    "invalid blob versioned hash"
+                )
+
+    if isinstance(tx, (BlobTransaction, SetCodeTransaction)):
+        if not isinstance(tx.to, Address):
+            raise TransactionTypeContractCreationError(tx)
+
+    if isinstance(tx, SetCodeTransaction):
+        if not any(tx.authorizations):
+            raise EmptyAuthorizationListError("empty authorization list")
+
     intrinsic = calculate_intrinsic_cost(tx, sender)
 
     if isinstance(tx, FrameTransaction):
@@ -882,8 +932,6 @@ def validate_transaction(tx: Transaction, sender: Address) -> IntrinsicGasCost:
             raise InsufficientTransactionGasError(
                 "Insufficient calldata floor"
             )
-        if tx.to == Bytes0(b"") and len(tx.data) > MAX_INIT_CODE_SIZE:
-            raise InitCodeTooLargeError("Code size too large")
 
     if intrinsic.regular > TX_MAX_GAS_LIMIT:
         raise InsufficientTransactionGasError(
@@ -893,8 +941,6 @@ def validate_transaction(tx: Transaction, sender: Address) -> IntrinsicGasCost:
         raise InsufficientTransactionGasError(
             "Intrinsic calldata floor exceeds TX_MAX_GAS_LIMIT"
         )
-    if U256(tx.nonce) >= U256(U64.MAX_VALUE):
-        raise NonceOverflowError("Nonce too high")
 
     return intrinsic
 
