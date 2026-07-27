@@ -111,6 +111,13 @@ class NoBlobDataError(InvalidTransaction):
     """
 
 
+class InvalidMaxFeePerBlobGas(InvalidTransaction):
+    """
+    The transaction carries no blobs but has a nonzero
+    `max_fee_per_blob_gas`.
+    """
+
+
 class BlobCountExceededError(InvalidTransaction):
     """
     The transaction has more blobs than the limit.
