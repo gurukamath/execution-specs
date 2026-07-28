@@ -262,7 +262,7 @@ def process_top_level(
 
     """
     gas_meter = GasMeter(
-        gas_left=tx_env.gas,
+        gas_left=tx_env.execution_gas_grant,
         state_gas_left=tx_env.state_gas_reservoir,
         state_gas_baseline=tx_env.state_gas_reservoir,
     )
@@ -304,7 +304,8 @@ def process_top_level(
         accounts_to_delete = evm.accounts_to_delete
 
     tx_end = TransactionEnd(
-        int(tx_env.gas) - int(gas_meter.gas_left), evm.output, evm.error
+        int(tx_env.execution_gas_grant) - int(gas_meter.gas_left),
+        evm.output, evm.error,
     )
     evm_trace(evm, tx_end)
 

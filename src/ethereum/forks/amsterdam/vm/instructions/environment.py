@@ -320,7 +320,7 @@ def gasprice(evm: Evm) -> None:
     charge_gas(evm, GasCosts.OPCODE_GASPRICE)
 
     # OPERATION
-    push(evm.stack, U256(evm.tx_env.gas_price))
+    push(evm.stack, U256(evm.tx_env.effective_gas_price))
 
     # PROGRAM COUNTER
     evm.pc += Uint(1)

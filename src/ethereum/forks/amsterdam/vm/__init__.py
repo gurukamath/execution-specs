@@ -129,8 +129,9 @@ class TransactionEnvironment:
     is_create: bool
     data: Bytes
     value: U256
-    gas_price: Uint
-    gas: Uint
+    gas_limit: Uint
+    effective_gas_price: Uint
+    execution_gas_grant: Uint
     state_gas_reservoir: Uint
     access_list_addresses: Set[Address]
     access_list_storage_keys: Set[Tuple[Address, Bytes32]]
