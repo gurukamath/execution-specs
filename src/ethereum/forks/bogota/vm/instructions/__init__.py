@@ -15,19 +15,22 @@ implementations.
 import enum
 from typing import Callable, Dict
 
+from ...eips import EIP_8141
 from . import arithmetic as arithmetic_instructions
 from . import bitwise as bitwise_instructions
 from . import block as block_instructions
 from . import comparison as comparison_instructions
 from . import control_flow as control_flow_instructions
 from . import environment as environment_instructions
-from . import frame as frame_instructions
 from . import keccak as keccak_instructions
 from . import log as log_instructions
 from . import memory as memory_instructions
 from . import stack as stack_instructions
 from . import storage as storage_instructions
 from . import system as system_instructions
+
+if EIP_8141:
+    from . import frame as frame_instructions
 
 
 class Ops(enum.Enum):
@@ -209,14 +212,15 @@ class Ops(enum.Enum):
     LOG3 = 0xA3
     LOG4 = 0xA4
 
-    # Frame Transaction Operations
-    APPROVE = 0xAA
-    TXPARAM = 0xB0
-    FRAMEDATALOAD = 0xB1
-    FRAMEDATACOPY = 0xB2
-    FRAMEPARAM = 0xB3
-    SIGPARAM = 0xB4
-    SIGDATACOPY = 0xB5
+    if EIP_8141:
+        # Frame Transaction Operations
+        APPROVE = 0xAA
+        TXPARAM = 0xB0
+        FRAMEDATALOAD = 0xB1
+        FRAMEDATACOPY = 0xB2
+        FRAMEPARAM = 0xB3
+        SIGPARAM = 0xB4
+        SIGDATACOPY = 0xB5
 
     # System Operations
     CREATE = 0xF0
@@ -375,13 +379,6 @@ op_implementation: Dict[Ops, Callable] = {
     Ops.LOG2: log_instructions.log2,
     Ops.LOG3: log_instructions.log3,
     Ops.LOG4: log_instructions.log4,
-    Ops.APPROVE: frame_instructions.approve,
-    Ops.TXPARAM: frame_instructions.txparam,
-    Ops.FRAMEDATALOAD: frame_instructions.framedataload,
-    Ops.FRAMEDATACOPY: frame_instructions.framedatacopy,
-    Ops.FRAMEPARAM: frame_instructions.frameparam,
-    Ops.SIGPARAM: frame_instructions.sigparam,
-    Ops.SIGDATACOPY: frame_instructions.sigdatacopy,
     Ops.CREATE: system_instructions.create,
     Ops.RETURN: system_instructions.return_,
     Ops.CALL: system_instructions.call,
@@ -392,3 +389,16 @@ op_implementation: Dict[Ops, Callable] = {
     Ops.REVERT: system_instructions.revert,
     Ops.CREATE2: system_instructions.create2,
 }
+
+if EIP_8141:
+    op_implementation.update(
+        {
+            Ops.APPROVE: frame_instructions.approve,
+            Ops.TXPARAM: frame_instructions.txparam,
+            Ops.FRAMEDATALOAD: frame_instructions.framedataload,
+            Ops.FRAMEDATACOPY: frame_instructions.framedatacopy,
+            Ops.FRAMEPARAM: frame_instructions.frameparam,
+            Ops.SIGPARAM: frame_instructions.sigparam,
+            Ops.SIGDATACOPY: frame_instructions.sigdatacopy,
+        }
+    )
