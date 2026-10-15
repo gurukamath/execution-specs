@@ -10,6 +10,7 @@ from ethereum.cancun.blocks import Withdrawal
 
 from ethereum.ethash import *
 from ethereum.fork_criteria import Unscheduled
+from ethereum.forks.bogota.eips import EIP_8141, OWNED_MODULES, REQUIRES
 from ethereum.forks.bogota.transactions.frame_transaction import (
     FrameMode,
 )
@@ -45,6 +46,12 @@ Withdrawal.validator_index
 
 # src/ethereum/fork_criteria.py
 Unscheduled
+
+# src/ethereum/forks/bogota/eips.py - read by the guard lint and the
+# fold codemod; EIP_8141 leaves this list with the first guard
+EIP_8141
+REQUIRES
+OWNED_MODULES
 
 # src/ethereum/forks/bogota/transactions/frame_transaction.py -
 # constructed while decoding transactions, never compared explicitly

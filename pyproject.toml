@@ -499,6 +499,10 @@ warn_unused_ignores = true
 warn_unused_configs = true
 warn_redundant_casts = true
 ignore_missing_imports = false
+# EIP feature flags of the fork under development; every checked-in
+# flag is True, so their `else` branches are type-checked only on
+# folded output.
+always_true = ["EIP_8141"]
 mypy_path = ["src", "packages/testing/src", "packages/testing/stubs"]
 files = ["src", "tests", "packages"]
 enable_error_code = [
