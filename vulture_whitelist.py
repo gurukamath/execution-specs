@@ -34,6 +34,13 @@ from ethereum_spec_tools.loaders.transaction_loader import (
 )
 from ethereum_spec_tools.new_fork.codemod.comment import CommentReplaceCommand
 from ethereum_spec_tools.new_fork.codemod.constant import SetConstantCommand
+from ethereum_spec_tools.new_fork.codemod.feature_guards import (
+    FoldFeatureGuardsCommand,
+    _ConditionalNameCollector,
+    _DecidedEntryRemover,
+    _DedentDocstrings,
+    _SurvivingFlagFinder,
+)
 from ethereum_spec_tools.new_fork.codemod.string_replace import (
     StringReplaceCommand,
 )
@@ -140,6 +147,29 @@ GlacierForksHygiene.visit_Pass
 # src/ethereum_spec_tools/lint/lints/glacier_forks_hygiene.py
 ImportHygiene
 ImportHygiene.visit_AnnAssign
+
+# src/ethereum_spec_tools/new_fork/codemod/feature_guards.py - libcst
+# visitor hooks and command-line entry points
+FoldFeatureGuardsCommand
+FoldFeatureGuardsCommand.METADATA_DEPENDENCIES
+FoldFeatureGuardsCommand.add_args
+FoldFeatureGuardsCommand.leave_If
+FoldFeatureGuardsCommand.leave_IndentedBlock
+FoldFeatureGuardsCommand.leave_ImportFrom
+FoldFeatureGuardsCommand.visit_Annotation
+FoldFeatureGuardsCommand.leave_Annotation
+FoldFeatureGuardsCommand.leave_FunctionDef
+FoldFeatureGuardsCommand.leave_BinaryOperation
+FoldFeatureGuardsCommand.leave_Subscript
+_ConditionalNameCollector.visit_If
+_DedentDocstrings.visit_SimpleStatementLine
+_DedentDocstrings.leave_SimpleStatementLine
+_DedentDocstrings.leave_SimpleString
+_SurvivingFlagFinder.visit_Name
+_DecidedEntryRemover.visit_DictElement
+_DecidedEntryRemover.leave_DictElement
+_DecidedEntryRemover.leave_Dict
+_DecidedEntryRemover.leave_Element
 
 # src/ethereum_spec_tools/new_fork/codemod/constant.py
 SetConstantCommand

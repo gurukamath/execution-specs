@@ -98,6 +98,10 @@ from .vm.gas import (
 )
 from .vm.interpreter import TransactionOutput, process_top_level
 
+if EIP_8141:
+    from .frame_processing import process_frame_transaction
+    from .transactions.frame_transaction import FrameTransaction
+
 BASE_FEE_MAX_CHANGE_DENOMINATOR = Uint(8)
 ELASTICITY_MULTIPLIER = Uint(2)
 EMPTY_OMMER_HASH = keccak256(rlp.encode([]))
@@ -131,10 +135,6 @@ HISTORY_STORAGE_ADDRESS = hex_to_address(
 MAX_BLOCK_SIZE = 10_485_760
 SAFETY_MARGIN = 2_097_152
 MAX_RLP_BLOCK_SIZE = MAX_BLOCK_SIZE - SAFETY_MARGIN
-
-if EIP_8141:
-    from .frame_processing import process_frame_transaction
-    from .transactions.frame_transaction import FrameTransaction
 
 
 @final
