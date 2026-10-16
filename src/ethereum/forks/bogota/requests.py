@@ -42,9 +42,13 @@ from ethereum.exceptions import InvalidBlock
 from ethereum.merkle_patricia_trie import trie_get
 from ethereum.utils.hexadecimal import hex_to_bytes32
 
-from .blocks import FrameTransactionReceipt, decode_receipt
+from .blocks import decode_receipt
+from .eips import EIP_8141
 from .utils.hexadecimal import hex_to_address
 from .vm import BlockOutput
+
+if EIP_8141:
+    from .blocks import FrameTransactionReceipt
 
 DEPOSIT_CONTRACT_ADDRESS = hex_to_address(
     "0x00000000219ab540356cbb839cbe05303d7705fa"
@@ -292,14 +296,17 @@ def parse_deposit_requests(block_output: BlockOutput) -> Bytes:
         receipt = trie_get(block_output.receipts_trie, key)
         assert receipt is not None
         decoded_receipt = decode_receipt(receipt)
-        if isinstance(decoded_receipt, FrameTransactionReceipt):
-            # A frame transaction's logs are its frames' logs, in
-            # frame order.
-            logs = tuple(
-                log
-                for frame_receipt in decoded_receipt.frame_receipts
-                for log in frame_receipt.logs
-            )
+        if EIP_8141:
+            if isinstance(decoded_receipt, FrameTransactionReceipt):
+                # A frame transaction's logs are its frames' logs, in
+                # frame order.
+                logs = tuple(
+                    log
+                    for frame_receipt in decoded_receipt.frame_receipts
+                    for log in frame_receipt.logs
+                )
+            else:
+                logs = decoded_receipt.logs
         else:
             logs = decoded_receipt.logs
         for log in logs:
