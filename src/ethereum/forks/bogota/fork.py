@@ -40,9 +40,9 @@ from .block_access_lists import (
 )
 from .blocks import Block, Header, Log, Receipt, Withdrawal, encode_receipt
 from .bloom import logs_bloom
+from .eips import EIP_8141
 from .exceptions import WrongChainIdError
 from .fork_types import Authorization, BlockAccessIndex, ExecutionGas, StateGas
-from .frame_processing import process_frame_transaction
 from .requests import (
     BUILDER_DEPOSIT_REQUEST_TYPE,
     BUILDER_EXIT_REQUEST_TYPE,
@@ -80,7 +80,6 @@ from .transactions import (
     recover_sender,
     validate_transaction,
 )
-from .transactions.frame_transaction import FrameTransaction
 from .utils.address import compute_contract_address
 from .utils.hexadecimal import hex_to_address
 from .vm.eoa_delegation import is_valid_delegation
@@ -132,6 +131,10 @@ HISTORY_STORAGE_ADDRESS = hex_to_address(
 MAX_BLOCK_SIZE = 10_485_760
 SAFETY_MARGIN = 2_097_152
 MAX_RLP_BLOCK_SIZE = MAX_BLOCK_SIZE - SAFETY_MARGIN
+
+if EIP_8141:
+    from .frame_processing import process_frame_transaction
+    from .transactions.frame_transaction import FrameTransaction
 
 
 @final
@@ -537,22 +540,28 @@ def check_transaction(
         limit.
 
     """
-    assert not isinstance(tx, FrameTransaction)
+    if EIP_8141:
+        assert not isinstance(tx, FrameTransaction)
 
     sender = recover_sender(tx)
     intrinsic = validate_transaction(tx, sender)
     tx_state = TransactionState(parent=block_env.state)
 
-    # Under the reservoir model any part of the gas limit can end up
-    # in either dimension, so the whole limit is reserved in both; a
-    # single transaction's execution gas is capped by EIP-7825.
-    check_block_gas_capacity(
-        block_env,
-        block_output,
-        min(GasCosts.TX_MAX_GAS_LIMIT, tx.gas),
-        tx.gas,
-        calculate_total_blob_gas(tx),
-    )
+    if EIP_8141:
+        # Under the reservoir model any part of the gas limit can end up
+        # in either dimension, so the whole limit is reserved in both; a
+        # single transaction's execution gas is capped by EIP-7825.
+        check_block_gas_capacity(
+            block_env,
+            block_output,
+            min(GasCosts.TX_MAX_GAS_LIMIT, tx.gas),
+            tx.gas,
+            calculate_total_blob_gas(tx),
+        )
+    else:
+        check_block_gas_capacity(
+            block_env, block_output, tx.gas, calculate_total_blob_gas(tx)
+        )
 
     sender_account = get_account(tx_state, sender)
 
@@ -614,29 +623,51 @@ def check_transaction(
     if is_create or tx.value > U256(0):
         accounts_with_paid_writes.add(recipient)
 
-    return vm.TransactionEnvironment(
-        origin=sender,
-        gas_limit=tx.gas,
-        effective_gas_price=effective_gas_price,
-        execution_gas_grant=allocation.execution_gas,
-        state_gas_reservoir=allocation.state_gas_reservoir,
-        calldata_floor=intrinsic.calldata_floor,
-        access_list_addresses=access_list_addresses,
-        access_list_storage_keys=access_list_storage_keys,
-        accounts_with_paid_writes=accounts_with_paid_writes,
-        state=tx_state,
-        blob_versioned_hashes=blob_versioned_hashes,
-        authorizations=authorizations,
-        index_in_block=index,
-        tx_hash=get_transaction_hash(encode_transaction(tx)),
-        top_level_context=vm.TopLevelContext(
+    if EIP_8141:
+        return vm.TransactionEnvironment(
+            origin=sender,
+            gas_limit=tx.gas,
+            effective_gas_price=effective_gas_price,
+            execution_gas_grant=allocation.execution_gas,
+            state_gas_reservoir=allocation.state_gas_reservoir,
+            calldata_floor=intrinsic.calldata_floor,
+            access_list_addresses=access_list_addresses,
+            access_list_storage_keys=access_list_storage_keys,
+            accounts_with_paid_writes=accounts_with_paid_writes,
+            state=tx_state,
+            blob_versioned_hashes=blob_versioned_hashes,
+            authorizations=authorizations,
+            index_in_block=index,
+            tx_hash=get_transaction_hash(encode_transaction(tx)),
+            top_level_context=vm.TopLevelContext(
+                recipient=recipient,
+                is_create=is_create,
+                data=tx.data,
+                value=tx.value,
+            ),
+            frame_context=None,
+        )
+    else:
+        return vm.TransactionEnvironment(
+            origin=sender,
             recipient=recipient,
             is_create=is_create,
             data=tx.data,
             value=tx.value,
-        ),
-        frame_context=None,
-    )
+            gas_limit=tx.gas,
+            effective_gas_price=effective_gas_price,
+            execution_gas_grant=allocation.execution_gas,
+            state_gas_reservoir=allocation.state_gas_reservoir,
+            calldata_floor=intrinsic.calldata_floor,
+            access_list_addresses=access_list_addresses,
+            access_list_storage_keys=access_list_storage_keys,
+            accounts_with_paid_writes=accounts_with_paid_writes,
+            state=tx_state,
+            blob_versioned_hashes=blob_versioned_hashes,
+            authorizations=authorizations,
+            index_in_block=index,
+            tx_hash=get_transaction_hash(encode_transaction(tx)),
+        )
 
 
 def make_receipt(
@@ -761,32 +792,57 @@ def process_unchecked_system_transaction(
     """
     system_tx_state = TransactionState(parent=block_env.state)
 
-    tx_env = vm.TransactionEnvironment(
-        origin=SYSTEM_ADDRESS,
-        gas_limit=SYSTEM_TRANSACTION_GAS,
-        effective_gas_price=block_env.base_fee_per_gas,
-        execution_gas_grant=SYSTEM_TRANSACTION_GAS,
-        state_gas_reservoir=StateGas(
-            StateGasCosts.STORAGE_SET * SYSTEM_MAX_SSTORES_PER_CALL
-        ),
-        calldata_floor=Uint(0),
-        access_list_addresses=set(),
-        access_list_storage_keys=set(),
-        # A system transaction charges no gas, so no write is paid for.
-        accounts_with_paid_writes=set(),
-        state=system_tx_state,
-        blob_versioned_hashes=(),
-        authorizations=(),
-        index_in_block=None,
-        tx_hash=None,
-        top_level_context=vm.TopLevelContext(
+    if EIP_8141:
+        tx_env = vm.TransactionEnvironment(
+            origin=SYSTEM_ADDRESS,
+            gas_limit=SYSTEM_TRANSACTION_GAS,
+            effective_gas_price=block_env.base_fee_per_gas,
+            execution_gas_grant=SYSTEM_TRANSACTION_GAS,
+            state_gas_reservoir=StateGas(
+                StateGasCosts.STORAGE_SET * SYSTEM_MAX_SSTORES_PER_CALL
+            ),
+            calldata_floor=Uint(0),
+            access_list_addresses=set(),
+            access_list_storage_keys=set(),
+            # A system transaction charges no gas, so no write is paid for.
+            accounts_with_paid_writes=set(),
+            state=system_tx_state,
+            blob_versioned_hashes=(),
+            authorizations=(),
+            index_in_block=None,
+            tx_hash=None,
+            top_level_context=vm.TopLevelContext(
+                recipient=target_address,
+                is_create=False,
+                data=data,
+                value=U256(0),
+            ),
+            frame_context=None,
+        )
+    else:
+        tx_env = vm.TransactionEnvironment(
+            origin=SYSTEM_ADDRESS,
             recipient=target_address,
             is_create=False,
             data=data,
             value=U256(0),
-        ),
-        frame_context=None,
-    )
+            gas_limit=SYSTEM_TRANSACTION_GAS,
+            effective_gas_price=block_env.base_fee_per_gas,
+            execution_gas_grant=SYSTEM_TRANSACTION_GAS,
+            state_gas_reservoir=StateGas(
+                StateGasCosts.STORAGE_SET * SYSTEM_MAX_SSTORES_PER_CALL
+            ),
+            calldata_floor=Uint(0),
+            access_list_addresses=set(),
+            access_list_storage_keys=set(),
+            # A system transaction charges no gas, so no write is paid for.
+            accounts_with_paid_writes=set(),
+            state=system_tx_state,
+            blob_versioned_hashes=(),
+            authorizations=(),
+            index_in_block=None,
+            tx_hash=None,
+        )
 
     system_tx_output = process_top_level(block_env, tx_env)
 
@@ -1065,8 +1121,11 @@ def process_transaction(
             actual=tx_chain_id,
         )
 
-    if isinstance(tx, FrameTransaction):
-        return process_frame_transaction(block_env, block_output, tx, index)
+    if EIP_8141:
+        if isinstance(tx, FrameTransaction):
+            return process_frame_transaction(
+                block_env, block_output, tx, index
+            )
 
     tx_env = check_transaction(block_env, block_output, tx, index)
 
