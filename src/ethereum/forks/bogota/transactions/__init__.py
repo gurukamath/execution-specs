@@ -23,7 +23,6 @@ from ethereum.exceptions import (
 )
 from ethereum.state import Address
 
-from ..eips import EIP_8141
 from ..exceptions import (
     BlobCountExceededError,
     EmptyAuthorizationListError,
@@ -37,9 +36,7 @@ from ..exceptions import (
     TransactionTypeError,
 )
 from ..fork_types import Authorization, ExecutionGas, VersionedHash
-
-if EIP_8141:
-    from .frame_transaction import FrameTransaction
+from .frame_transaction import FrameTransaction
 
 
 @final
@@ -544,18 +541,17 @@ See [`FeeMarketTransaction`][fmt] for more details.
 """  # noqa: E501
 
 
-if EIP_8141:
-    BlobCapableTransaction = BlobTransaction | FrameTransaction
-    """
-    Transaction types that can carry [EIP-4844] blobs.
+BlobCapableTransaction = BlobTransaction | FrameTransaction
+"""
+Transaction types that can carry [EIP-4844] blobs.
 
-    See [`BlobTransaction`][bt] and [`FrameTransaction`][ftx] for more
-    details.
+See [`BlobTransaction`][bt] and [`FrameTransaction`][ftx] for more
+details.
 
-    [EIP-4844]: https://eips.ethereum.org/EIPS/eip-4844
-    [bt]: ref:ethereum.forks.bogota.transactions.BlobTransaction
-    [ftx]: ref:ethereum.forks.bogota.transactions.frame_transaction.FrameTransaction
-    """  # noqa: E501
+[EIP-4844]: https://eips.ethereum.org/EIPS/eip-4844
+[bt]: ref:ethereum.forks.bogota.transactions.BlobTransaction
+[ftx]: ref:ethereum.forks.bogota.transactions.frame_transaction.FrameTransaction
+"""  # noqa: E501
 
 
 def encode_transaction(tx: Transaction) -> LegacyTransaction | Bytes:
@@ -566,9 +562,8 @@ def encode_transaction(tx: Transaction) -> LegacyTransaction | Bytes:
     Legacy transactions are returned as-is, while other transaction types
     are prefixed with their type identifier and RLP encoded.
     """
-    if EIP_8141:
-        if isinstance(tx, FrameTransaction):
-            return b"\x06" + rlp.encode(tx)
+    if isinstance(tx, FrameTransaction):
+        return b"\x06" + rlp.encode(tx)
     if isinstance(tx, LegacyTransaction):
         return tx
     elif isinstance(tx, AccessListTransaction):
@@ -598,9 +593,8 @@ def decode_transaction(tx: LegacyTransaction | Bytes) -> Transaction:
     if isinstance(tx, Bytes):
         if len(tx) == 0:
             raise InvalidBlock("empty transaction")
-        if EIP_8141:
-            if tx[0] == 6:
-                return rlp.decode_to(FrameTransaction, tx[1:])
+        if tx[0] == 6:
+            return rlp.decode_to(FrameTransaction, tx[1:])
         if tx[0] == 1:
             return rlp.decode_to(AccessListTransaction, tx[1:])
         elif tx[0] == 2:
@@ -663,8 +657,7 @@ def validate_transaction(tx: Transaction, sender: Address) -> IntrinsicGasCost:
     from ..vm.gas import GasCosts
     from ..vm.interpreter import MAX_INIT_CODE_SIZE
 
-    if EIP_8141:
-        assert not isinstance(tx, FrameTransaction)
+    assert not isinstance(tx, FrameTransaction)
 
     if U256(tx.nonce) >= U256(U64.MAX_VALUE):
         raise NonceOverflowError("Nonce too high")
@@ -764,11 +757,10 @@ def calculate_intrinsic_cost(
     """
     from ..vm.gas import GasCosts, init_code_cost
 
-    if EIP_8141:
-        # Frame transactions never reach this function; their intrinsic
-        # cost is calculated by
-        # `calculate_frame_transaction_intrinsic_cost`.
-        assert not isinstance(tx, FrameTransaction)
+    # Frame transactions never reach this function; their intrinsic
+    # cost is calculated by
+    # `calculate_frame_transaction_intrinsic_cost`.
+    assert not isinstance(tx, FrameTransaction)
 
     tokens_in_calldata = count_tokens_in_data(tx.data)
 
@@ -865,13 +857,9 @@ def calculate_effective_gas_price(
     pays that price outright, which must likewise cover the base fee.
     """
     if isinstance(tx, FeeMarketCapableTransaction):
-        if EIP_8141:
-            if isinstance(tx, FrameTransaction):
-                max_fee_per_gas = tx.fees.max_fee_per_gas
-                max_priority_fee_per_gas = tx.fees.max_priority_fee_per_gas
-            else:
-                max_fee_per_gas = tx.max_fee_per_gas
-                max_priority_fee_per_gas = tx.max_priority_fee_per_gas
+        if isinstance(tx, FrameTransaction):
+            max_fee_per_gas = tx.fees.max_fee_per_gas
+            max_priority_fee_per_gas = tx.fees.max_priority_fee_per_gas
         else:
             max_fee_per_gas = tx.max_fee_per_gas
             max_priority_fee_per_gas = tx.max_priority_fee_per_gas
@@ -900,8 +888,7 @@ def calculate_max_gas_fee(tx: Transaction, gas_limit: Uint) -> Uint:
     Frame transactions never reach this function: their maximum cost is
     anchored on the derived `max_gas` and computed in the frame flow.
     """
-    if EIP_8141:
-        assert not isinstance(tx, FrameTransaction)
+    assert not isinstance(tx, FrameTransaction)
 
     if isinstance(tx, FeeMarketCapableTransaction):
         return gas_limit * tx.max_fee_per_gas
@@ -953,8 +940,7 @@ def recover_sender(tx: Transaction) -> Address:
     the address of the sender of the transaction. It raises an
     `InvalidSignatureError` if the signature values (r, s, v) are invalid.
     """
-    if EIP_8141:
-        assert not isinstance(tx, FrameTransaction)
+    assert not isinstance(tx, FrameTransaction)
 
     r, s = tx.r, tx.s
     if U256(0) >= r or r >= SECP256K1N:

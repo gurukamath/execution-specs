@@ -22,23 +22,20 @@ from ethereum.trace import GasAndRefund, StateGasAndRefund, evm_trace
 from ethereum.utils.numeric import ceil32, taylor_exponential
 
 from ..blocks import Header
-from ..eips import EIP_8141
 from ..exceptions import (
     BlobGasLimitExceededError,
     InsufficientMaxFeePerBlobGasError,
 )
 from ..fork_types import ExecutionGas, StateGas, StateGasPerByte, VersionedHash
-from ..transactions import BlobTransaction, IntrinsicGasCost, Transaction
+from ..transactions import (
+    BlobCapableTransaction,
+    IntrinsicGasCost,
+    Transaction,
+)
 from .exceptions import OutOfGasError
 
-if EIP_8141:
-    from ..transactions import BlobCapableTransaction
-
 if TYPE_CHECKING:
-    from . import BlockEnvironment, BlockOutput, Evm
-
-    if EIP_8141:
-        from . import FrameContext
+    from . import BlockEnvironment, BlockOutput, Evm, FrameContext
 
 
 # These may be patched at runtime by a future gas repricing utility to
@@ -256,69 +253,66 @@ class GasCosts:
     OPCODE_LOG_TOPIC: Final[ExecutionGas] = ExecutionGas(Uint(375))
     OPCODE_SELFDESTRUCT_BASE: Final[ExecutionGas] = ExecutionGas(Uint(5000))
 
-    if EIP_8141:
-        # Frame transactions
-        TX_FRAME_INTRINSIC: Final[ExecutionGas] = ExecutionGas(Uint(12000))
-        """
-        Base gas cost for [`FrameTransaction`][ftx]s, equal to [`TX_BASE`][tb].
+    # Frame transactions
+    TX_FRAME_INTRINSIC: Final[ExecutionGas] = ExecutionGas(Uint(12000))
+    """
+    Base gas cost for [`FrameTransaction`][ftx]s, equal to [`TX_BASE`][tb].
 
-        Frame transactions price signature recovery per signature entry, so
-        the recovery component of the base cost instead covers payer
-        settlement, which regular transactions do not price separately.
+    Frame transactions price signature recovery per signature entry, so
+    the recovery component of the base cost instead covers payer
+    settlement, which regular transactions do not price separately.
 
-        [ftx]: ref:ethereum.forks.bogota.transactions.frame_transaction.FrameTransaction
-        [tb]: ref:ethereum.forks.bogota.vm.gas.GasCosts.TX_BASE
-        """  # noqa: E501
+    [ftx]: ref:ethereum.forks.bogota.transactions.frame_transaction.FrameTransaction
+    [tb]: ref:ethereum.forks.bogota.vm.gas.GasCosts.TX_BASE
+    """  # noqa: E501
 
-        TX_PER_FRAME: Final[ExecutionGas] = ExecutionGas(Uint(475))
-        """
-        Additional per-[`Frame`] gas cost for [`FrameTransaction`][ftx]s.
+    TX_PER_FRAME: Final[ExecutionGas] = ExecutionGas(Uint(475))
+    """
+    Additional per-[`Frame`] gas cost for [`FrameTransaction`][ftx]s.
 
-        [ftx]: ref:ethereum.forks.bogota.transactions.frame_transaction.FrameTransaction
-        [`Frame`]: ref:ethereum.forks.bogota.transactions.frame_transaction.Frame
-        """  # noqa: E501
+    [ftx]: ref:ethereum.forks.bogota.transactions.frame_transaction.FrameTransaction
+    [`Frame`]: ref:ethereum.forks.bogota.transactions.frame_transaction.Frame
+    """  # noqa: E501
 
-        # Frames
-        FRAME_SIGNATURE_SCHEME_SECP256K1: Final[ExecutionGas] = ExecutionGas(
-            Uint(2800)
-        )
-        """
-        Cost for verifying a [`SECP256K1`][s] signature in a
-        [`FrameTransaction`][ftx].
+    # Frames
+    FRAME_SIGNATURE_SCHEME_SECP256K1: Final[ExecutionGas] = ExecutionGas(
+        Uint(2800)
+    )
+    """
+    Cost for verifying a [`SECP256K1`][s] signature in a
+    [`FrameTransaction`][ftx].
 
-        [s]: ref:ethereum.forks.bogota.transactions.frame_transaction.FrameSignatureScheme.SECP256K1
-        [ftx]: ref:ethereum.forks.bogota.transactions.frame_transaction.FrameTransaction
-        """  # noqa: E501
+    [s]: ref:ethereum.forks.bogota.transactions.frame_transaction.FrameSignatureScheme.SECP256K1
+    [ftx]: ref:ethereum.forks.bogota.transactions.frame_transaction.FrameTransaction
+    """  # noqa: E501
 
-        FRAME_SIGNATURE_SCHEME_P256: Final[ExecutionGas] = ExecutionGas(
-            Uint(6700)
-        )
-        """
-        Cost for verifying a [`P256`][s] signature in a [`FrameTransaction`][ftx].
+    FRAME_SIGNATURE_SCHEME_P256: Final[ExecutionGas] = ExecutionGas(Uint(6700))
+    """
+    Cost for verifying a [`P256`][s] signature in a [`FrameTransaction`][ftx].
 
-        [s]: ref:ethereum.forks.bogota.transactions.frame_transaction.FrameSignatureScheme.P256
-        [ftx]: ref:ethereum.forks.bogota.transactions.frame_transaction.FrameTransaction
-        """  # noqa: E501
+    [s]: ref:ethereum.forks.bogota.transactions.frame_transaction.FrameSignatureScheme.P256
+    [ftx]: ref:ethereum.forks.bogota.transactions.frame_transaction.FrameTransaction
+    """  # noqa: E501
 
-        FRAME_SIGNATURE_SCHEME_ARBITRARY: Final[ExecutionGas] = ExecutionGas(
-            Uint(100)
-        )
-        """
-        Cost charged for an [`ARBITRARY`][s] signature entry in a
-        [`FrameTransaction`][ftx]. The protocol does not cryptographically
-        validate these entries; the charge covers making the bytes available
-        for introspection.
+    FRAME_SIGNATURE_SCHEME_ARBITRARY: Final[ExecutionGas] = ExecutionGas(
+        Uint(100)
+    )
+    """
+    Cost charged for an [`ARBITRARY`][s] signature entry in a
+    [`FrameTransaction`][ftx]. The protocol does not cryptographically
+    validate these entries; the charge covers making the bytes available
+    for introspection.
 
-        [s]: ref:ethereum.forks.bogota.transactions.frame_transaction.FrameSignatureScheme.ARBITRARY
-        [ftx]: ref:ethereum.forks.bogota.transactions.frame_transaction.FrameTransaction
-        """  # noqa: E501
+    [s]: ref:ethereum.forks.bogota.transactions.frame_transaction.FrameSignatureScheme.ARBITRARY
+    [ftx]: ref:ethereum.forks.bogota.transactions.frame_transaction.FrameTransaction
+    """  # noqa: E501
 
-        OPCODE_TXPARAM: Final[ExecutionGas] = BASE
-        OPCODE_FRAMEDATALOAD: Final[ExecutionGas] = VERY_LOW
-        OPCODE_FRAMEPARAM: Final[ExecutionGas] = BASE
-        OPCODE_SIGPARAM: Final[ExecutionGas] = BASE
-        OPCODE_FRAMEDATACOPY_BASE: Final[ExecutionGas] = VERY_LOW
-        OPCODE_SIGDATACOPY_BASE: Final[ExecutionGas] = VERY_LOW
+    OPCODE_TXPARAM: Final[ExecutionGas] = BASE
+    OPCODE_FRAMEDATALOAD: Final[ExecutionGas] = VERY_LOW
+    OPCODE_FRAMEPARAM: Final[ExecutionGas] = BASE
+    OPCODE_SIGPARAM: Final[ExecutionGas] = BASE
+    OPCODE_FRAMEDATACOPY_BASE: Final[ExecutionGas] = VERY_LOW
+    OPCODE_SIGDATACOPY_BASE: Final[ExecutionGas] = VERY_LOW
 
 
 MAX_BLOB_GAS_PER_BLOCK: Final[U64] = (
@@ -547,75 +541,74 @@ def charge_state_gas_from_meter(gas_meter: GasMeter, amount: StateGas) -> None:
         raise OutOfGasError
 
 
-if EIP_8141:
+def charge_frame_state_gas(
+    frame_context: "FrameContext", amount: StateGas
+) -> None:
+    """
+    Subtracts `amount` from the executing frame's state gas pool.
 
-    def charge_frame_state_gas(
-        frame_context: "FrameContext", amount: StateGas
-    ) -> None:
-        """
-        Subtracts `amount` from the executing frame's state gas pool.
+    The pool is the only source of state gas within a frame
+    transaction: execution gas can never fund state charges, so a
+    charge exceeding the pool is an exceptional halt of the current
+    call frame, with ordinary out-of-gas semantics.
 
-        The pool is the only source of state gas within a frame
-        transaction: execution gas can never fund state charges, so a
-        charge exceeding the pool is an exceptional halt of the current
-        call frame, with ordinary out-of-gas semantics.
+    Parameters
+    ----------
+    frame_context :
+        The frame transaction's context.
+    amount :
+        The amount of state gas the current operation requires.
 
-        Parameters
-        ----------
-        frame_context :
-            The frame transaction's context.
-        amount :
-            The amount of state gas the current operation requires.
+    """
+    if frame_context.state_gas_left < amount:
+        raise OutOfGasError
+    frame_context.state_gas_left -= amount
 
-        """
-        if frame_context.state_gas_left < amount:
-            raise OutOfGasError
-        frame_context.state_gas_left -= amount
 
-    def credit_frame_state_gas_refund(
-        frame_context: "FrameContext", owner: Uint, amount: StateGas
-    ) -> None:
-        """
-        Credit a state gas refund to the frame that paid the charge, within
-        a frame transaction.
+def credit_frame_state_gas_refund(
+    frame_context: "FrameContext", owner: Uint, amount: StateGas
+) -> None:
+    """
+    Credit a state gas refund to the frame that paid the charge, within
+    a frame transaction.
 
-        The refund lowers the owner's attributed state gas: back into the
-        executing frame's own pool when it is the owner — a frame's
-        refunds can never exceed its own charges, so the pool never
-        exceeds the frame's budget — or out of the owner's receipt
-        otherwise, returning the amount to the payer at settlement without
-        granting the executing frame budget it never declared.
+    The refund lowers the owner's attributed state gas: back into the
+    executing frame's own pool when it is the owner — a frame's
+    refunds can never exceed its own charges, so the pool never
+    exceeds the frame's budget — or out of the owner's receipt
+    otherwise, returning the amount to the payer at settlement without
+    granting the executing frame budget it never declared.
 
-        The caller identifies the owner: the frame recorded in the
-        outstanding-charge ownership map for a storage slot refill, or the
-        executing frame itself when undoing a charge it just paid for an
-        account creation that failed or never happened.
+    The caller identifies the owner: the frame recorded in the
+    outstanding-charge ownership map for a storage slot refill, or the
+    executing frame itself when undoing a charge it just paid for an
+    account creation that failed or never happened.
 
-        Parameters
-        ----------
-        frame_context :
-            The frame transaction's context.
-        owner :
-            Index of the frame that paid the charge.
-        amount :
-            The amount of state gas the original charge paid.
+    Parameters
+    ----------
+    frame_context :
+        The frame transaction's context.
+    owner :
+        Index of the frame that paid the charge.
+    amount :
+        The amount of state gas the original charge paid.
 
-        """
-        if owner == frame_context.current_frame_index:
-            frame_context.state_gas_left += amount
-            # A refund only ever undoes a charge, so the pool never
-            # exceeds the frame's declared budget.
-            frame = frame_context.tx.frames[int(owner)]
-            assert frame_context.state_gas_left <= Uint(frame.gas_limits.state)
-        else:
-            receipt = frame_context.frame_receipts[int(owner)]
-            frame_context.frame_receipts[int(owner)] = replace(
-                receipt,
-                gas_used=replace(
-                    receipt.gas_used,
-                    state=receipt.gas_used.state - Uint(amount),
-                ),
-            )
+    """
+    if owner == frame_context.current_frame_index:
+        frame_context.state_gas_left += amount
+        # A refund only ever undoes a charge, so the pool never
+        # exceeds the frame's declared budget.
+        frame = frame_context.tx.frames[int(owner)]
+        assert frame_context.state_gas_left <= Uint(frame.gas_limits.state)
+    else:
+        receipt = frame_context.frame_receipts[int(owner)]
+        frame_context.frame_receipts[int(owner)] = replace(
+            receipt,
+            gas_used=replace(
+                receipt.gas_used,
+                state=receipt.gas_used.state - Uint(amount),
+            ),
+        )
 
 
 def charge_state_gas(evm: "Evm", amount: StateGas) -> None:
@@ -638,14 +631,11 @@ def charge_state_gas(evm: "Evm", amount: StateGas) -> None:
     """
     evm_trace(evm, StateGasAndRefund(int(amount)))
 
-    if EIP_8141:
-        frame_context = evm.tx_env.frame_context
-        if frame_context is None:
-            charge_state_gas_from_meter(evm.gas_meter, amount)
-        else:
-            charge_frame_state_gas(frame_context, amount)
-    else:
+    frame_context = evm.tx_env.frame_context
+    if frame_context is None:
         charge_state_gas_from_meter(evm.gas_meter, amount)
+    else:
+        charge_frame_state_gas(frame_context, amount)
 
 
 def commit_state_gas(gas_meter: GasMeter) -> None:
@@ -1165,12 +1155,8 @@ def calculate_total_blob_gas(tx: Transaction) -> U64:
         The total blob gas for the transaction.
 
     """
-    if EIP_8141:
-        if isinstance(tx, BlobCapableTransaction):
-            return GasCosts.PER_BLOB * U64(len(tx.blob_versioned_hashes))
-    else:
-        if isinstance(tx, BlobTransaction):
-            return GasCosts.PER_BLOB * U64(len(tx.blob_versioned_hashes))
+    if isinstance(tx, BlobCapableTransaction):
+        return GasCosts.PER_BLOB * U64(len(tx.blob_versioned_hashes))
     return U64(0)
 
 
@@ -1451,110 +1437,109 @@ def settle_transaction_gas(
     )
 
 
-if EIP_8141:
+@final
+@dataclass
+class FrameTransactionGasSettlement:
+    """
+    Settled gas amounts for a finished frame transaction.
 
-    @final
-    @dataclass
-    class FrameTransactionGasSettlement:
-        """
-        Settled gas amounts for a finished frame transaction.
+    Hold the payer-facing total alongside the two block-accounted
+    dimensions so the caller does not have to reconstruct settlement.
+    """
 
-        Hold the payer-facing total alongside the two block-accounted
-        dimensions so the caller does not have to reconstruct settlement.
-        """
+    gas_used: Uint
+    """Total gas charged to the payer, after refund and floor."""
 
-        gas_used: Uint
-        """Total gas charged to the payer, after refund and floor."""
+    execution_gas_used: ExecutionGas
+    """Execution gas the transaction contributes to the block total."""
 
-        execution_gas_used: ExecutionGas
-        """Execution gas the transaction contributes to the block total."""
+    state_gas_used: StateGas
+    """State gas the transaction contributes to the block total."""
 
-        state_gas_used: StateGas
-        """State gas the transaction contributes to the block total."""
 
-    def settle_frame_transaction_gas(
-        standard_gas_limit: Uint,
-        calldata_floor: Uint,
-        tx_unused_gas: Uint,
-        refund_counter: U256,
-        tx_state_gas: StateGas,
-    ) -> FrameTransactionGasSettlement:
-        """
-        Settle a frame transaction's gas after all frames have executed.
+def settle_frame_transaction_gas(
+    standard_gas_limit: Uint,
+    calldata_floor: Uint,
+    tx_unused_gas: Uint,
+    refund_counter: U256,
+    tx_state_gas: StateGas,
+) -> FrameTransactionGasSettlement:
+    """
+    Settle a frame transaction's gas after all frames have executed.
 
-        Compute, in order:
+    Compute, in order:
 
-        - the gas used before refunds, from the settlement anchor less the
-          gas not charged at settlement;
-        - the storage refund, capped at one fifth of the pre-refund usage
-          ([EIP-3529]) — state gas refills bypass the cap by design: a
-          refill reverses a charge for state that was never durably
-          created, and has already reduced the owning frame's receipt, and
-          with it the pre-refund usage;
-        - the payer-facing execution dimension, as the post-refund usage
-          less the final attributed state gas, held to the calldata floor
-          ([EIP-7976]); and
-        - the block-accounted execution dimension, as the pre-refund usage
-          less the final attributed state gas, held to the same floor.
-          Storage refunds therefore reduce what the payer pays without
-          reducing block execution gas ([EIP-7778]).
+    - the gas used before refunds, from the settlement anchor less the
+      gas not charged at settlement;
+    - the storage refund, capped at one fifth of the pre-refund usage
+      ([EIP-3529]) — state gas refills bypass the cap by design: a
+      refill reverses a charge for state that was never durably
+      created, and has already reduced the owning frame's receipt, and
+      with it the pre-refund usage;
+    - the payer-facing execution dimension, as the post-refund usage
+      less the final attributed state gas, held to the calldata floor
+      ([EIP-7976]); and
+    - the block-accounted execution dimension, as the pre-refund usage
+      less the final attributed state gas, held to the same floor.
+      Storage refunds therefore reduce what the payer pays without
+      reducing block execution gas ([EIP-7778]).
 
-        The floor binds the execution dimension alone, so a floor-bound
-        transaction pays the floor plus its state gas in full. The refund
-        cap of a state-dominated transaction can exceed its intrinsic cost
-        plus execution usage, driving the payer-facing subtraction negative,
-        so it is computed in plain integers before the floor clamps it.
+    The floor binds the execution dimension alone, so a floor-bound
+    transaction pays the floor plus its state gas in full. The refund
+    cap of a state-dominated transaction can exceed its intrinsic cost
+    plus execution usage, driving the payer-facing subtraction negative,
+    so it is computed in plain integers before the floor clamps it.
 
-        Parameters
-        ----------
-        standard_gas_limit :
-            The transaction's settlement anchor: intrinsic cost plus the
-            frames' budgets in both dimensions.
-        calldata_floor :
-            The transaction's calldata floor gas.
-        tx_unused_gas :
-            Gas not charged at settlement, over both dimensions: gas left
-            in the frames' pools at frame exit, skipped-frame budgets, and
-            state gas removed from a receipt by a later refill or
-            rollback.
-        refund_counter :
-            The storage refund accrued across all frames.
-        tx_state_gas :
-            The frames' final attributed state gas: the sum of their
-            receipts' state gas usage.
+    Parameters
+    ----------
+    standard_gas_limit :
+        The transaction's settlement anchor: intrinsic cost plus the
+        frames' budgets in both dimensions.
+    calldata_floor :
+        The transaction's calldata floor gas.
+    tx_unused_gas :
+        Gas not charged at settlement, over both dimensions: gas left
+        in the frames' pools at frame exit, skipped-frame budgets, and
+        state gas removed from a receipt by a later refill or
+        rollback.
+    refund_counter :
+        The storage refund accrued across all frames.
+    tx_state_gas :
+        The frames' final attributed state gas: the sum of their
+        receipts' state gas usage.
 
-        Returns
-        -------
-        settlement : `FrameTransactionGasSettlement`
-            The settled gas amounts.
+    Returns
+    -------
+    settlement : `FrameTransactionGasSettlement`
+        The settled gas amounts.
 
-        [EIP-3529]: https://eips.ethereum.org/EIPS/eip-3529
-        [EIP-7778]: https://eips.ethereum.org/EIPS/eip-7778
-        [EIP-7976]: https://eips.ethereum.org/EIPS/eip-7976
+    [EIP-3529]: https://eips.ethereum.org/EIPS/eip-3529
+    [EIP-7778]: https://eips.ethereum.org/EIPS/eip-7778
+    [EIP-7976]: https://eips.ethereum.org/EIPS/eip-7976
 
-        """
-        gas_used_before_refund = standard_gas_limit - tx_unused_gas
-        applied_refund = min(
-            Uint(refund_counter), gas_used_before_refund // Uint(5)
-        )
-        gas_used_after_refund = gas_used_before_refund - applied_refund
+    """
+    gas_used_before_refund = standard_gas_limit - tx_unused_gas
+    applied_refund = min(
+        Uint(refund_counter), gas_used_before_refund // Uint(5)
+    )
+    gas_used_after_refund = gas_used_before_refund - applied_refund
 
-        payer_execution_gas_used = ExecutionGas(
-            Uint(
-                max(
-                    int(gas_used_after_refund) - int(tx_state_gas),
-                    int(calldata_floor),
-                )
-            )
-        )
-        block_execution_gas_used = ExecutionGas(
+    payer_execution_gas_used = ExecutionGas(
+        Uint(
             max(
-                gas_used_before_refund - Uint(tx_state_gas),
-                calldata_floor,
+                int(gas_used_after_refund) - int(tx_state_gas),
+                int(calldata_floor),
             )
         )
-        return FrameTransactionGasSettlement(
-            gas_used=Uint(payer_execution_gas_used) + Uint(tx_state_gas),
-            execution_gas_used=block_execution_gas_used,
-            state_gas_used=tx_state_gas,
+    )
+    block_execution_gas_used = ExecutionGas(
+        max(
+            gas_used_before_refund - Uint(tx_state_gas),
+            calldata_floor,
         )
+    )
+    return FrameTransactionGasSettlement(
+        gas_used=Uint(payer_execution_gas_used) + Uint(tx_state_gas),
+        execution_gas_used=block_execution_gas_used,
+        state_gas_used=tx_state_gas,
+    )

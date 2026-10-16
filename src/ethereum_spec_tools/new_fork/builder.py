@@ -30,7 +30,7 @@ from ethereum.fork_criteria import (
     Unscheduled,
 )
 
-from ..forks import Hardfork
+from ..forks import DEVELOP_FORK_NAME, Hardfork
 from .codemod.feature_guards import FLAG_PATTERN
 
 
@@ -580,20 +580,30 @@ class ForkBuilder:
         self.force = False
         self.format = False
 
-        forks = Hardfork.discover()
+        forks = Hardfork.discover(include_develop=True)
+        generated = [f for f in forks if f.short_name != DEVELOP_FORK_NAME]
 
-        # Find the `Hardfork` object named by `template_fork`.
+        # Find the `Hardfork` object named by `template_fork`, and the fork
+        # that precedes it. The development source precedes nothing and
+        # shares its criteria with the forks generated from it, so its
+        # predecessor is the last fork scheduled strictly before it.
         before = None
         found = None
-        for index, fork in enumerate(forks):
+        for fork in forks:
             if fork.short_name == template_fork:
                 found = fork
-                if index > 0:
-                    before = forks[index - 1]
                 break
 
         if found is None:
             raise ValueError(f"no fork named `{template_fork}` found")
+
+        if found.short_name == DEVELOP_FORK_NAME:
+            earlier = [f for f in generated if f.criteria < found.criteria]
+            before = earlier[-1] if earlier else None
+        else:
+            index = generated.index(found)
+            if index > 0:
+                before = generated[index - 1]
 
         if before:
             assert before.short_name != new_fork
@@ -609,7 +619,7 @@ class ForkBuilder:
             self.output = Path(template_path).parent
 
         # Try to make a sane guess for the activation criteria.
-        if found is forks[-1] or isinstance(found.criteria, Unscheduled):
+        if found is generated[-1] or isinstance(found.criteria, Unscheduled):
             order_index = 0
 
             # check template fork's criteria and bump order_index if needed

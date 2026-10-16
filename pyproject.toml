@@ -181,6 +181,13 @@ packages = [
     "ethereum.forks.bogota.vm.instructions",
     "ethereum.forks.bogota.vm.precompiled_contracts",
     "ethereum.forks.bogota.vm.precompiled_contracts.bls12_381",
+    "ethereum.forks.develop",
+    "ethereum.forks.develop.transactions",
+    "ethereum.forks.develop.utils",
+    "ethereum.forks.develop.vm",
+    "ethereum.forks.develop.vm.instructions",
+    "ethereum.forks.develop.vm.precompiled_contracts",
+    "ethereum.forks.develop.vm.precompiled_contracts.bls12_381",
 ]
 
 [tool.setuptools.package-data]
@@ -273,6 +280,7 @@ version = { attr = "ethereum.__version__" }
 ethereum-spec-lint = "ethereum_spec_tools.lint:main"
 ethereum-spec-sync = "ethereum_spec_tools.sync:main"
 ethereum-spec-new-fork = "ethereum_spec_tools.new_fork.cli:main"
+ethereum-spec-generate-forks = "ethereum_spec_tools.new_fork.generate:main"
 ethereum-spec-patch = "ethereum_spec_tools.patch_tool:main"
 
 [project.entry-points."docc.plugins"]

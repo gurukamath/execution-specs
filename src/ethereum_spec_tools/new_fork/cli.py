@@ -15,7 +15,7 @@ from .builder import ForkBuilder
 
 
 def _make_parser() -> ArgumentParser:
-    forks = Hardfork.discover()
+    forks = Hardfork.discover(include_develop=True)
     fork_short_names = [f.short_name for f in forks]
 
     parser = ArgumentParser(

@@ -26,8 +26,7 @@ from ethereum.state import Address
 from ethereum.utils.byte import left_pad_zero_bytes
 
 from ..block_access_lists import BlockAccessList, BlockAccessListBuilder
-from ..blocks import Log, Receipt, Withdrawal
-from ..eips import EIP_8141
+from ..blocks import FrameReceipt, Log, Receipt, Withdrawal
 from ..fork_types import Authorization, ExecutionGas, StateGas, VersionedHash
 from ..state_tracker import (
     BlockState,
@@ -38,27 +37,27 @@ from ..state_tracker import (
     set_account_balance,
 )
 from ..transactions import LegacyTransaction
-from .gas import GasMeter, StateGasCosts, repay_state_gas_spill
-
-if EIP_8141:
-    from ..blocks import FrameReceipt
-    from ..transactions.frame_transaction import (
-        APPROVE_SCOPE_MASK,
-        FrameFlag,
-        FrameTransaction,
-        resolve_frame_target,
-    )
-    from .gas import charge_frame_state_gas
+from ..transactions.frame_transaction import (
+    APPROVE_SCOPE_MASK,
+    FrameFlag,
+    FrameTransaction,
+    resolve_frame_target,
+)
+from .gas import (
+    GasMeter,
+    StateGasCosts,
+    charge_frame_state_gas,
+    repay_state_gas_spill,
+)
 
 __all__ = ("Environment", "Evm")
 TRANSFER_TOPIC = keccak256(b"Transfer(address,address,uint256)")
 SYSTEM_ADDRESS = Address(
     bytes.fromhex("fffffffffffffffffffffffffffffffffffffffe")
 )
-if EIP_8141:
-    FRAME_ENTRY_POINT = Address(
-        bytes.fromhex("00000000000000000000000000000000000000aa")
-    )
+FRAME_ENTRY_POINT = Address(
+    bytes.fromhex("00000000000000000000000000000000000000aa")
+)
 CALL_SUCCESS = U256(1)
 
 
@@ -173,102 +172,100 @@ class TopLevelContext:
     """
 
 
-if EIP_8141:
+@final
+@dataclass
+class FrameContext:
+    """
+    Frame-transaction state, alive for the whole transaction and
+    visible at every call depth through the transaction environment.
 
-    @final
-    @dataclass
-    class FrameContext:
-        """
-        Frame-transaction state, alive for the whole transaction and
-        visible at every call depth through the transaction environment.
+    The state gas dimension lives here rather than on the gas meters:
+    each frame's pool is shared by every call depth within the frame,
+    never forwarded or split like execution gas. While a frame
+    executes only its pool moves; its attributed state gas is written
+    once, at frame exit, into its receipt — the frame's budget less
+    the remaining pool. A later frame's cross-frame refill lowers the
+    owning frame's receipt entry in place. The pool, the receipts, and
+    the outstanding-charge ownership map roll back with the
+    transaction state, through the same snapshots
+    (`copy_frame_context` / `restore_frame_context`) that already
+    accompany every state snapshot.
+    """
 
-        The state gas dimension lives here rather than on the gas meters:
-        each frame's pool is shared by every call depth within the frame,
-        never forwarded or split like execution gas. While a frame
-        executes only its pool moves; its attributed state gas is written
-        once, at frame exit, into its receipt — the frame's budget less
-        the remaining pool. A later frame's cross-frame refill lowers the
-        owning frame's receipt entry in place. The pool, the receipts, and
-        the outstanding-charge ownership map roll back with the
-        transaction state, through the same snapshots
-        (`copy_frame_context` / `restore_frame_context`) that already
-        accompany every state snapshot.
-        """
+    tx: FrameTransaction
+    """
+    The frame transaction being executed.
+    """
 
-        tx: FrameTransaction
-        """
-        The frame transaction being executed.
-        """
+    signature_hash: Hash32
+    """
+    The transaction's canonical signature hash.
+    """
 
-        signature_hash: Hash32
-        """
-        The transaction's canonical signature hash.
-        """
+    resolved_signers: Tuple[Optional[Address], ...]
+    """
+    The signer each signature entry resolved to; `None` for
+    `ARBITRARY` entries, to which the protocol assigns no signer.
+    """
 
-        resolved_signers: Tuple[Optional[Address], ...]
-        """
-        The signer each signature entry resolved to; `None` for
-        `ARBITRARY` entries, to which the protocol assigns no signer.
-        """
+    standard_gas_limit: Uint
+    """
+    Settlement anchor: the transaction's intrinsic cost plus the sum
+    of the frames' gas budgets in both dimensions. The environment's
+    `gas_limit` carries the inclusion-facing `max_gas` instead.
+    """
 
-        standard_gas_limit: Uint
-        """
-        Settlement anchor: the transaction's intrinsic cost plus the sum
-        of the frames' gas budgets in both dimensions. The environment's
-        `gas_limit` carries the inclusion-facing `max_gas` instead.
-        """
+    max_cost: Uint
+    """
+    The maximum cost of the transaction: `max_gas` priced at the fee
+    cap, plus the blob fee. Collected from the payer when a frame
+    approves payment.
+    """
 
-        max_cost: Uint
-        """
-        The maximum cost of the transaction: `max_gas` priced at the fee
-        cap, plus the blob fee. Collected from the payer when a frame
-        approves payment.
-        """
+    current_frame_index: Uint
+    """
+    Index of the frame currently executing, advanced by the frame
+    loop.
+    """
 
-        current_frame_index: Uint
-        """
-        Index of the frame currently executing, advanced by the frame
-        loop.
-        """
+    frame_receipts: List[FrameReceipt]
+    """
+    Receipts of the completed frames, growing as frames complete.
 
-        frame_receipts: List[FrameReceipt]
-        """
-        Receipts of the completed frames, growing as frames complete.
+    Entries are not final until the transaction ends: a later frame's
+    refill of a state charge lowers the owning frame's
+    `gas_used.state`, and an atomic batch unroll zeroes the state gas
+    and empties the logs of the unrolled frames' receipts.
+    """
 
-        Entries are not final until the transaction ends: a later frame's
-        refill of a state charge lowers the owning frame's
-        `gas_used.state`, and an atomic batch unroll zeroes the state gas
-        and empties the logs of the unrolled frames' receipts.
-        """
+    payer: Optional[Address]
+    """
+    The account that approved paying for the transaction's gas, once
+    one has.
+    """
 
-        payer: Optional[Address]
-        """
-        The account that approved paying for the transaction's gas, once
-        one has.
-        """
+    sender_approved: bool
+    """
+    Whether the sender has approved future frames executing on its
+    behalf.
+    """
 
-        sender_approved: bool
-        """
-        Whether the sender has approved future frames executing on its
-        behalf.
-        """
+    state_gas_left: StateGas
+    """
+    State gas remaining in the executing frame's pool, seeded from the
+    frame's declared state budget at frame entry. EVM call frames at
+    every depth within the frame draw from it directly; a charge
+    exceeding it halts the current call frame exceptionally.
+    """
 
-        state_gas_left: StateGas
-        """
-        State gas remaining in the executing frame's pool, seeded from the
-        frame's declared state budget at frame entry. EVM call frames at
-        every depth within the frame draw from it directly; a charge
-        exceeding it halts the current call frame exceptionally.
-        """
-
-        outstanding_charge_owners: Dict[Tuple[Address, Bytes32], Uint]
-        """
-        For each storage slot whose creation charge is outstanding, the
-        index of the frame that paid it. A refill of the slot lowers the
-        owner frame's attributed state gas — the executing frame's pool
-        when the owner is still executing, its receipt entry otherwise —
-        and clears the entry either way.
-        """
+    outstanding_charge_owners: Dict[Tuple[Address, Bytes32], Uint]
+    """
+    For each storage slot whose creation charge is outstanding, the
+    index of the frame that paid it. A refill of the slot lowers the
+    owner frame's attributed state gas — the executing frame's pool
+    when the owner is still executing, its receipt entry otherwise —
+    and clears the entry either way.
+    """
 
 
 @final
@@ -304,144 +301,141 @@ class TransactionEnvironment:
     flow entries assert it.
     """
 
-    if EIP_8141:
-        frame_context: Optional[FrameContext] = None
-        """
-        Present iff this is a frame transaction. The frame-only opcodes
-        exceptionally halt when this is `None`.
-        """
+    frame_context: Optional[FrameContext] = None
+    """
+    Present iff this is a frame transaction. The frame-only opcodes
+    exceptionally halt when this is `None`.
+    """
 
 
-if EIP_8141:
+def copy_frame_context(
+    tx_env: TransactionEnvironment,
+) -> Optional[FrameContext]:
+    """
+    Copy a frame transaction's context, to be restored on failure.
 
-    def copy_frame_context(
-        tx_env: TransactionEnvironment,
-    ) -> Optional[FrameContext]:
-        """
-        Copy a frame transaction's context, to be restored on failure.
+    Paired with every transaction-state snapshot taken while a frame
+    executes: `APPROVE`'s state-side effects (the sender's nonce
+    increment and the payment escrow) are transaction-state writes
+    that roll back with the state, so the context fields recording the
+    approval must roll back in the same motion — as must the state gas
+    pool, the receipts a cross-frame refill may have edited, and the
+    outstanding-charge ownership map. Return `None` for other
+    transaction types, whose environments carry no frame context.
+    """
+    frame_context = tx_env.frame_context
+    if frame_context is None:
+        return None
+    return replace(
+        frame_context,
+        frame_receipts=list(frame_context.frame_receipts),
+        outstanding_charge_owners=dict(
+            frame_context.outstanding_charge_owners
+        ),
+    )
 
-        Paired with every transaction-state snapshot taken while a frame
-        executes: `APPROVE`'s state-side effects (the sender's nonce
-        increment and the payment escrow) are transaction-state writes
-        that roll back with the state, so the context fields recording the
-        approval must roll back in the same motion — as must the state gas
-        pool, the receipts a cross-frame refill may have edited, and the
-        outstanding-charge ownership map. Return `None` for other
-        transaction types, whose environments carry no frame context.
-        """
-        frame_context = tx_env.frame_context
-        if frame_context is None:
-            return None
-        return replace(
-            frame_context,
-            frame_receipts=list(frame_context.frame_receipts),
-            outstanding_charge_owners=dict(
-                frame_context.outstanding_charge_owners
-            ),
-        )
 
-    def restore_frame_context(
-        tx_env: TransactionEnvironment,
-        snapshot: Optional[FrameContext],
-    ) -> None:
-        """
-        Restore the mutable fields of a frame transaction's context from a
-        copy taken by `copy_frame_context`; a no-op for other transaction
-        types.
-        """
-        if snapshot is None:
-            return
-        frame_context = tx_env.frame_context
-        assert frame_context is not None
-        frame_context.current_frame_index = snapshot.current_frame_index
-        frame_context.frame_receipts = snapshot.frame_receipts
-        frame_context.payer = snapshot.payer
-        frame_context.sender_approved = snapshot.sender_approved
-        frame_context.state_gas_left = snapshot.state_gas_left
-        frame_context.outstanding_charge_owners = (
-            snapshot.outstanding_charge_owners
-        )
+def restore_frame_context(
+    tx_env: TransactionEnvironment,
+    snapshot: Optional[FrameContext],
+) -> None:
+    """
+    Restore the mutable fields of a frame transaction's context from a
+    copy taken by `copy_frame_context`; a no-op for other transaction
+    types.
+    """
+    if snapshot is None:
+        return
+    frame_context = tx_env.frame_context
+    assert frame_context is not None
+    frame_context.current_frame_index = snapshot.current_frame_index
+    frame_context.frame_receipts = snapshot.frame_receipts
+    frame_context.payer = snapshot.payer
+    frame_context.sender_approved = snapshot.sender_approved
+    frame_context.state_gas_left = snapshot.state_gas_left
+    frame_context.outstanding_charge_owners = (
+        snapshot.outstanding_charge_owners
+    )
 
-    def attempt_approval(
-        tx_env: TransactionEnvironment,
-        scope: FrameFlag,
-    ) -> bool:
-        """
-        Attempt an `APPROVE` of `scope` on behalf of the executing frame's
-        resolved target, applying its effects on success.
 
-        The scope must be non-empty and within the frame's allowed
-        approval flags. Approving execution requires that execution is not
-        already approved and that the frame's resolved target is the
-        transaction's sender. Approving payment requires that no payer is
-        set, that execution is approved (by this same scope or earlier),
-        and that the resolved target can cover the transaction's maximum
-        cost; it increments the sender's nonce and collects the maximum
-        cost from the resolved target, which becomes the payer. The payer
-        needs no warming here: it is the frame's resolved target, whose
-        access the frame charged and warmed at frame entry.
+def attempt_approval(
+    tx_env: TransactionEnvironment,
+    scope: FrameFlag,
+) -> bool:
+    """
+    Attempt an `APPROVE` of `scope` on behalf of the executing frame's
+    resolved target, applying its effects on success.
 
-        When incrementing the nonce creates the sender account, the
-        account creation is charged from the executing frame's state gas
-        pool immediately before the increment. A pool that cannot cover
-        the charge halts the current call frame exceptionally — the halt's
-        rollback discards every approval effect, including an execution
-        approval this same call already recorded.
+    The scope must be non-empty and within the frame's allowed
+    approval flags. Approving execution requires that execution is not
+    already approved and that the frame's resolved target is the
+    transaction's sender. Approving payment requires that no payer is
+    set, that execution is approved (by this same scope or earlier),
+    and that the resolved target can cover the transaction's maximum
+    cost; it increments the sender's nonce and collects the maximum
+    cost from the resolved target, which becomes the payer. The payer
+    needs no warming here: it is the frame's resolved target, whose
+    access the frame charged and warmed at frame entry.
 
-        Return whether the approval was granted; a refusal reverts the
-        requesting call frame, which is the frame itself only when the
-        protocol default code is the caller.
-        """
-        frame_context = tx_env.frame_context
-        assert frame_context is not None
-        tx = frame_context.tx
-        frame = tx.frames[int(frame_context.current_frame_index)]
-        resolved_target = resolve_frame_target(tx, frame)
+    When incrementing the nonce creates the sender account, the
+    account creation is charged from the executing frame's state gas
+    pool immediately before the increment. A pool that cannot cover
+    the charge halts the current call frame exceptionally — the halt's
+    rollback discards every approval effect, including an execution
+    approval this same call already recorded.
 
-        allowed_scope = frame.flags & APPROVE_SCOPE_MASK
-        # An empty scope, or one beyond the frame's allowed flags.
-        if not scope or scope & ~allowed_scope:
+    Return whether the approval was granted; a refusal reverts the
+    requesting call frame, which is the frame itself only when the
+    protocol default code is the caller.
+    """
+    frame_context = tx_env.frame_context
+    assert frame_context is not None
+    tx = frame_context.tx
+    frame = tx.frames[int(frame_context.current_frame_index)]
+    resolved_target = resolve_frame_target(tx, frame)
+
+    allowed_scope = frame.flags & APPROVE_SCOPE_MASK
+    # An empty scope, or one beyond the frame's allowed flags.
+    if not scope or scope & ~allowed_scope:
+        return False
+
+    approves_execution = FrameFlag.APPROVE_EXECUTION in scope
+    approves_payment = FrameFlag.APPROVE_PAYMENT in scope
+
+    if approves_execution:
+        # Execution is already approved.
+        if frame_context.sender_approved:
+            return False
+        # Only the sender may approve execution on its own behalf.
+        if resolved_target != tx.sender:
             return False
 
-        approves_execution = FrameFlag.APPROVE_EXECUTION in scope
-        approves_payment = FrameFlag.APPROVE_PAYMENT in scope
+    if approves_payment:
+        # Payment is already approved.
+        if frame_context.payer is not None:
+            return False
+        # Payment approval requires execution approval first.
+        if not (frame_context.sender_approved or approves_execution):
+            return False
+        payer_balance = get_account(tx_env.state, resolved_target).balance
+        # The payer cannot cover the transaction's maximum cost.
+        if Uint(payer_balance) < frame_context.max_cost:
+            return False
 
-        if approves_execution:
-            # Execution is already approved.
-            if frame_context.sender_approved:
-                return False
-            # Only the sender may approve execution on its own behalf.
-            if resolved_target != tx.sender:
-                return False
+    if approves_execution:
+        frame_context.sender_approved = True
+    if approves_payment:
+        if not is_account_alive(tx_env.state, tx.sender):
+            charge_frame_state_gas(frame_context, StateGasCosts.NEW_ACCOUNT)
+        increment_nonce(tx_env.state, tx.sender)
+        set_account_balance(
+            tx_env.state,
+            resolved_target,
+            U256(Uint(payer_balance) - frame_context.max_cost),
+        )
+        frame_context.payer = resolved_target
 
-        if approves_payment:
-            # Payment is already approved.
-            if frame_context.payer is not None:
-                return False
-            # Payment approval requires execution approval first.
-            if not (frame_context.sender_approved or approves_execution):
-                return False
-            payer_balance = get_account(tx_env.state, resolved_target).balance
-            # The payer cannot cover the transaction's maximum cost.
-            if Uint(payer_balance) < frame_context.max_cost:
-                return False
-
-        if approves_execution:
-            frame_context.sender_approved = True
-        if approves_payment:
-            if not is_account_alive(tx_env.state, tx.sender):
-                charge_frame_state_gas(
-                    frame_context, StateGasCosts.NEW_ACCOUNT
-                )
-            increment_nonce(tx_env.state, tx.sender)
-            set_account_balance(
-                tx_env.state,
-                resolved_target,
-                U256(Uint(payer_balance) - frame_context.max_cost),
-            )
-            frame_context.payer = resolved_target
-
-        return True
+    return True
 
 
 @final

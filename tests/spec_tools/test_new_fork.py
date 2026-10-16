@@ -208,7 +208,7 @@ def test_fold_feature_guards_end_to_end(enabled: bool) -> None:
     Folding the flagged fork removes its flags module and every guard,
     and keeps or deletes the EIP's own modules with the EIP.
     """
-    template = "bogota"
+    template = "develop"
     owned = [
         Path("frame_processing.py"),
         Path("transactions") / "frame_transaction.py",
@@ -250,9 +250,9 @@ def test_fold_rejects_unknown_eip() -> None:
             new_fork(
                 [
                     "--template-fork",
-                    "bogota",
+                    "develop",
                     "--new-fork",
-                    "bogota",
+                    "develop",
                     "--output",
                     str(Path(base_dir) / "ethereum"),
                     "--fold-only",

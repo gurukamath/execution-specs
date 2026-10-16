@@ -23,6 +23,7 @@ from typing import (
     TYPE_CHECKING,
     Any,
     Dict,
+    Final,
     FrozenSet,
     Iterator,
     List,
@@ -176,6 +177,17 @@ class ForkOverrides:
         return all(self._matches_field(*x) for x in checks)
 
 
+DEVELOP_FORK_NAME: Final[str] = "develop"
+"""
+Short name of the development source package under `ethereum.forks`.
+
+It is a complete fork package with every EIP under consideration behind
+a feature flag, from which the forks under development are generated.
+It is not itself a fork: discovery leaves it out unless asked for it,
+so that lints, documentation and fills only ever see generated forks.
+"""
+
+
 class Hardfork:
     """
     Metadata associated with an Ethereum hardfork.
@@ -185,10 +197,15 @@ class Hardfork:
 
     @classmethod
     def discover(
-        cls: Type[H], submodule_search_locations: None | list[str] = None
+        cls: Type[H],
+        submodule_search_locations: None | list[str] = None,
+        include_develop: bool = False,
     ) -> List[H]:
         """
         Find packages which contain Ethereum hardfork specifications.
+
+        The development source package is included only when
+        `include_develop` is set.
         """
         if submodule_search_locations is None:
             ethereum_forks = importlib.import_module("ethereum.forks")
@@ -209,6 +226,11 @@ class Hardfork:
         forks: List[H] = []
 
         for pkg in modules:
+            if (
+                not include_develop
+                and pkg.name.rsplit(".", 1)[-1] == DEVELOP_FORK_NAME
+            ):
+                continue
             try:
                 mod = sys.modules[pkg.name]
                 if hasattr(mod, "FORK_CRITERIA"):

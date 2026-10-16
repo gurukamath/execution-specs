@@ -8,8 +8,6 @@ from ethereum_types.numeric import U64, Uint
 
 from ethereum.exceptions import InvalidBlock, InvalidTransaction
 
-from .eips import EIP_8141
-
 if TYPE_CHECKING:
     from .transactions import Transaction
 
@@ -147,71 +145,74 @@ class TransactionGasLimitExceededError(InvalidTransaction):
     """
 
 
-if EIP_8141:
+class InvalidMaxFeePerBlobGasError(InvalidTransaction):
+    """
+    The transaction carries no blobs but has a nonzero
+    `max_fee_per_blob_gas`.
+    """
 
-    class InvalidMaxFeePerBlobGasError(InvalidTransaction):
-        """
-        The transaction carries no blobs but has a nonzero
-        `max_fee_per_blob_gas`.
-        """
 
-    class FeeOverflowError(InvalidTransaction):
-        """
-        A fee field of the transaction exceeds the largest representable
-        256-bit value.
-        """
+class FeeOverflowError(InvalidTransaction):
+    """
+    A fee field of the transaction exceeds the largest representable
+    256-bit value.
+    """
 
-    class MaxCostOverflowError(InvalidTransaction):
-        """
-        The maximum wei cost the transaction can incur exceeds the largest
-        representable 256-bit value.
-        """
 
-    class FrameCountError(InvalidTransaction):
-        """
-        The transaction has either too many or too few [`Frame`]s to be valid.
+class MaxCostOverflowError(InvalidTransaction):
+    """
+    The maximum wei cost the transaction can incur exceeds the largest
+    representable 256-bit value.
+    """
 
-        [`Frame`]: ref:ethereum.forks.bogota.transactions.frame_transaction.Frame
-        """  # noqa: E501
 
-        maximum: Final[Uint]
-        """
-        Any more than this number of [`Frame`]s invalidates a transaction.
+class FrameCountError(InvalidTransaction):
+    """
+    The transaction has either too many or too few [`Frame`]s to be valid.
 
-        [`Frame`]: ref:ethereum.forks.bogota.transactions.frame_transaction.Frame
-        """  # noqa: E501
+    [`Frame`]: ref:ethereum.forks.bogota.transactions.frame_transaction.Frame
+    """  # noqa: E501
 
-        actual: Final[Uint]
-        """
-        Number of [`Frame`]s actually included in the transaction.
+    maximum: Final[Uint]
+    """
+    Any more than this number of [`Frame`]s invalidates a transaction.
 
-        [`Frame`]: ref:ethereum.forks.bogota.transactions.frame_transaction.Frame
-        """  # noqa: E501
+    [`Frame`]: ref:ethereum.forks.bogota.transactions.frame_transaction.Frame
+    """  # noqa: E501
 
-        def __init__(self, actual: Uint, maximum: Uint) -> None:
-            message = (
-                f"transaction must contain between 1 and {maximum} frames, "
-                f"inclusive (got {actual})"
-            )
+    actual: Final[Uint]
+    """
+    Number of [`Frame`]s actually included in the transaction.
 
-            super().__init__(message)
-            self.maximum = maximum
-            self.actual = actual
+    [`Frame`]: ref:ethereum.forks.bogota.transactions.frame_transaction.Frame
+    """  # noqa: E501
 
-    class InvalidFrameError(InvalidTransaction):
-        """
-        A [`Frame`] did not pass validation.
+    def __init__(self, actual: Uint, maximum: Uint) -> None:
+        message = (
+            f"transaction must contain between 1 and {maximum} frames, "
+            f"inclusive (got {actual})"
+        )
 
-        [`Frame`]: ref:ethereum.forks.bogota.transactions.frame_transaction.Frame
-        """  # noqa: E501
+        super().__init__(message)
+        self.maximum = maximum
+        self.actual = actual
 
-    class FrameTransactionExecutionError(InvalidTransaction):
-        """
-        A frame transaction violated a validity rule that is only checkable
-        during execution: a `VERIFY` frame reverted or halted exceptionally,
-        a `SENDER` frame ran before execution approval, or no frame approved
-        gas payment.
-        """
+
+class InvalidFrameError(InvalidTransaction):
+    """
+    A [`Frame`] did not pass validation.
+
+    [`Frame`]: ref:ethereum.forks.bogota.transactions.frame_transaction.Frame
+    """  # noqa: E501
+
+
+class FrameTransactionExecutionError(InvalidTransaction):
+    """
+    A frame transaction violated a validity rule that is only checkable
+    during execution: a `VERIFY` frame reverted or halted exceptionally,
+    a `SENDER` frame ran before execution approval, or no frame approved
+    gas payment.
+    """
 
 
 class BlockAccessListGasLimitExceededError(InvalidBlock):

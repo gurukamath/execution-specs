@@ -10,10 +10,10 @@ from ethereum.cancun.blocks import Withdrawal
 
 from ethereum.ethash import *
 from ethereum.fork_criteria import Unscheduled
-from ethereum.forks.bogota.eips import OWNED_MODULES, REQUIRES
 from ethereum.forks.bogota.transactions.frame_transaction import (
     FrameMode,
 )
+from ethereum.forks.develop.eips import OWNED_MODULES, REQUIRES, TARGETS
 from ethereum.trace import EvmTracer
 from ethereum.utils.hexadecimal import hex_to_bytes256
 from ethereum_optimized.state_db import State
@@ -54,10 +54,11 @@ Withdrawal.validator_index
 # src/ethereum/fork_criteria.py
 Unscheduled
 
-# src/ethereum/forks/bogota/eips.py - read by the guard lint and the
-# fold codemod
+# src/ethereum/forks/develop/eips.py - read by the guard lint, the fold
+# codemod and the fork generator
 REQUIRES
 OWNED_MODULES
+TARGETS
 
 # src/ethereum/forks/bogota/transactions/frame_transaction.py -
 # constructed while decoding transactions, never compared explicitly

@@ -40,9 +40,9 @@ from .block_access_lists import (
 )
 from .blocks import Block, Header, Log, Receipt, Withdrawal, encode_receipt
 from .bloom import logs_bloom
-from .eips import EIP_8141
 from .exceptions import WrongChainIdError
 from .fork_types import Authorization, BlockAccessIndex, ExecutionGas, StateGas
+from .frame_processing import process_frame_transaction
 from .requests import (
     BUILDER_DEPOSIT_REQUEST_TYPE,
     BUILDER_EXIT_REQUEST_TYPE,
@@ -80,6 +80,7 @@ from .transactions import (
     recover_sender,
     validate_transaction,
 )
+from .transactions.frame_transaction import FrameTransaction
 from .utils.address import compute_contract_address
 from .utils.hexadecimal import hex_to_address
 from .vm.eoa_delegation import is_valid_delegation
@@ -97,10 +98,6 @@ from .vm.gas import (
     settle_transaction_gas,
 )
 from .vm.interpreter import TransactionOutput, process_top_level
-
-if EIP_8141:
-    from .frame_processing import process_frame_transaction
-    from .transactions.frame_transaction import FrameTransaction
 
 BASE_FEE_MAX_CHANGE_DENOMINATOR = Uint(8)
 ELASTICITY_MULTIPLIER = Uint(2)
@@ -540,8 +537,7 @@ def check_transaction(
         limit.
 
     """
-    if EIP_8141:
-        assert not isinstance(tx, FrameTransaction)
+    assert not isinstance(tx, FrameTransaction)
 
     sender = recover_sender(tx)
     intrinsic = validate_transaction(tx, sender)
@@ -1067,11 +1063,8 @@ def process_transaction(
             actual=tx_chain_id,
         )
 
-    if EIP_8141:
-        if isinstance(tx, FrameTransaction):
-            return process_frame_transaction(
-                block_env, block_output, tx, index
-            )
+    if isinstance(tx, FrameTransaction):
+        return process_frame_transaction(block_env, block_output, tx, index)
 
     tx_env = check_transaction(block_env, block_output, tx, index)
 
