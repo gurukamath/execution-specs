@@ -137,42 +137,43 @@ class BlockOutput:
     block_access_list: BlockAccessList = field(default_factory=list)
 
 
+@final
+@slotted_freezable
+@dataclass
+class TopLevelContext:
+    """
+    The single top-level call or creation a non-frame transaction
+    describes.
+
+    Unlike `FrameContext`, this is a frozen one-shot descriptor:
+    consumed once when the transaction's top-level frame is built;
+    instructions never read it.
+    """
+
+    recipient: Address
+    """
+    The address the transaction calls; for a creation, the address the
+    contract deploys to.
+    """
+
+    is_create: bool
+    """
+    Whether the transaction is a contract creation.
+    """
+
+    data: Bytes
+    """
+    The transaction's data payload: call data for a call, init code
+    for a creation.
+    """
+
+    value: U256
+    """
+    The amount of ether (in wei) sent with the transaction.
+    """
+
+
 if EIP_8141:
-
-    @final
-    @slotted_freezable
-    @dataclass
-    class TopLevelContext:
-        """
-        The single top-level call or creation a non-frame transaction
-        describes.
-
-        Unlike `FrameContext`, this is a frozen one-shot descriptor:
-        consumed once when the transaction's top-level frame is built;
-        instructions never read it.
-        """
-
-        recipient: Address
-        """
-        The address the transaction calls; for a creation, the address the
-        contract deploys to.
-        """
-
-        is_create: bool
-        """
-        Whether the transaction is a contract creation.
-        """
-
-        data: Bytes
-        """
-        The transaction's data payload: call data for a call, init code
-        for a creation.
-        """
-
-        value: U256
-        """
-        The amount of ether (in wei) sent with the transaction.
-        """
 
     @final
     @dataclass
@@ -282,12 +283,6 @@ class TransactionEnvironment:
     """
 
     origin: Address
-    if not EIP_8141:
-        # For a creation, the address the contract deploys to.
-        recipient: Address
-        is_create: bool
-        data: Bytes
-        value: U256
     gas_limit: Uint
     effective_gas_price: Uint
     execution_gas_grant: ExecutionGas
@@ -302,15 +297,15 @@ class TransactionEnvironment:
     index_in_block: Optional[Uint]
     tx_hash: Optional[Hash32]
 
-    if EIP_8141:
-        top_level_context: Optional[TopLevelContext]
-        """
-        Present iff the transaction describes a single top-level call or
-        creation. Exactly one of this and `frame_context` is set; both
-        flow entries assert it.
-        """
+    top_level_context: Optional[TopLevelContext]
+    """
+    Present iff the transaction describes a single top-level call or
+    creation. Exactly one of this and `frame_context` is set; both
+    flow entries assert it.
+    """
 
-        frame_context: Optional[FrameContext]
+    if EIP_8141:
+        frame_context: Optional[FrameContext] = None
         """
         Present iff this is a frame transaction. The frame-only opcodes
         exceptionally halt when this is `None`.
@@ -541,46 +536,28 @@ def incorporate_child(evm: Evm, child_evm: Evm) -> None:
     gas_meter.gas_left += child_meter.gas_left
     gas_meter.refund_counter += child_meter.refund_counter
 
-    if EIP_8141:
-        child_reservoir = child_meter.reservoir
-        if child_reservoir is None:
-            assert gas_meter.reservoir is None
-        else:
-            parent_reservoir = gas_meter.reservoir
-            assert parent_reservoir is not None
-
-            # Only the top frame commits state gas; a child never
-            # carries any.
-            assert child_reservoir.state_gas_committed_spill == Uint(0)
-
-            if child_evm.error:
-                # A failed child arrives settled: rolled back to its
-                # baseline, spill refilled.
-                assert child_reservoir.state_gas_spilled == Uint(0)
-                assert (
-                    child_reservoir.state_gas_left
-                    == child_reservoir.state_gas_baseline
-                )
-
-            parent_reservoir.state_gas_left += child_reservoir.state_gas_left
-            parent_reservoir.state_gas_spilled += (
-                child_reservoir.state_gas_spilled
-            )
-            if not child_evm.error:
-                repay_state_gas_spill(gas_meter)
+    child_reservoir = child_meter.reservoir
+    if child_reservoir is None:
+        assert gas_meter.reservoir is None
     else:
+        parent_reservoir = gas_meter.reservoir
+        assert parent_reservoir is not None
+
         # Only the top frame commits state gas; a child never carries
         # any.
-        assert child_meter.state_gas_committed_spill == Uint(0)
+        assert child_reservoir.state_gas_committed_spill == Uint(0)
 
         if child_evm.error:
             # A failed child arrives settled: rolled back to its
             # baseline, spill refilled.
-            assert child_meter.state_gas_spilled == Uint(0)
-            assert child_meter.state_gas_left == child_meter.state_gas_baseline
+            assert child_reservoir.state_gas_spilled == Uint(0)
+            assert (
+                child_reservoir.state_gas_left
+                == child_reservoir.state_gas_baseline
+            )
 
-        gas_meter.state_gas_left += child_meter.state_gas_left
-        gas_meter.state_gas_spilled += child_meter.state_gas_spilled
+        parent_reservoir.state_gas_left += child_reservoir.state_gas_left
+        parent_reservoir.state_gas_spilled += child_reservoir.state_gas_spilled
         if not child_evm.error:
             repay_state_gas_spill(gas_meter)
 

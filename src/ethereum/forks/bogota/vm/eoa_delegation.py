@@ -12,7 +12,6 @@ from ethereum.crypto.hash import keccak256
 from ethereum.exceptions import InvalidSignatureError
 from ethereum.state import Address
 
-from ..eips import EIP_8141
 from ..fork_types import Authorization, ExecutionGas
 from ..state_tracker import (
     TransactionState,
@@ -279,13 +278,8 @@ def set_delegation(
         transaction.
 
     """
-    if EIP_8141:
-        top_level_context = tx_env.top_level_context
-        assert (
-            top_level_context is not None and not top_level_context.is_create
-        )
-    else:
-        assert not tx_env.is_create
+    top_level_context = tx_env.top_level_context
+    assert top_level_context is not None and not top_level_context.is_create
     tx_state = tx_env.state
     # Authorities a delegation was set for earlier in this transaction.
     accessed_authorities: Set[Address] = set()
