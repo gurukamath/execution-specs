@@ -9,6 +9,7 @@ import importlib.abc
 import importlib.util
 import pkgutil
 import random
+import re
 import sys
 from contextlib import AbstractContextManager
 from dataclasses import astuple, dataclass
@@ -22,6 +23,7 @@ from typing import (
     TYPE_CHECKING,
     Any,
     Dict,
+    FrozenSet,
     Iterator,
     List,
     Optional,
@@ -78,6 +80,12 @@ class ForkOverrides:
     max_blob_gas_per_block: U64 | None = None
     blob_schedule_target: U64 | None = None
     blob_schedule_max: U64 | None = None
+    enabled_eips: FrozenSet[int] | None = None
+    """
+    EIPs whose feature guards fold to their enabled branch; every other
+    flag of the template folds to its disabled branch. `None` leaves the
+    template's guards alone.
+    """
 
     def is_empty(self) -> bool:
         """
@@ -112,6 +120,21 @@ class ForkOverrides:
             and self.fork_criteria != template.criteria
         ):
             return False
+
+        if self.enabled_eips is not None:
+            # The template carries every flag enabled, so only the
+            # selection of all of them needs no fold.
+            try:
+                eips = template.module("eips")
+            except ModuleNotFoundError:
+                return False
+            template_flags = {
+                int(match.group(1))
+                for name in dir(eips)
+                if (match := re.match(r"^EIP_(\d+)$", name)) is not None
+            }
+            if self.enabled_eips != template_flags:
+                return False
 
         fork_mod = template.module("fork")
         gas_costs = template.module("vm.gas").GasCosts
@@ -352,6 +375,9 @@ class Hardfork:
 
             if overrides.blob_schedule_max is not None:
                 builder.modify_blob_schedule_max(overrides.blob_schedule_max)
+
+            if overrides.enabled_eips is not None:
+                builder.fold_feature_guards(overrides.enabled_eips)
 
             builder.build()
 

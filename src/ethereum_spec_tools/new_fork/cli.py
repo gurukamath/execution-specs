@@ -53,6 +53,49 @@ def _make_parser() -> ArgumentParser:
     )
 
     parser.add_argument(
+        "--enable-eip",
+        dest="enable_eips",
+        type=int,
+        action="append",
+        metavar="N",
+        help=(
+            "fold the template's EIP-N feature guards to their `if` branch;"
+            " when given without --disable-eip, every other flag is"
+            " disabled"
+        ),
+    )
+
+    parser.add_argument(
+        "--disable-eip",
+        dest="disable_eips",
+        type=int,
+        action="append",
+        metavar="N",
+        help=(
+            "fold the template's EIP-N feature guards to their `else`"
+            " branch; when given without --enable-eip, every other flag is"
+            " enabled"
+        ),
+    )
+
+    parser.add_argument(
+        "--fold-only",
+        action="store_true",
+        default=False,
+        help=(
+            "only fold feature guards: keep the template's name, fork"
+            " criteria and docstring"
+        ),
+    )
+
+    parser.add_argument(
+        "--format",
+        action="store_true",
+        default=False,
+        help="run the formatter and import sorter over the generated fork",
+    )
+
+    parser.add_argument(
         "--force",
         "-f",
         action="store_true",
@@ -165,6 +208,20 @@ def main(args: Sequence[str] | None = None) -> None:
         builder.output = options.output
 
     builder.force = options.force
+    builder.format = options.format
+
+    if options.fold_only:
+        builder.modifiers = []
+
+    if options.enable_eips is not None or options.disable_eips is not None:
+        flags = set(builder.template_flags())
+        enabled = set(options.enable_eips or [])
+        disabled = set(options.disable_eips or [])
+        if options.enable_eips is None:
+            enabled = flags - disabled
+        elif options.disable_eips is None:
+            disabled = flags - enabled
+        builder.fold_feature_guards(enabled, disabled)
 
     if options.fork_criteria is not None:
         builder.fork_criteria = options.fork_criteria

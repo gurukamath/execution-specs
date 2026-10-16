@@ -10,6 +10,7 @@ import pytest
 from libcst.codemod import CodemodContext
 
 from ethereum_spec_tools.forks import Hardfork
+from ethereum_spec_tools.new_fork.builder import validate_eip_selection
 from ethereum_spec_tools.new_fork.cli import main as new_fork
 from ethereum_spec_tools.new_fork.codemod.remove_docstring import (
     RemoveDocstringCommand,
@@ -177,3 +178,85 @@ def test_remove_docstring_handles_empty_files() -> None:
     new_module = command.transform_module(module)
 
     assert new_module.code == source_empty
+
+
+def test_validate_eip_selection() -> None:
+    """
+    An EIP selection must name known flags, not contradict itself, and
+    enable every requirement of an enabled EIP.
+    """
+    flags = {8141, 8250}
+    requires = {8250: {8141}}
+
+    validate_eip_selection({8141, 8250}, set(), flags, requires)
+    validate_eip_selection(set(), {8141, 8250}, flags, requires)
+    validate_eip_selection({8141}, {8250}, flags, requires)
+
+    with pytest.raises(ValueError, match="both enabled and disabled"):
+        validate_eip_selection({8141}, {8141}, flags, requires)
+    with pytest.raises(ValueError, match="no feature flag"):
+        validate_eip_selection({9999}, set(), flags, requires)
+    with pytest.raises(ValueError, match="requires"):
+        validate_eip_selection({8250}, {8141}, flags, requires)
+    with pytest.raises(ValueError, match="requires"):
+        validate_eip_selection({8250}, set(), flags, requires)
+
+
+@pytest.mark.parametrize("enabled", [True, False], ids=["on", "off"])
+def test_fold_feature_guards_end_to_end(enabled: bool) -> None:
+    """
+    Folding the flagged fork removes its flags module and every guard,
+    and keeps or deletes the EIP's own modules with the EIP.
+    """
+    template = "bogota"
+    owned = [
+        Path("frame_processing.py"),
+        Path("transactions") / "frame_transaction.py",
+    ]
+    with TemporaryDirectory() as base_dir:
+        output_dir = Path(base_dir) / "ethereum"
+        fork_dir = output_dir / template
+        new_fork(
+            [
+                "--template-fork",
+                template,
+                "--new-fork",
+                template,
+                "--output",
+                str(output_dir),
+                "--fold-only",
+                "--enable-eip" if enabled else "--disable-eip",
+                "8141",
+            ]
+        )
+
+        assert not (fork_dir / "eips.py").exists()
+        for relative in owned:
+            assert (fork_dir / relative).exists() == enabled
+        for path in fork_dir.rglob("*.py"):
+            assert "EIP_8141" not in path.read_text(), path
+        gas = (fork_dir / "vm" / "gas.py").read_text()
+        assert ("def charge_frame_state_gas(" in gas) == enabled
+        init = (fork_dir / "__init__.py").read_text()
+        assert "FORK_CRITERIA" in init and has_module_docstring(
+            fork_dir / "__init__.py"
+        )
+
+
+def test_fold_rejects_unknown_eip() -> None:
+    """A selection naming an EIP without a flag is refused."""
+    with TemporaryDirectory() as base_dir:
+        with pytest.raises(ValueError, match="no feature flag"):
+            new_fork(
+                [
+                    "--template-fork",
+                    "bogota",
+                    "--new-fork",
+                    "bogota",
+                    "--output",
+                    str(Path(base_dir) / "ethereum"),
+                    "--fold-only",
+                    "--disable-eip",
+                    "9999",
+                ]
+            )
