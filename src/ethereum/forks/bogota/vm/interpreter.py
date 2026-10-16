@@ -32,6 +32,7 @@ from ethereum.trace import (
 from ethereum.utils.numeric import ceil32
 
 from ..blocks import Log
+from ..eips import EIP_8141
 from ..fork_types import ExecutionGas, StateGas
 from ..state_tracker import (
     TransactionState,
@@ -68,9 +69,7 @@ from . import (
     Evm,
     TopLevelContext,
     TransactionEnvironment,
-    copy_frame_context,
     emit_transfer_log,
-    restore_frame_context,
 )
 from .eoa_delegation import resolve_delegated_code_address, set_delegation
 from .exceptions import (
@@ -84,6 +83,9 @@ from .exceptions import (
 )
 from .instructions import Ops, op_implementation
 from .runtime import get_valid_jump_destinations
+
+if EIP_8141:
+    from . import copy_frame_context, restore_frame_context
 
 STACK_DEPTH_LIMIT = Uint(1024)
 MAX_CODE_SIZE = 0x10000
@@ -284,7 +286,8 @@ def process_top_level(
     """
     top_level_context = tx_env.top_level_context
     assert top_level_context is not None
-    assert tx_env.frame_context is None
+    if EIP_8141:
+        assert tx_env.frame_context is None
 
     reservoir = StateGasReservoir(
         state_gas_left=tx_env.state_gas_reservoir,
@@ -370,7 +373,8 @@ def process_create(evm: Evm) -> Evm:
     tx_state = evm.tx_env.state
     # take snapshot of state before processing the message
     snapshot = copy_tx_state(tx_state)
-    frame_context_snapshot = copy_frame_context(evm.tx_env)
+    if EIP_8141:
+        frame_context_snapshot = copy_frame_context(evm.tx_env)
 
     # If the address where the account is being created has storage, it is
     # destroyed. This can only happen in the following highly unlikely
@@ -411,7 +415,8 @@ def process_create(evm: Evm) -> Evm:
             charge_state_gas(evm, code_deposit_state_gas)
         except ExceptionalHalt as error:
             restore_tx_state(tx_state, snapshot)
-            restore_frame_context(evm.tx_env, frame_context_snapshot)
+            if EIP_8141:
+                restore_frame_context(evm.tx_env, frame_context_snapshot)
             # A create frame never applies authorizations, so its
             # baseline is still the frame's entry reservoir.
             restore_state_gas(evm.gas_meter)
@@ -422,7 +427,8 @@ def process_create(evm: Evm) -> Evm:
             set_code(tx_state, evm.current_target, contract_code)
     else:
         restore_tx_state(tx_state, snapshot)
-        restore_frame_context(evm.tx_env, frame_context_snapshot)
+        if EIP_8141:
+            restore_frame_context(evm.tx_env, frame_context_snapshot)
     return evm
 
 
@@ -446,7 +452,8 @@ def process_call(evm: Evm) -> Evm:
         raise StackDepthLimitError("Stack depth limit reached")
 
     snapshot = copy_tx_state(tx_state)
-    frame_context_snapshot = copy_frame_context(evm.tx_env)
+    if EIP_8141:
+        frame_context_snapshot = copy_frame_context(evm.tx_env)
 
     # Execute message code and handle errors
     try:
@@ -501,5 +508,6 @@ def process_call(evm: Evm) -> Evm:
 
     if evm.error:
         restore_tx_state(tx_state, snapshot)
-        restore_frame_context(evm.tx_env, frame_context_snapshot)
+        if EIP_8141:
+            restore_frame_context(evm.tx_env, frame_context_snapshot)
     return evm
