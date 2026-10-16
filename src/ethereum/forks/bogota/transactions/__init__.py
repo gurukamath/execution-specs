@@ -494,29 +494,17 @@ class SetCodeTransaction:
     """
 
 
-if EIP_8141:
-    Transaction = (
-        LegacyTransaction
-        | AccessListTransaction
-        | FeeMarketTransaction
-        | BlobTransaction
-        | SetCodeTransaction
-        | FrameTransaction
-    )
-    """
-    Union type representing any valid transaction type.
-    """
-else:
-    Transaction = (
-        LegacyTransaction
-        | AccessListTransaction
-        | FeeMarketTransaction
-        | BlobTransaction
-        | SetCodeTransaction
-    )
-    """
-    Union type representing any valid transaction type.
-    """
+Transaction = (
+    LegacyTransaction
+    | AccessListTransaction
+    | FeeMarketTransaction
+    | BlobTransaction
+    | SetCodeTransaction
+    | FrameTransaction
+)
+"""
+Union type representing any valid transaction type.
+"""
 
 
 AccessListCapableTransaction = (
@@ -536,37 +524,24 @@ See [`has_access_list`][hal] and [`Access`][a] for more details.
 """
 
 
-if EIP_8141:
-    FeeMarketCapableTransaction = (
-        FeeMarketTransaction
-        | BlobTransaction
-        | SetCodeTransaction
-        | FrameTransaction
-    )
-    """
-    Transaction types that include the [EIP-1559]-style fee structure.
+FeeMarketCapableTransaction = (
+    FeeMarketTransaction
+    | BlobTransaction
+    | SetCodeTransaction
+    | FrameTransaction
+)
+"""
+Transaction types that include the [EIP-1559]-style fee structure.
 
-    Frame transactions carry the fee parameters nested in their
-    [`fees`][f] list rather than as flat fields.
+Frame transactions carry the fee parameters nested in their
+[`fees`][f] list rather than as flat fields.
 
-    See [`FeeMarketTransaction`][fmt] for more details.
+See [`FeeMarketTransaction`][fmt] for more details.
 
-    [EIP-1559]: https://eips.ethereum.org/EIPS/eip-1559
-    [fmt]: ref:ethereum.forks.bogota.transactions.FeeMarketTransaction
-    [f]: ref:ethereum.forks.bogota.transactions.frame_transaction.FrameTransaction.fees
-    """  # noqa: E501
-else:
-    FeeMarketCapableTransaction = (
-        FeeMarketTransaction | BlobTransaction | SetCodeTransaction
-    )
-    """
-    Transaction types that include the [EIP-1559]-style fee structure.
-
-    See [`FeeMarketTransaction`][fmt] for more details.
-
-    [EIP-1559]: https://eips.ethereum.org/EIPS/eip-1559
-    [fmt]: ref:ethereum.forks.bogota.transactions.FeeMarketTransaction
-    """
+[EIP-1559]: https://eips.ethereum.org/EIPS/eip-1559
+[fmt]: ref:ethereum.forks.bogota.transactions.FeeMarketTransaction
+[f]: ref:ethereum.forks.bogota.transactions.frame_transaction.FrameTransaction.fees
+"""  # noqa: E501
 
 
 if EIP_8141:
