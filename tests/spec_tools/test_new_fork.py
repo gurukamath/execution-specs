@@ -4,6 +4,7 @@ Tests for the ethereum-spec-new-fork CLI tool.
 
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from textwrap import dedent
 
 import libcst as cst
 import pytest
@@ -16,6 +17,9 @@ from ethereum_spec_tools.new_fork.builder import (
     with_requirements,
 )
 from ethereum_spec_tools.new_fork.cli import main as new_fork
+from ethereum_spec_tools.new_fork.codemod.feature_guards import (
+    removed_qualified_names,
+)
 from ethereum_spec_tools.new_fork.codemod.remove_docstring import (
     RemoveDocstringCommand,
 )
@@ -219,6 +223,41 @@ def test_eip_selection_closure() -> None:
     assert with_dependents({9000}, requires) == frozenset({9000})
 
 
+def test_removed_qualified_names() -> None:
+    """
+    The pre-fold scan qualifies names bound only in discarded branches
+    by module and class, and ignores function bodies.
+    """
+    module = cst.parse_module(
+        dedent(
+            """
+            if EIP_8141:
+                A = 1
+            else:
+                B = 2
+
+
+            class GasCosts:
+                X = 1
+                if EIP_8250:
+                    KEYED = 2
+
+
+            def f():
+                if EIP_8250:
+                    local = 3
+            """
+        )
+    )
+    removed = removed_qualified_names(
+        module, "ethereum.forks.bogota.vm.gas", ["EIP_8141"], ["EIP_8250"]
+    )
+    assert removed == {
+        "ethereum.forks.bogota.vm.gas.B",
+        "ethereum.forks.bogota.vm.gas.GasCosts.KEYED",
+    }
+
+
 def test_resolve_target() -> None:
     """
     A target's set includes its bases' sets; a missing or cyclic base is
@@ -277,7 +316,11 @@ def test_fold_feature_guards_end_to_end(enabled: bool) -> None:
         for relative in owned:
             assert (fork_dir / relative).exists() == enabled
         for path in fork_dir.rglob("*.py"):
-            assert "EIP_8141" not in path.read_text(), path
+            text = path.read_text()
+            assert "EIP_8141" not in text, path
+            assert ("ref:ethereum.forks.develop.keyed_nonces" in text) <= (
+                enabled
+            ), path
         gas = (fork_dir / "vm" / "gas.py").read_text()
         assert ("def charge_frame_state_gas(" in gas) == enabled
         init = (fork_dir / "__init__.py").read_text()

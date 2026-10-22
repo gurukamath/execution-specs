@@ -47,6 +47,8 @@ from ethereum_spec_tools.new_fork.codemod.feature_guards import (
     _ConditionalNameCollector,
     _DecidedEntryRemover,
     _DedentDocstrings,
+    _RemovedQualifiedNames,
+    _RewriteDocstringLinks,
     _SurvivingFlagFinder,
 )
 from ethereum_spec_tools.new_fork.codemod.string_replace import (
@@ -182,6 +184,13 @@ _ConditionalNameCollector.visit_If
 _DedentDocstrings.visit_SimpleStatementLine
 _DedentDocstrings.leave_SimpleStatementLine
 _DedentDocstrings.leave_SimpleString
+_RewriteDocstringLinks.visit_SimpleStatementLine
+_RewriteDocstringLinks.leave_SimpleStatementLine
+_RewriteDocstringLinks.leave_SimpleString
+_RemovedQualifiedNames.visit_ClassDef
+_RemovedQualifiedNames.leave_ClassDef
+_RemovedQualifiedNames.visit_FunctionDef
+_RemovedQualifiedNames.visit_If
 _SurvivingFlagFinder.visit_Name
 _DecidedEntryRemover.visit_DictElement
 _DecidedEntryRemover.leave_DictElement

@@ -899,10 +899,10 @@ def check_nonce(tx: Transaction, sender_nonce: Uint) -> None:
     """
     Check that the transaction's nonce equals the sender's next nonce.
 
-    Frame transactions select nonce keys instead and are checked by
-    [`check_nonce_set`][cns].
+    Frame transactions under [EIP-8250] select nonce keys instead and
+    are checked by `check_nonce_set`.
 
-    [cns]: ref:ethereum.forks.bogota.keyed_nonces.check_nonce_set
+    [EIP-8250]: https://eips.ethereum.org/EIPS/eip-8250
     """
     if sender_nonce > Uint(tx.nonce):
         raise NonceMismatchError("nonce too low")

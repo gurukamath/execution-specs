@@ -171,21 +171,21 @@ if EIP_8141:
         """
         The transaction has either too many or too few [`Frame`]s to be valid.
 
-        [`Frame`]: ref:ethereum.forks.bogota.transactions.frame_transaction.Frame
+        [`Frame`]: ref:ethereum.forks.develop.transactions.frame_transaction.Frame
         """  # noqa: E501
 
         maximum: Final[Uint]
         """
         Any more than this number of [`Frame`]s invalidates a transaction.
 
-        [`Frame`]: ref:ethereum.forks.bogota.transactions.frame_transaction.Frame
+        [`Frame`]: ref:ethereum.forks.develop.transactions.frame_transaction.Frame
         """  # noqa: E501
 
         actual: Final[Uint]
         """
         Number of [`Frame`]s actually included in the transaction.
 
-        [`Frame`]: ref:ethereum.forks.bogota.transactions.frame_transaction.Frame
+        [`Frame`]: ref:ethereum.forks.develop.transactions.frame_transaction.Frame
         """  # noqa: E501
 
         def __init__(self, actual: Uint, maximum: Uint) -> None:
@@ -202,7 +202,7 @@ if EIP_8141:
         """
         A [`Frame`] did not pass validation.
 
-        [`Frame`]: ref:ethereum.forks.bogota.transactions.frame_transaction.Frame
+        [`Frame`]: ref:ethereum.forks.develop.transactions.frame_transaction.Frame
         """  # noqa: E501
 
     class FrameTransactionExecutionError(InvalidTransaction):

@@ -19,6 +19,7 @@ from tempfile import TemporaryDirectory
 from types import ModuleType
 from typing import ClassVar, Final, NamedTuple
 
+import libcst as cst
 from ethereum_types.numeric import U64, U256, Uint
 from libcst.tool import main as libcst_tool
 from typing_extensions import override
@@ -31,7 +32,7 @@ from ethereum.fork_criteria import (
 )
 
 from ..forks import DEVELOP_FORK_NAME, Hardfork
-from .codemod.feature_guards import FLAG_PATTERN
+from .codemod.feature_guards import FLAG_PATTERN, removed_qualified_names
 
 
 def _source_file_for(fork_root: Path, qualified_name: str) -> Path:
@@ -177,12 +178,17 @@ class FoldFeatureGuards(CodemodArgs):
 
     EIPs in neither set keep their guards. Modules that exist only for a
     disabled EIP are deleted before the fold, and the flags module itself
-    is deleted afterwards when no flag remains in it.
+    is deleted afterwards when no flag remains in it. Docstring `ref:`
+    links move from the template's package name to the new fork's, and
+    links to names the fold removes are dropped: the deleted modules and,
+    from a scan of the template before folding, every name bound only in
+    a discarded branch.
     """
 
     enabled: frozenset[int]
     disabled: frozenset[int]
     flags_module: str = "eips"
+    _removed_names: list[str] = field(default_factory=list, init=False)
 
     def _eips(self, fork_builder: "ForkBuilder") -> ModuleType:
         name = f"{fork_builder.template_fork.name}.{self.flags_module}"
@@ -215,6 +221,8 @@ class FoldFeatureGuards(CodemodArgs):
             eips, "OWNED_MODULES", {}
         )
         fork_root = self._fork_root(fork_builder, working_directory)
+        qualname = f"ethereum.forks.{fork_builder.new_fork}"
+        removed: set[str] = set()
         for eip in sorted(self.disabled):
             for dotted in owned.get(eip, ()):
                 target = fork_root.joinpath(*dotted.split("."))
@@ -227,6 +235,23 @@ class FoldFeatureGuards(CodemodArgs):
                         f"owned module `{dotted}` of EIP-{eip} is not in"
                         " the fork"
                     )
+                removed.add(f"{qualname}.{dotted}")
+
+        flags = flags_of(eips)
+        enable = [flags[eip] for eip in sorted(self.enabled)]
+        disable = [flags[eip] for eip in sorted(self.disabled)]
+        for path in sorted(fork_root.rglob("*.py")):
+            parts = list(path.relative_to(fork_root).with_suffix("").parts)
+            if parts[-1] == "__init__":
+                parts.pop()
+            module_name = ".".join([qualname, *parts])
+            removed |= removed_qualified_names(
+                cst.parse_module(path.read_text()),
+                module_name,
+                enable,
+                disable,
+            )
+        self._removed_names = sorted(removed)
 
     @override
     def _to_args(
@@ -244,6 +269,15 @@ class FoldFeatureGuards(CodemodArgs):
             command.extend(["--enable", flags[eip]])
         for eip in sorted(self.disabled):
             command.extend(["--disable", flags[eip]])
+        command.extend(
+            [
+                "--ref-prefix",
+                fork_builder.template_fork.name,
+                f"ethereum.forks.{fork_builder.new_fork}",
+            ]
+        )
+        for name in self._removed_names:
+            command.extend(["--removed-name", name])
         command.append(str(self._fork_root(fork_builder, working_directory)))
         return [command]
 

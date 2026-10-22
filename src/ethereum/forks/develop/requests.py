@@ -21,15 +21,15 @@ processed.
 [EIP-4895]: https://eips.ethereum.org/EIPS/eip-4895
 [EIP-7685]: https://eips.ethereum.org/EIPS/eip-7685
 [EIP-8282]: https://eips.ethereum.org/EIPS/eip-8282
-[rh]: ref:ethereum.forks.bogota.blocks.Header.requests_hash
-[dt]: ref:ethereum.forks.bogota.requests.DEPOSIT_REQUEST_TYPE
-[wt]: ref:ethereum.forks.bogota.requests.WITHDRAWAL_REQUEST_TYPE
-[ct]: ref:ethereum.forks.bogota.requests.CONSOLIDATION_REQUEST_TYPE
-[bd]: ref:ethereum.forks.bogota.requests.BUILDER_DEPOSIT_REQUEST_TYPE
-[be]: ref:ethereum.forks.bogota.requests.BUILDER_EXIT_REQUEST_TYPE
-[pd]: ref:ethereum.forks.bogota.requests.parse_deposit_requests
-[crh]: ref:ethereum.forks.bogota.requests.compute_requests_hash
-[pgpr]: ref:ethereum.forks.bogota.fork.process_general_purpose_requests
+[rh]: ref:ethereum.forks.develop.blocks.Header.requests_hash
+[dt]: ref:ethereum.forks.develop.requests.DEPOSIT_REQUEST_TYPE
+[wt]: ref:ethereum.forks.develop.requests.WITHDRAWAL_REQUEST_TYPE
+[ct]: ref:ethereum.forks.develop.requests.CONSOLIDATION_REQUEST_TYPE
+[bd]: ref:ethereum.forks.develop.requests.BUILDER_DEPOSIT_REQUEST_TYPE
+[be]: ref:ethereum.forks.develop.requests.BUILDER_EXIT_REQUEST_TYPE
+[pd]: ref:ethereum.forks.develop.requests.parse_deposit_requests
+[crh]: ref:ethereum.forks.develop.requests.compute_requests_hash
+[pgpr]: ref:ethereum.forks.develop.fork.process_general_purpose_requests
 """
 
 from hashlib import sha256
@@ -287,9 +287,9 @@ def parse_deposit_requests(block_output: BlockOutput) -> Bytes:
     prefixed with [`DEPOSIT_REQUEST_TYPE`][dt] before being appended to
     the block's request list.
 
-    [addr]: ref:ethereum.forks.bogota.requests.DEPOSIT_CONTRACT_ADDRESS
-    [sig]: ref:ethereum.forks.bogota.requests.DEPOSIT_EVENT_SIGNATURE_HASH
-    [dt]: ref:ethereum.forks.bogota.requests.DEPOSIT_REQUEST_TYPE
+    [addr]: ref:ethereum.forks.develop.requests.DEPOSIT_CONTRACT_ADDRESS
+    [sig]: ref:ethereum.forks.develop.requests.DEPOSIT_EVENT_SIGNATURE_HASH
+    [dt]: ref:ethereum.forks.develop.requests.DEPOSIT_REQUEST_TYPE
     """
     deposit_requests: Bytes = b""
     for key in block_output.receipt_keys:
@@ -334,7 +334,7 @@ def compute_requests_hash(requests: List[Bytes]) -> Bytes:
 
     [EIP-7685]: https://eips.ethereum.org/EIPS/eip-7685
     [SHA2-256]: https://en.wikipedia.org/wiki/SHA-2
-    [rh]: ref:ethereum.forks.bogota.blocks.Header.requests_hash
+    [rh]: ref:ethereum.forks.develop.blocks.Header.requests_hash
     """
     m = sha256()
     for request in requests:

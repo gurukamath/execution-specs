@@ -270,16 +270,16 @@ class GasCosts:
         the recovery component of the base cost instead covers payer
         settlement, which regular transactions do not price separately.
 
-        [ftx]: ref:ethereum.forks.bogota.transactions.frame_transaction.FrameTransaction
-        [tb]: ref:ethereum.forks.bogota.vm.gas.GasCosts.TX_BASE
+        [ftx]: ref:ethereum.forks.develop.transactions.frame_transaction.FrameTransaction
+        [tb]: ref:ethereum.forks.develop.vm.gas.GasCosts.TX_BASE
         """  # noqa: E501
 
         TX_PER_FRAME: Final[ExecutionGas] = ExecutionGas(Uint(475))
         """
         Additional per-[`Frame`] gas cost for [`FrameTransaction`][ftx]s.
 
-        [ftx]: ref:ethereum.forks.bogota.transactions.frame_transaction.FrameTransaction
-        [`Frame`]: ref:ethereum.forks.bogota.transactions.frame_transaction.Frame
+        [ftx]: ref:ethereum.forks.develop.transactions.frame_transaction.FrameTransaction
+        [`Frame`]: ref:ethereum.forks.develop.transactions.frame_transaction.Frame
         """  # noqa: E501
 
         # Frames
@@ -290,8 +290,8 @@ class GasCosts:
         Cost for verifying a [`SECP256K1`][s] signature in a
         [`FrameTransaction`][ftx].
 
-        [s]: ref:ethereum.forks.bogota.transactions.frame_transaction.FrameSignatureScheme.SECP256K1
-        [ftx]: ref:ethereum.forks.bogota.transactions.frame_transaction.FrameTransaction
+        [s]: ref:ethereum.forks.develop.transactions.frame_transaction.FrameSignatureScheme.SECP256K1
+        [ftx]: ref:ethereum.forks.develop.transactions.frame_transaction.FrameTransaction
         """  # noqa: E501
 
         FRAME_SIGNATURE_SCHEME_P256: Final[ExecutionGas] = ExecutionGas(
@@ -300,8 +300,8 @@ class GasCosts:
         """
         Cost for verifying a [`P256`][s] signature in a [`FrameTransaction`][ftx].
 
-        [s]: ref:ethereum.forks.bogota.transactions.frame_transaction.FrameSignatureScheme.P256
-        [ftx]: ref:ethereum.forks.bogota.transactions.frame_transaction.FrameTransaction
+        [s]: ref:ethereum.forks.develop.transactions.frame_transaction.FrameSignatureScheme.P256
+        [ftx]: ref:ethereum.forks.develop.transactions.frame_transaction.FrameTransaction
         """  # noqa: E501
 
         FRAME_SIGNATURE_SCHEME_ARBITRARY: Final[ExecutionGas] = ExecutionGas(
@@ -313,8 +313,8 @@ class GasCosts:
         validate these entries; the charge covers making the bytes available
         for introspection.
 
-        [s]: ref:ethereum.forks.bogota.transactions.frame_transaction.FrameSignatureScheme.ARBITRARY
-        [ftx]: ref:ethereum.forks.bogota.transactions.frame_transaction.FrameTransaction
+        [s]: ref:ethereum.forks.develop.transactions.frame_transaction.FrameSignatureScheme.ARBITRARY
+        [ftx]: ref:ethereum.forks.develop.transactions.frame_transaction.FrameTransaction
         """  # noqa: E501
 
         OPCODE_TXPARAM: Final[ExecutionGas] = BASE
@@ -334,7 +334,7 @@ class GasCosts:
         in the nonce manager, which the protocol performs outside the
         access lists and `SSTORE` pricing.
 
-        [ftx]: ref:ethereum.forks.bogota.transactions.frame_transaction.FrameTransaction
+        [ftx]: ref:ethereum.forks.develop.transactions.frame_transaction.FrameTransaction
         """  # noqa: E501
 
 
@@ -372,7 +372,7 @@ class StateGasReservoir:
     moved down by [`commit_state_gas`][commit] when charges become
     non-refillable.
 
-    [commit]: ref:ethereum.forks.bogota.vm.gas.commit_state_gas
+    [commit]: ref:ethereum.forks.develop.vm.gas.commit_state_gas
     """
 
     state_gas_spilled: StateGas = StateGas(Uint(0))
@@ -384,7 +384,7 @@ class StateGasReservoir:
     ([`repay_state_gas_spill`][repay]). [EIP-8037] names this
     quantity `state_gas_from_gas_left`.
 
-    [repay]: ref:ethereum.forks.bogota.vm.gas.repay_state_gas_spill
+    [repay]: ref:ethereum.forks.develop.vm.gas.repay_state_gas_spill
     [EIP-8037]: https://eips.ethereum.org/EIPS/eip-8037
     """
 
@@ -397,10 +397,10 @@ class StateGasReservoir:
     each commit lowers the baseline, so it is the frame's grant minus
     `state_gas_baseline`.
 
-    [Spill]: ref:ethereum.forks.bogota.vm.gas.StateGasReservoir.state_gas_spilled
-    [commit]: ref:ethereum.forks.bogota.vm.gas.commit_state_gas
-    [restore]: ref:ethereum.forks.bogota.vm.gas.restore_state_gas
-    [entry]: ref:ethereum.forks.bogota.vm.gas.restore_state_gas_to_entry
+    [Spill]: ref:ethereum.forks.develop.vm.gas.StateGasReservoir.state_gas_spilled
+    [commit]: ref:ethereum.forks.develop.vm.gas.commit_state_gas
+    [restore]: ref:ethereum.forks.develop.vm.gas.restore_state_gas
+    [entry]: ref:ethereum.forks.develop.vm.gas.restore_state_gas_to_entry
     """  # noqa: E501
 
 
@@ -421,8 +421,8 @@ class GasMeter:
     here and draw state gas from their frame's explicit budget on the
     frame context instead.
 
-    [`Evm`]: ref:ethereum.forks.bogota.vm.Evm
-    [r]: ref:ethereum.forks.bogota.vm.gas.StateGasReservoir
+    [`Evm`]: ref:ethereum.forks.develop.vm.Evm
+    [r]: ref:ethereum.forks.develop.vm.gas.StateGasReservoir
     """
 
     gas_left: ExecutionGas
@@ -431,7 +431,7 @@ class GasMeter:
     execution-gas charges, and state charges as [spill] once a carried
     reservoir empties.
 
-    [spill]: ref:ethereum.forks.bogota.vm.gas.StateGasReservoir.state_gas_spilled
+    [spill]: ref:ethereum.forks.develop.vm.gas.StateGasReservoir.state_gas_spilled
     """  # noqa: E501
 
     reservoir: Optional[StateGasReservoir]
@@ -547,7 +547,7 @@ def charge_state_gas_from_meter(gas_meter: GasMeter, amount: StateGas) -> None:
     amount :
         The amount of state gas the current operation requires.
 
-    [spill]: ref:ethereum.forks.bogota.vm.gas.StateGasReservoir.state_gas_spilled
+    [spill]: ref:ethereum.forks.develop.vm.gas.StateGasReservoir.state_gas_spilled
 
     """  # noqa: E501
     reservoir = gas_meter.reservoir
@@ -686,9 +686,9 @@ def commit_state_gas(gas_meter: GasMeter) -> None:
     gas_meter :
         The frame's gas meter.
 
-    [sd]: ref:ethereum.forks.bogota.vm.eoa_delegation.set_delegation
-    [restore]: ref:ethereum.forks.bogota.vm.gas.restore_state_gas
-    [entry]: ref:ethereum.forks.bogota.vm.gas.restore_state_gas_to_entry
+    [sd]: ref:ethereum.forks.develop.vm.eoa_delegation.set_delegation
+    [restore]: ref:ethereum.forks.develop.vm.gas.restore_state_gas
+    [entry]: ref:ethereum.forks.develop.vm.gas.restore_state_gas_to_entry
 
     """
     reservoir = gas_meter.reservoir
@@ -721,8 +721,8 @@ def restore_state_gas(gas_meter: GasMeter) -> None:
     gas_meter :
         The frame's gas meter.
 
-    [baseline]: ref:ethereum.forks.bogota.vm.gas.StateGasReservoir.state_gas_baseline
-    [spill]: ref:ethereum.forks.bogota.vm.gas.StateGasReservoir.state_gas_spilled
+    [baseline]: ref:ethereum.forks.develop.vm.gas.StateGasReservoir.state_gas_baseline
+    [spill]: ref:ethereum.forks.develop.vm.gas.StateGasReservoir.state_gas_spilled
 
     """  # noqa: E501
     reservoir = gas_meter.reservoir
@@ -753,8 +753,8 @@ def restore_state_gas_to_entry(
     state_gas_reservoir :
         The frame's immutable state gas grant.
 
-    [commit]: ref:ethereum.forks.bogota.vm.gas.commit_state_gas
-    [grant]: ref:ethereum.forks.bogota.vm.TransactionEnvironment.state_gas_reservoir
+    [commit]: ref:ethereum.forks.develop.vm.gas.commit_state_gas
+    [grant]: ref:ethereum.forks.develop.vm.TransactionEnvironment.state_gas_reservoir
 
     """  # noqa: E501
     reservoir = gas_meter.reservoir
@@ -799,7 +799,7 @@ def tx_state_gas_used(
     state_gas_used : `int`
         The net state gas consumed.
 
-    [spill]: ref:ethereum.forks.bogota.vm.gas.StateGasReservoir.state_gas_spilled
+    [spill]: ref:ethereum.forks.develop.vm.gas.StateGasReservoir.state_gas_spilled
 
     """  # noqa: E501
     reservoir = gas_meter.reservoir
@@ -831,7 +831,7 @@ def credit_state_gas_refund(gas_meter: GasMeter, amount: StateGas) -> None:
     amount :
         The refund amount to credit.
 
-    [spill]: ref:ethereum.forks.bogota.vm.gas.StateGasReservoir.state_gas_spilled
+    [spill]: ref:ethereum.forks.develop.vm.gas.StateGasReservoir.state_gas_spilled
 
     """  # noqa: E501
     reservoir = gas_meter.reservoir
@@ -865,7 +865,7 @@ def repay_state_gas_spill(gas_meter: GasMeter) -> None:
     gas_meter :
         The merged gas meter.
 
-    [spill]: ref:ethereum.forks.bogota.vm.gas.StateGasReservoir.state_gas_spilled
+    [spill]: ref:ethereum.forks.develop.vm.gas.StateGasReservoir.state_gas_spilled
 
     """  # noqa: E501
     reservoir = gas_meter.reservoir

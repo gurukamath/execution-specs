@@ -789,12 +789,13 @@ def calculate_frame_transaction_intrinsic_cost(
     The intrinsic cost is the base cost, the per-frame cost, the calldata
     cost of the byte fields priced as calldata — the `data` of each
     frame, the `signer`, `message`, and `signature` bytes of each
-    signature entry, and the encoding of the nonce fields (see
-    [`nonce_calldata`][nc]) — the signature verification cost, the value transfer cost
-    of each value-bearing frame with an explicit target other than the
-    sender, covering the recipient balance write and transfer log, and
-    the keyed nonce access cost of each non-zero nonce key (see
-    [`KEYED_NONCE_ACCESS`][kna]), covering the read and write of its slot.
+    signature entry, and under [EIP-8250] the encoding of the nonce
+    fields (see `nonce_calldata`) — the signature verification
+    cost, the value transfer cost of each value-bearing frame with an
+    explicit target other than the sender, covering the recipient balance
+    write and transfer log, and under [EIP-8250] the keyed nonce access
+    cost of each non-zero nonce key (see `KEYED_NONCE_ACCESS`),
+    covering the read and write of its slot.
     Unlike other transaction types, there is no recipient component:
     target access is paid during frame execution from each frame's own
     execution gas budget.
@@ -807,8 +808,7 @@ def calculate_frame_transaction_intrinsic_cost(
     base.
 
     [EIP-7976]: https://eips.ethereum.org/EIPS/eip-7976
-    [nc]: ref:ethereum.forks.bogota.transactions.frame_transaction.nonce_calldata
-    [kna]: ref:ethereum.forks.bogota.vm.gas.GasCosts.KEYED_NONCE_ACCESS
+    [EIP-8250]: https://eips.ethereum.org/EIPS/eip-8250
     """  # noqa: E501
     from ..vm.gas import GasCosts
     from . import IntrinsicGasCost, count_tokens_in_data

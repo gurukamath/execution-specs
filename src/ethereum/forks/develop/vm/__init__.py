@@ -391,27 +391,29 @@ if EIP_8141:
         transaction's sender. Approving payment requires that no payer is
         set, that execution is approved (by this same scope or earlier),
         and that the resolved target can cover the transaction's maximum
-        cost; it consumes the transaction's nonce set (see
-        [`consume_nonce_set`][cns]) and collects the maximum cost from the
-        resolved target, which becomes the payer. The payer needs no
+        cost; it consumes the transaction's nonce — the sender's account
+        nonce, or its nonce key set under [EIP-8250] (see
+        [`consume_nonce_set`][cns]) — and collects the maximum cost from
+        the resolved target, which becomes the payer. The payer needs no
         warming here: it is the frame's resolved target, whose access the
         frame charged and warmed at frame entry.
 
-        Consuming the nonce set is charged from the executing frame's state
-        gas pool immediately before it happens: for the legacy key set, the
-        account creation when incrementing the nonce creates the sender
-        account; otherwise one storage slot creation per selected key used
-        for the first time. A pool that cannot cover the charge, or a
-        legacy increment that would overflow the account nonce, halts the
-        current call frame exceptionally — the halt's rollback discards
-        every approval effect, including an execution approval this same
-        call already recorded.
+        Consuming the nonce is charged from the executing frame's state
+        gas pool immediately before it happens: the account creation when
+        incrementing the nonce creates the sender account, or under
+        [EIP-8250] one storage slot creation per selected key used for the
+        first time. A pool that cannot cover the charge, or under
+        [EIP-8250] a legacy increment that would overflow the account
+        nonce, halts the current call frame exceptionally — the halt's
+        rollback discards every approval effect, including an execution
+        approval this same call already recorded.
 
         Return whether the approval was granted; a refusal reverts the
         requesting call frame, which is the frame itself only when the
         protocol default code is the caller.
 
-        [cns]: ref:ethereum.forks.bogota.keyed_nonces.consume_nonce_set
+        [EIP-8250]: https://eips.ethereum.org/EIPS/eip-8250
+        [cns]: ref:ethereum.forks.develop.keyed_nonces.consume_nonce_set
         """
         frame_context = tx_env.frame_context
         assert frame_context is not None
@@ -559,7 +561,7 @@ def incorporate_child(evm: Evm, child_evm: Evm) -> None:
     child_evm :
         The child evm to incorporate.
 
-    [spill]: ref:ethereum.forks.bogota.vm.gas.StateGasReservoir.state_gas_spilled
+    [spill]: ref:ethereum.forks.develop.vm.gas.StateGasReservoir.state_gas_spilled
 
     """  # noqa: E501
     child_meter = child_evm.gas_meter

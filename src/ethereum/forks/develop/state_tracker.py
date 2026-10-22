@@ -112,7 +112,7 @@ def get_pre_state_account_optional(
     non-existent account and [`EMPTY_ACCOUNT`] isn't important.
 
     [`EMPTY_ACCOUNT`]: ref:ethereum.state.EMPTY_ACCOUNT
-    [pre]: ref:ethereum.forks.bogota.state_tracker.get_pre_state_account
+    [pre]: ref:ethereum.forks.develop.state_tracker.get_pre_state_account
 
     Parameters
     ----------
@@ -145,7 +145,7 @@ def get_pre_state_account(
     non-existent account and [`EMPTY_ACCOUNT`] is material.
 
     [`EMPTY_ACCOUNT`]: ref:ethereum.state.EMPTY_ACCOUNT
-    [opt]: ref:ethereum.forks.bogota.state_tracker.get_pre_state_account_optional
+    [opt]: ref:ethereum.forks.develop.state_tracker.get_pre_state_account_optional
 
     Parameters
     ----------

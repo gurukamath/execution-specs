@@ -519,8 +519,8 @@ Transaction types that include an [EIP-2930]-style access list.
 See [`has_access_list`][hal] and [`Access`][a] for more details.
 
 [EIP-2930]: https://eips.ethereum.org/EIPS/eip-2930
-[hal]: ref:ethereum.forks.bogota.transactions.has_access_list
-[a]: ref:ethereum.forks.bogota.transactions.Access
+[hal]: ref:ethereum.forks.develop.transactions.has_access_list
+[a]: ref:ethereum.forks.develop.transactions.Access
 """
 
 
@@ -539,8 +539,8 @@ Frame transactions carry the fee parameters nested in their
 See [`FeeMarketTransaction`][fmt] for more details.
 
 [EIP-1559]: https://eips.ethereum.org/EIPS/eip-1559
-[fmt]: ref:ethereum.forks.bogota.transactions.FeeMarketTransaction
-[f]: ref:ethereum.forks.bogota.transactions.frame_transaction.FrameTransaction.fees
+[fmt]: ref:ethereum.forks.develop.transactions.FeeMarketTransaction
+[f]: ref:ethereum.forks.develop.transactions.frame_transaction.FrameTransaction.fees
 """  # noqa: E501
 
 
@@ -553,8 +553,8 @@ if EIP_8141:
     details.
 
     [EIP-4844]: https://eips.ethereum.org/EIPS/eip-4844
-    [bt]: ref:ethereum.forks.bogota.transactions.BlobTransaction
-    [ftx]: ref:ethereum.forks.bogota.transactions.frame_transaction.FrameTransaction
+    [bt]: ref:ethereum.forks.develop.transactions.BlobTransaction
+    [ftx]: ref:ethereum.forks.develop.transactions.frame_transaction.FrameTransaction
     """  # noqa: E501
 
 
@@ -653,8 +653,8 @@ def validate_transaction(tx: Transaction, sender: Address) -> IntrinsicGasCost:
     the maximum priority fee per gas of a fee market transaction exceeds
     its maximum fee per gas.
 
-    [`TX_MAX_GAS_LIMIT`]: ref:ethereum.forks.bogota.vm.gas.GasCosts.TX_MAX_GAS_LIMIT
-    [`TX_MAX_TOTAL_GAS_LIMIT`]: ref:ethereum.forks.bogota.vm.gas.GasCosts.TX_MAX_TOTAL_GAS_LIMIT
+    [`TX_MAX_GAS_LIMIT`]: ref:ethereum.forks.develop.vm.gas.GasCosts.TX_MAX_GAS_LIMIT
+    [`TX_MAX_TOTAL_GAS_LIMIT`]: ref:ethereum.forks.develop.vm.gas.GasCosts.TX_MAX_TOTAL_GAS_LIMIT
     [EIP-2681]: https://eips.ethereum.org/EIPS/eip-2681
     [EIP-7623]: https://eips.ethereum.org/EIPS/eip-7623
     [EIP-7825]: https://eips.ethereum.org/EIPS/eip-7825
@@ -912,10 +912,11 @@ def check_nonce(tx: Transaction, sender_nonce: Uint) -> None:
     """
     Check that the transaction's nonce equals the sender's next nonce.
 
-    Frame transactions select nonce keys instead and are checked by
-    [`check_nonce_set`][cns].
+    Frame transactions under [EIP-8250] select nonce keys instead and
+    are checked by [`check_nonce_set`][cns].
 
-    [cns]: ref:ethereum.forks.bogota.keyed_nonces.check_nonce_set
+    [EIP-8250]: https://eips.ethereum.org/EIPS/eip-8250
+    [cns]: ref:ethereum.forks.develop.keyed_nonces.check_nonce_set
     """
     if EIP_8250:
         assert not isinstance(tx, FrameTransaction)

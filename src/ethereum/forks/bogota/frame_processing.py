@@ -5,10 +5,12 @@ The block-level flow for [EIP-8141] frame transactions, separate from
 the regular flow in `fork.py` from admission onwards: a frame
 transaction has no single top-level call to dispatch — it executes a
 list of frames — and no upfront sender payment: the consumption of
-the transaction's nonce set and the collection of its maximum cost
-are effects of the `APPROVE` instruction, during execution.
+the transaction's nonce (its nonce key set under [EIP-8250]) and the
+collection of its maximum cost are effects of the `APPROVE`
+instruction, during execution.
 
 [EIP-8141]: https://eips.ethereum.org/EIPS/eip-8141
+[EIP-8250]: https://eips.ethereum.org/EIPS/eip-8250
 """
 
 from typing import Tuple
@@ -106,8 +108,9 @@ def check_frame_transaction(
     GasUsedExceedsLimitError :
         If the gas used by the transaction exceeds the block's gas limit.
     NonceMismatchError :
-        If a nonce key the transaction selects does not hold the
-        transaction's nonce sequence.
+        If the transaction's nonce is not the sender's next nonce, or
+        under EIP-8250 a nonce key it selects does not hold its nonce
+        sequence.
     InsufficientMaxFeePerGasError :
         If the maximum fee per gas is insufficient for the transaction.
     InsufficientMaxFeePerBlobGasError :

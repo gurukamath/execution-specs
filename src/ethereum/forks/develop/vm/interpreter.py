@@ -104,8 +104,8 @@ class TransactionOutput:
     call, and by [`process_frames`][pf] for a frame transaction's
     frame sequence.
 
-    [ptl]: ref:ethereum.forks.bogota.vm.interpreter.process_top_level
-    [pf]: ref:ethereum.forks.bogota.vm.frame_interpreter.process_frames
+    [ptl]: ref:ethereum.forks.develop.vm.interpreter.process_top_level
+    [pf]: ref:ethereum.forks.develop.vm.frame_interpreter.process_frames
     """
 
     gas_left: ExecutionGas

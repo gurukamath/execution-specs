@@ -8,8 +8,8 @@ alongside the frames in a list of [`FrameSignature`] entries that the
 protocol validates before any frame executes.
 
 [EIP-8141]: https://eips.ethereum.org/EIPS/eip-8141
-[`Frame`]: ref:ethereum.forks.bogota.transactions.frame_transaction.Frame
-[`FrameSignature`]: ref:ethereum.forks.bogota.transactions.frame_transaction.FrameSignature
+[`Frame`]: ref:ethereum.forks.develop.transactions.frame_transaction.Frame
+[`FrameSignature`]: ref:ethereum.forks.develop.transactions.frame_transaction.FrameSignature
 """  # noqa: E501
 
 from dataclasses import dataclass, replace
@@ -52,8 +52,8 @@ MAX_FRAMES_PER_TX: Final[Uint] = Uint(64)
 """
 Maximum number of [`Frame`]s allowed per [`FrameTransaction`][ftx].
 
-[`Frame`]: ref:ethereum.forks.bogota.transactions.frame_transaction.Frame
-[ftx]: ref:ethereum.forks.bogota.transactions.frame_transaction.FrameTransaction
+[`Frame`]: ref:ethereum.forks.develop.transactions.frame_transaction.Frame
+[ftx]: ref:ethereum.forks.develop.transactions.frame_transaction.FrameTransaction
 """  # noqa: E501
 
 EXPIRY_VERIFIER: Final[Address] = Address(
@@ -75,9 +75,9 @@ are subject to additional validity constraints, checked in
 [`validate_frame_transaction`][vft].
 
 [EIP-8141]: https://eips.ethereum.org/EIPS/eip-8141
-[edl]: ref:ethereum.forks.bogota.transactions.frame_transaction.EXPIRY_DATA_LENGTH
-[v]: ref:ethereum.forks.bogota.transactions.frame_transaction.FrameMode.VERIFY
-[vft]: ref:ethereum.forks.bogota.transactions.frame_transaction.validate_frame_transaction
+[edl]: ref:ethereum.forks.develop.transactions.frame_transaction.EXPIRY_DATA_LENGTH
+[v]: ref:ethereum.forks.develop.transactions.frame_transaction.FrameMode.VERIFY
+[vft]: ref:ethereum.forks.develop.transactions.frame_transaction.validate_frame_transaction
 """  # noqa: E501
 
 EXPIRY_DATA_LENGTH: Final[int] = 8
@@ -114,14 +114,14 @@ if EIP_8250:
     writes keyed nonces.
 
     [EIP-8250]: https://eips.ethereum.org/EIPS/eip-8250
-    [ns]: ref:ethereum.forks.bogota.keyed_nonces.nonce_slot
+    [ns]: ref:ethereum.forks.develop.keyed_nonces.nonce_slot
     """
 
     MAX_NONCE_KEYS: Final[Uint] = Uint(16)
     """
     Maximum number of nonce keys a [`FrameTransaction`][ftx] may select.
 
-    [ftx]: ref:ethereum.forks.bogota.transactions.frame_transaction.FrameTransaction
+    [ftx]: ref:ethereum.forks.develop.transactions.frame_transaction.FrameTransaction
     """  # noqa: E501
 
     MAX_NONCE_SEQ: Final[U64] = U64.MAX_VALUE
@@ -148,14 +148,14 @@ class FrameMode(UintEnum, boundary=STRICT):
     transactions with a new mode adds a member here; it does not change how
     the existing members are checked.
 
-    [`Frame`]: ref:ethereum.forks.bogota.transactions.frame_transaction.Frame
+    [`Frame`]: ref:ethereum.forks.develop.transactions.frame_transaction.Frame
     """  # noqa: E501
 
     DEFAULT = Uint(0)
     """
     Execute frame as [`FRAME_ENTRY_POINT`][fep].
 
-    [fep]: ref:ethereum.forks.bogota.vm.FRAME_ENTRY_POINT
+    [fep]: ref:ethereum.forks.develop.vm.FRAME_ENTRY_POINT
     """
 
     VERIFY = Uint(1)
@@ -167,7 +167,7 @@ class FrameMode(UintEnum, boundary=STRICT):
     """
     Execute frame as [`sender`][s].
 
-    [s]: ref:ethereum.forks.bogota.transactions.frame_transaction.FrameTransaction.sender
+    [s]: ref:ethereum.forks.develop.transactions.frame_transaction.FrameTransaction.sender
     """  # noqa: E501
 
 
@@ -187,14 +187,14 @@ class FrameFlag(UintFlag, boundary=STRICT):
     """
     [`Frame`] has permission to approve payment.
 
-    [`Frame`]: ref:ethereum.forks.bogota.transactions.frame_transaction.Frame
+    [`Frame`]: ref:ethereum.forks.develop.transactions.frame_transaction.Frame
     """  # noqa: E501
 
     APPROVE_EXECUTION = Uint(2)
     """
     [`Frame`] has permission to approve execution.
 
-    [`Frame`]: ref:ethereum.forks.bogota.transactions.frame_transaction.Frame
+    [`Frame`]: ref:ethereum.forks.develop.transactions.frame_transaction.Frame
     """  # noqa: E501
 
     ATOMIC_BATCH = Uint(4)
@@ -203,7 +203,7 @@ class FrameFlag(UintFlag, boundary=STRICT):
 
     All frames within an atomic batch either all succeed or are all reverted.
 
-    [`Frame`]: ref:ethereum.forks.bogota.transactions.frame_transaction.Frame
+    [`Frame`]: ref:ethereum.forks.develop.transactions.frame_transaction.Frame
     """  # noqa: E501
 
 
@@ -258,7 +258,7 @@ class GasLimits:
     Corresponds to the `limits` list of the frame object in [EIP-8141].
 
     [EIP-8141]: https://eips.ethereum.org/EIPS/eip-8141
-    [`Frame`]: ref:ethereum.forks.bogota.transactions.frame_transaction.Frame
+    [`Frame`]: ref:ethereum.forks.develop.transactions.frame_transaction.Frame
     """  # noqa: E501
 
     execution: U64
@@ -279,7 +279,7 @@ class Frame:
     """
     Unit of execution defined in a [`FrameTransaction`][ft].
 
-    [ft]: ref:ethereum.forks.bogota.transactions.frame_transaction.FrameTransaction
+    [ft]: ref:ethereum.forks.develop.transactions.frame_transaction.FrameTransaction
     """  # noqa: E501
 
     mode: FrameMode
@@ -309,7 +309,7 @@ class Frame:
     Amount of ether (in wei) to transfer from the [`sender`][s] as part of the
     frame execution.
 
-    [s]: ref:ethereum.forks.bogota.transactions.frame_transaction.FrameTransaction.sender
+    [s]: ref:ethereum.forks.develop.transactions.frame_transaction.FrameTransaction.sender
     """  # noqa: E501
 
     data: Bytes
@@ -329,7 +329,7 @@ class FrameSignatureScheme(UintEnum, boundary=STRICT):
     a signature using a reserved scheme never decodes and no separate
     validity check is required.
 
-    [fs]: ref:ethereum.forks.bogota.transactions.frame_transaction.FrameSignature
+    [fs]: ref:ethereum.forks.develop.transactions.frame_transaction.FrameSignature
     """  # noqa: E501
 
     ARBITRARY = Uint(0)
@@ -360,7 +360,7 @@ class FrameSignature:
     referenced by [`VERIFY`][v] frames and by ordinary EVM execution,
     through the signature introspection instructions.
 
-    [v]: ref:ethereum.forks.bogota.transactions.frame_transaction.FrameMode.VERIFY
+    [v]: ref:ethereum.forks.develop.transactions.frame_transaction.FrameMode.VERIFY
     """  # noqa: E501
 
     scheme: FrameSignatureScheme
@@ -374,8 +374,8 @@ class FrameSignature:
 
     For [`SECP256K1`] and [`P256`], this is a 20-byte address.
 
-    [`SECP256K1`]: ref:ethereum.forks.bogota.transactions.frame_transaction.FrameSignatureScheme.SECP256K1
-    [`P256`]: ref:ethereum.forks.bogota.transactions.frame_transaction.FrameSignatureScheme.P256
+    [`SECP256K1`]: ref:ethereum.forks.develop.transactions.frame_transaction.FrameSignatureScheme.SECP256K1
+    [`P256`]: ref:ethereum.forks.develop.transactions.frame_transaction.FrameSignatureScheme.P256
     """  # noqa: E501
 
     message: Bytes0 | Bytes32
@@ -388,7 +388,7 @@ class FrameSignature:
     """
     Raw signature bytes, to be interpreted according to [`scheme`].
 
-    [`scheme`]: ref:ethereum.forks.bogota.transactions.frame_transaction.FrameSignature.scheme
+    [`scheme`]: ref:ethereum.forks.develop.transactions.frame_transaction.FrameSignature.scheme
     """  # noqa: E501
 
 
@@ -403,7 +403,7 @@ class TransactionFees:
     [EIP-8141].
 
     [EIP-8141]: https://eips.ethereum.org/EIPS/eip-8141
-    [ftx]: ref:ethereum.forks.bogota.transactions.frame_transaction.FrameTransaction
+    [ftx]: ref:ethereum.forks.develop.transactions.frame_transaction.FrameTransaction
     """  # noqa: E501
 
     max_priority_fee_per_gas: Uint
@@ -449,10 +449,10 @@ class FrameTransaction:
         nonce; any other set selects independent sequences held by the
         nonce manager (see [`current_nonce_seq`][cns]).
 
-        [ns]: ref:ethereum.forks.bogota.transactions.frame_transaction.FrameTransaction.nonce_seq
-        [lnk]: ref:ethereum.forks.bogota.transactions.frame_transaction.LEGACY_NONCE_KEYS
-        [s]: ref:ethereum.forks.bogota.transactions.frame_transaction.FrameTransaction.sender
-        [cns]: ref:ethereum.forks.bogota.keyed_nonces.current_nonce_seq
+        [ns]: ref:ethereum.forks.develop.transactions.frame_transaction.FrameTransaction.nonce_seq
+        [lnk]: ref:ethereum.forks.develop.transactions.frame_transaction.LEGACY_NONCE_KEYS
+        [s]: ref:ethereum.forks.develop.transactions.frame_transaction.FrameTransaction.sender
+        [cns]: ref:ethereum.forks.develop.keyed_nonces.current_nonce_seq
         """  # noqa: E501
 
         nonce_seq: U64
@@ -465,7 +465,7 @@ class FrameTransaction:
         A scalar value equal to the number of transactions sent by the
         [`sender`][s].
 
-        [s]: ref:ethereum.forks.bogota.transactions.frame_transaction.FrameTransaction.sender
+        [s]: ref:ethereum.forks.develop.transactions.frame_transaction.FrameTransaction.sender
         """  # noqa: E501
 
     sender: Address
@@ -487,8 +487,8 @@ class FrameTransaction:
     list must validate successfully before any [`Frame`] is executed. If any
     signature is malformed or invalid, the whole transaction is invalid.
 
-    [v]: ref:ethereum.forks.bogota.transactions.frame_transaction.FrameMode.VERIFY
-    [`Frame`]: ref:ethereum.forks.bogota.transactions.frame_transaction.Frame
+    [v]: ref:ethereum.forks.develop.transactions.frame_transaction.FrameMode.VERIFY
+    [`Frame`]: ref:ethereum.forks.develop.transactions.frame_transaction.Frame
     """  # noqa: E501
 
     fees: TransactionFees
@@ -554,11 +554,11 @@ def validate_signature(
     assigns them no resolved signer — `None` is returned — so their
     `signer` must be empty.
 
-    [`FrameSignature`]: ref:ethereum.forks.bogota.transactions.frame_transaction.FrameSignature
-    [csh]: ref:ethereum.forks.bogota.transactions.frame_transaction.compute_frame_signature_hash
-    [k1]: ref:ethereum.forks.bogota.transactions.frame_transaction.FrameSignatureScheme.SECP256K1
-    [p256]: ref:ethereum.forks.bogota.transactions.frame_transaction.FrameSignatureScheme.P256
-    [arb]: ref:ethereum.forks.bogota.transactions.frame_transaction.FrameSignatureScheme.ARBITRARY
+    [`FrameSignature`]: ref:ethereum.forks.develop.transactions.frame_transaction.FrameSignature
+    [csh]: ref:ethereum.forks.develop.transactions.frame_transaction.compute_frame_signature_hash
+    [k1]: ref:ethereum.forks.develop.transactions.frame_transaction.FrameSignatureScheme.SECP256K1
+    [p256]: ref:ethereum.forks.develop.transactions.frame_transaction.FrameSignatureScheme.P256
+    [arb]: ref:ethereum.forks.develop.transactions.frame_transaction.FrameSignatureScheme.ARBITRARY
     """  # noqa: E501
     signature_scheme = frame_signature.scheme
     signer = frame_signature.signer
@@ -849,8 +849,8 @@ if EIP_8250:
         The zero key aliases the sender's account nonce and may only appear
         alone, as [`LEGACY_NONCE_KEYS`][lnk].
 
-        [mnk]: ref:ethereum.forks.bogota.transactions.frame_transaction.MAX_NONCE_KEYS
-        [lnk]: ref:ethereum.forks.bogota.transactions.frame_transaction.LEGACY_NONCE_KEYS
+        [mnk]: ref:ethereum.forks.develop.transactions.frame_transaction.MAX_NONCE_KEYS
+        [lnk]: ref:ethereum.forks.develop.transactions.frame_transaction.LEGACY_NONCE_KEYS
         """  # noqa: E501
         key_count = ulen(nonce_keys)
         if key_count < Uint(1) or key_count > MAX_NONCE_KEYS:
@@ -906,12 +906,13 @@ def calculate_frame_transaction_intrinsic_cost(
     The intrinsic cost is the base cost, the per-frame cost, the calldata
     cost of the byte fields priced as calldata — the `data` of each
     frame, the `signer`, `message`, and `signature` bytes of each
-    signature entry, and the encoding of the nonce fields (see
-    [`nonce_calldata`][nc]) — the signature verification cost, the value transfer cost
-    of each value-bearing frame with an explicit target other than the
-    sender, covering the recipient balance write and transfer log, and
-    the keyed nonce access cost of each non-zero nonce key (see
-    [`KEYED_NONCE_ACCESS`][kna]), covering the read and write of its slot.
+    signature entry, and under [EIP-8250] the encoding of the nonce
+    fields (see [`nonce_calldata`][nc]) — the signature verification
+    cost, the value transfer cost of each value-bearing frame with an
+    explicit target other than the sender, covering the recipient balance
+    write and transfer log, and under [EIP-8250] the keyed nonce access
+    cost of each non-zero nonce key (see [`KEYED_NONCE_ACCESS`][kna]),
+    covering the read and write of its slot.
     Unlike other transaction types, there is no recipient component:
     target access is paid during frame execution from each frame's own
     execution gas budget.
@@ -924,8 +925,9 @@ def calculate_frame_transaction_intrinsic_cost(
     base.
 
     [EIP-7976]: https://eips.ethereum.org/EIPS/eip-7976
-    [nc]: ref:ethereum.forks.bogota.transactions.frame_transaction.nonce_calldata
-    [kna]: ref:ethereum.forks.bogota.vm.gas.GasCosts.KEYED_NONCE_ACCESS
+    [EIP-8250]: https://eips.ethereum.org/EIPS/eip-8250
+    [nc]: ref:ethereum.forks.develop.transactions.frame_transaction.nonce_calldata
+    [kna]: ref:ethereum.forks.develop.vm.gas.GasCosts.KEYED_NONCE_ACCESS
     """  # noqa: E501
     from ..vm.gas import GasCosts
     from . import IntrinsicGasCost, count_tokens_in_data

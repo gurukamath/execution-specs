@@ -11,6 +11,11 @@ imports the fold leaves unused, and finally refuses any module where a
 decided flag name survives. Flags that are neither enabled nor disabled
 are left in place, so a fold can decide one fork's EIPs and leave
 another's untouched.
+
+Docstrings are prose and are not folded, but their `ref:` links are
+kept resolvable: a link prefix can be rewritten from the source
+package's name to the output's, and links to names the fold removed
+are dropped, their inline references unwrapped to plain text.
 """
 
 import argparse
@@ -126,6 +131,99 @@ class _DedentDocstrings(cst.CSTTransformer):
         return updated_node.with_changes(value="\n".join([first, *rest]))
 
 
+_LINK_DEFINITION = re.compile(
+    r"^[ \t]*\[(?P<label>[^\]]+)\]:[ \t]*ref:(?P<target>\S+)[ \t]*\n?",
+    re.MULTILINE,
+)
+
+
+def rewrite_docstring_links(
+    text: str,
+    prefix: tuple[str, str] | None,
+    removed: Collection[str],
+) -> str:
+    """
+    Rewrite the `ref:` links of a docstring.
+
+    With `prefix`, links under the first qualified name are moved under
+    the second. A link definition whose target is one of `removed`, or
+    lies under one of them, is deleted, and every inline reference to
+    its label becomes the reference's own text. Blank lines the
+    deletions leave before the closing quotes are removed.
+    """
+    if prefix is not None:
+        old, new = prefix
+        text = re.sub(
+            r"ref:" + re.escape(old) + r"(?=[.\s]|$)", f"ref:{new}", text
+        )
+
+    dropped: list[str] = []
+
+    def is_removed(target: str) -> bool:
+        return any(
+            target == name or target.startswith(name + ".") for name in removed
+        )
+
+    def definition(match: re.Match[str]) -> str:
+        if is_removed(match.group("target")):
+            dropped.append(match.group("label"))
+            return ""
+        return match.group(0)
+
+    if removed:
+        text = _LINK_DEFINITION.sub(definition, text)
+    for label in dropped:
+        text = re.sub(
+            r"\[([^\[\]]+)\]\[" + re.escape(label) + r"\]", r"\1", text
+        )
+        text = re.sub(r"\[" + re.escape(label) + r"\](?![\[(:])", label, text)
+    if dropped:
+        text = re.sub(r"\n[ \t]*\n([ \t]*)(\"\"\"|''')$", r"\n\1\2", text)
+        text = re.sub(r"\n[ \t]*\n[ \t]*\n", "\n\n", text)
+    return text
+
+
+class _RewriteDocstringLinks(cst.CSTTransformer):
+    """
+    Apply `rewrite_docstring_links` to every string in docstring position.
+    """
+
+    def __init__(
+        self, prefix: tuple[str, str] | None, removed: Collection[str]
+    ) -> None:
+        self._prefix = prefix
+        self._removed = removed
+        self._in_docstring_line = False
+
+    @override
+    def visit_SimpleStatementLine(  # noqa: D102
+        self, node: cst.SimpleStatementLine
+    ) -> bool:
+        self._in_docstring_line = _is_docstring_line(node)
+        return True
+
+    @override
+    def leave_SimpleStatementLine(  # noqa: D102
+        self,
+        original_node: cst.SimpleStatementLine,
+        updated_node: cst.SimpleStatementLine,
+    ) -> cst.SimpleStatementLine:
+        self._in_docstring_line = False
+        return updated_node
+
+    @override
+    def leave_SimpleString(  # noqa: D102
+        self, original_node: cst.SimpleString, updated_node: cst.SimpleString
+    ) -> cst.SimpleString:
+        if not self._in_docstring_line or "ref:" not in updated_node.value:
+            return updated_node
+        return updated_node.with_changes(
+            value=rewrite_docstring_links(
+                updated_node.value, self._prefix, self._removed
+            )
+        )
+
+
 def _is_import_line(statement: cst.BaseStatement) -> bool:
     return isinstance(statement, cst.SimpleStatementLine) and all(
         isinstance(small, (cst.Import, cst.ImportFrom))
@@ -224,6 +322,61 @@ class _ConditionalNameCollector(cst.CSTVisitor):
         return True
 
 
+class _RemovedQualifiedNames(cst.CSTVisitor):
+    """
+    Collect, qualified by module and class, the names bound only inside
+    branches that the fold discards. Function bodies are not entered:
+    nothing links to a local.
+    """
+
+    def __init__(self, qualname: str, evaluate) -> None:  # type: ignore[no-untyped-def]
+        self._scope = [qualname]
+        self._evaluate = evaluate
+        self.names: set[str] = set()
+
+    @override
+    def visit_ClassDef(self, node: cst.ClassDef) -> bool:  # noqa: D102
+        self._scope.append(node.name.value)
+        return True
+
+    @override
+    def leave_ClassDef(self, original_node: cst.ClassDef) -> None:  # noqa: D102
+        self._scope.pop()
+
+    @override
+    def visit_FunctionDef(self, node: cst.FunctionDef) -> bool:  # noqa: D102
+        return False
+
+    @override
+    def visit_If(self, node: cst.If) -> bool:  # noqa: D102
+        value, _ = self._evaluate(node.test)
+        removed: list[cst.BaseStatement] = []
+        if value is True and isinstance(node.orelse, cst.Else):
+            removed = _suite_statements(node.orelse.body)
+        elif value is False:
+            removed = _suite_statements(node.body)
+        prefix = ".".join(self._scope)
+        self.names |= {f"{prefix}.{name}" for name in _bound_names(removed)}
+        return True
+
+
+def removed_qualified_names(
+    module: cst.Module,
+    qualname: str,
+    enable: Collection[str],
+    disable: Collection[str],
+) -> set[str]:
+    """
+    Qualified names a fold of `module` with the given decisions removes.
+    """
+    command = FoldFeatureGuardsCommand(
+        CodemodContext(), enable=list(enable), disable=list(disable)
+    )
+    collector = _RemovedQualifiedNames(qualname, command._evaluate)
+    module.visit(collector)
+    return collector.names
+
+
 class _SurvivingFlagFinder(cst.CSTVisitor):
     """
     Find decided flag names that survived the fold.
@@ -282,6 +435,20 @@ class FoldFeatureGuardsCommand(VisitorBasedCodemodCommand):
             default="eips",
             help="Module name (without `.py`) that defines the flags.",
         )
+        arg_parser.add_argument(
+            "--ref-prefix",
+            dest="ref_prefix",
+            metavar=("OLD", "NEW"),
+            nargs=2,
+            help="Move docstring `ref:` links under OLD to NEW.",
+        )
+        arg_parser.add_argument(
+            "--removed-name",
+            dest="removed_names",
+            metavar="NAME",
+            action="append",
+            help="Qualified name the fold removes; links to it are dropped.",
+        )
 
     def __init__(
         self,
@@ -289,8 +456,14 @@ class FoldFeatureGuardsCommand(VisitorBasedCodemodCommand):
         enable: list[str] | None = None,
         disable: list[str] | None = None,
         flags_module: str = "eips",
+        ref_prefix: list[str] | None = None,
+        removed_names: list[str] | None = None,
     ) -> None:
         super().__init__(context)
+        self.ref_prefix = (
+            (ref_prefix[0], ref_prefix[1]) if ref_prefix else None
+        )
+        self.removed_names = list(removed_names or [])
         self.decided = {}
         for name in enable or []:
             self.decided[_flag_name_check(name)] = True
@@ -382,6 +555,13 @@ class FoldFeatureGuardsCommand(VisitorBasedCodemodCommand):
         if self._in_flags_module:
             body = self._strip_decided_flags(body)
         updated_node = updated_node.with_changes(body=body)
+
+        if self.ref_prefix is not None or self.removed_names:
+            rewritten = updated_node.visit(
+                _RewriteDocstringLinks(self.ref_prefix, self.removed_names)
+            )
+            assert isinstance(rewritten, cst.Module)
+            updated_node = rewritten
 
         if not self._in_flags_module:
             finder = _SurvivingFlagFinder(self.decided)

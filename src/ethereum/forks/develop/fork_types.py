@@ -26,7 +26,7 @@ BlockAccessIndex = U32
 """
 Position within the set of all changes in a [`Block`].
 
-[`Block`]: ref:ethereum.forks.bogota.blocks.Block
+[`Block`]: ref:ethereum.forks.develop.blocks.Block
 """
 
 VersionedHash = Hash32

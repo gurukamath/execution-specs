@@ -373,6 +373,8 @@ paths = [
 excluded_paths = [
     "src/ethereum_optimized",
     "src/ethereum_spec_tools",
+    # The development source: every EIP behind a flag, not a fork.
+    "src/ethereum/forks/develop",
 ]
 
 [tool.docc.plugins."docc.html.context"]

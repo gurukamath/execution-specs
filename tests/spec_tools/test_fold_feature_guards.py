@@ -399,6 +399,87 @@ class TestFoldFeatureGuardsCommand(CodemodTest):
             context_override=CodemodContext(filename="pkg/eips.py"),
         )
 
+    def test_ref_links_follow_the_fork_name(self) -> None:
+        """Docstring `ref:` links move under the output's package name."""
+        before = '''
+            """
+            See [`A`] and [the gas][g].
+
+            [`A`]: ref:ethereum.forks.develop.a.A
+            [g]: ref:ethereum.forks.develop.vm.gas.GasCosts.BASE
+            """
+
+            X = 1
+        '''
+        after = '''
+            """
+            See [`A`] and [the gas][g].
+
+            [`A`]: ref:ethereum.forks.bogota.a.A
+            [g]: ref:ethereum.forks.bogota.vm.gas.GasCosts.BASE
+            """
+
+            X = 1
+        '''
+        self.fold(
+            before,
+            after,
+            ref_prefix=["ethereum.forks.develop", "ethereum.forks.bogota"],
+        )
+
+    def test_links_to_removed_names_are_unwrapped(self) -> None:
+        """
+        A link definition whose target the fold removed is dropped, its
+        inline references become plain text, and the blank line left
+        before the closing quotes goes with it.
+        """
+        before = '''
+            def f():
+                """
+                Checked by [`check_nonce_set`][cns] against [`KEYED`]; see
+                also [`Account`].
+
+                [cns]: ref:ethereum.forks.bogota.keyed_nonces.check_nonce_set
+                [`KEYED`]: ref:ethereum.forks.bogota.vm.gas.GasCosts.KEYED
+                [`Account`]: ref:ethereum.state.Account
+                """
+                return 1
+
+
+            def g():
+                """
+                Only [`check_nonce_set`][cns].
+
+                [cns]: ref:ethereum.forks.bogota.keyed_nonces.check_nonce_set
+                """
+                return 2
+        '''
+        after = '''
+            def f():
+                """
+                Checked by `check_nonce_set` against `KEYED`; see
+                also [`Account`].
+
+                [`Account`]: ref:ethereum.state.Account
+                """
+                return 1
+
+
+            def g():
+                """
+                Only `check_nonce_set`.
+                """
+                return 2
+        '''
+        self.fold(
+            before,
+            after,
+            removed_names=[
+                "ethereum.forks.bogota.keyed_nonces",
+                "ethereum.forks.bogota.vm.gas.GasCosts.KEYED",
+            ],
+        )
+
     def test_surfaced_imports_join_the_import_block(self) -> None:
         """Imports a module-level fold surfaces move up with the others."""
         before = """
