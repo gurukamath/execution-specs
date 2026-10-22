@@ -15,7 +15,6 @@ from ethereum.forks.bogota.transactions.frame_transaction import (
 )
 from ethereum.forks.develop.eips import (
     EIP_7906,
-    EIP_8250,
     OWNED_MODULES,
     REQUIRES,
     TARGETS,
@@ -71,7 +70,6 @@ TARGETS
 
 # src/ethereum/forks/develop/eips.py - flags whose guards are not in the
 # source tree yet; drop each entry with the EIP's first guard
-EIP_8250
 EIP_7906
 
 # src/ethereum/forks/develop/transactions/frame_transaction.py -

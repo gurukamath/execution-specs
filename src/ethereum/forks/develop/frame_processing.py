@@ -4,9 +4,9 @@ Frame transaction processing.
 The block-level flow for [EIP-8141] frame transactions, separate from
 the regular flow in `fork.py` from admission onwards: a frame
 transaction has no single top-level call to dispatch — it executes a
-list of frames — and no upfront sender payment: the sender's nonce
-increment and the collection of the transaction's maximum cost are
-effects of the `APPROVE` instruction, during execution.
+list of frames — and no upfront sender payment: the consumption of
+the transaction's nonce set and the collection of its maximum cost
+are effects of the `APPROVE` instruction, during execution.
 
 [EIP-8141]: https://eips.ethereum.org/EIPS/eip-8141
 """
@@ -27,6 +27,7 @@ from .blocks import (
     Receipt,
     encode_receipt,
 )
+from .eips import EIP_8250
 from .exceptions import MaxCostOverflowError
 from .fork_types import ExecutionGas, StateGas
 from .state_tracker import (
@@ -54,6 +55,9 @@ from .vm.gas import (
     check_max_fee_per_blob_gas,
     settle_frame_transaction_gas,
 )
+
+if EIP_8250:
+    from .keyed_nonces import check_nonce_set
 
 
 def check_frame_transaction(
@@ -106,7 +110,8 @@ def check_frame_transaction(
     GasUsedExceedsLimitError :
         If the gas used by the transaction exceeds the block's gas limit.
     NonceMismatchError :
-        If the nonce of the transaction is not equal to the sender's nonce.
+        If a nonce key the transaction selects does not hold the
+        transaction's nonce sequence.
     InsufficientMaxFeePerGasError :
         If the maximum fee per gas is insufficient for the transaction.
     InsufficientMaxFeePerBlobGasError :
@@ -161,7 +166,10 @@ def check_frame_transaction(
         block_env.excess_blob_gas,
     )
 
-    check_nonce(tx, sender_account.nonce)
+    if EIP_8250:
+        check_nonce_set(tx_state, tx)
+    else:
+        check_nonce(tx, sender_account.nonce)
 
     max_cost = validation.max_gas * tx.fees.max_fee_per_gas + Uint(
         calculate_total_blob_gas(tx)
@@ -189,6 +197,7 @@ def check_frame_transaction(
             tx=tx,
             signature_hash=validation.signature_hash,
             resolved_signers=validation.resolved_signers,
+            legacy_nonce=sender_account.nonce,
             standard_gas_limit=validation.standard_gas_limit,
             max_cost=max_cost,
             current_frame_index=Uint(0),

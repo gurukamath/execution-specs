@@ -13,6 +13,8 @@ Exceptions which cause the EVM to halt exceptionally.
 
 from ethereum.exceptions import EthereumException
 
+from ..eips import EIP_8250
+
 
 class ExceptionalHalt(EthereumException):
     """
@@ -129,6 +131,17 @@ class AddressCollision(ExceptionalHalt):
     """
 
     pass
+
+
+if EIP_8250:
+
+    class NonceOverflow(ExceptionalHalt):
+        """
+        Raised when a payment approval would increment the sender's
+        account nonce past the largest nonce sequence.
+        """
+
+        pass
 
 
 class KZGProofError(ExceptionalHalt):

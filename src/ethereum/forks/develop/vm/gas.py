@@ -22,7 +22,7 @@ from ethereum.trace import GasAndRefund, StateGasAndRefund, evm_trace
 from ethereum.utils.numeric import ceil32, taylor_exponential
 
 from ..blocks import Header
-from ..eips import EIP_8141
+from ..eips import EIP_8141, EIP_8250
 from ..exceptions import (
     BlobGasLimitExceededError,
     InsufficientMaxFeePerBlobGasError,
@@ -64,6 +64,10 @@ class StateGasCosts:
     AUTH_BASE: Final[StateGas] = (
         STATE_BYTES_PER_AUTH_BASE * COST_PER_STATE_BYTE
     )
+    if EIP_8250:
+        KEYED_NONCE_FIRST_USE: Final[StateGas] = (
+            STATE_BYTES_PER_STORAGE_SET * COST_PER_STATE_BYTE
+        )
 
 
 # These values may be patched at runtime by a future gas repricing utility
@@ -319,6 +323,19 @@ class GasCosts:
         OPCODE_SIGPARAM: Final[ExecutionGas] = BASE
         OPCODE_FRAMEDATACOPY_BASE: Final[ExecutionGas] = VERY_LOW
         OPCODE_SIGDATACOPY_BASE: Final[ExecutionGas] = VERY_LOW
+
+    if EIP_8250:
+        KEYED_NONCE_ACCESS: Final[ExecutionGas] = (
+            COLD_STORAGE_ACCESS + STORAGE_WRITE
+        )
+        """
+        Intrinsic cost of each non-zero nonce key of a
+        [`FrameTransaction`][ftx]: the cold read and the write of its slot
+        in the nonce manager, which the protocol performs outside the
+        access lists and `SSTORE` pricing.
+
+        [ftx]: ref:ethereum.forks.bogota.transactions.frame_transaction.FrameTransaction
+        """  # noqa: E501
 
 
 MAX_BLOB_GAS_PER_BLOCK: Final[U64] = (

@@ -208,6 +208,13 @@ class FrameContext:
     `ARBITRARY` entries, to which the protocol assigns no signer.
     """
 
+    legacy_nonce: Uint
+    """
+    The sender's account nonce in the transaction's pre-state, observed
+    before any frame executes. Later changes to the account nonce
+    within the transaction do not update it.
+    """
+
     standard_gas_limit: Uint
     """
     Settlement anchor: the transaction's intrinsic cost plus the sum
@@ -372,21 +379,27 @@ def attempt_approval(
     transaction's sender. Approving payment requires that no payer is
     set, that execution is approved (by this same scope or earlier),
     and that the resolved target can cover the transaction's maximum
-    cost; it increments the sender's nonce and collects the maximum
-    cost from the resolved target, which becomes the payer. The payer
-    needs no warming here: it is the frame's resolved target, whose
-    access the frame charged and warmed at frame entry.
+    cost; it consumes the transaction's nonce set (see
+    [`consume_nonce_set`][cns]) and collects the maximum cost from the
+    resolved target, which becomes the payer. The payer needs no
+    warming here: it is the frame's resolved target, whose access the
+    frame charged and warmed at frame entry.
 
-    When incrementing the nonce creates the sender account, the
-    account creation is charged from the executing frame's state gas
-    pool immediately before the increment. A pool that cannot cover
-    the charge halts the current call frame exceptionally — the halt's
-    rollback discards every approval effect, including an execution
-    approval this same call already recorded.
+    Consuming the nonce set is charged from the executing frame's state
+    gas pool immediately before it happens: for the legacy key set, the
+    account creation when incrementing the nonce creates the sender
+    account; otherwise one storage slot creation per selected key used
+    for the first time. A pool that cannot cover the charge, or a
+    legacy increment that would overflow the account nonce, halts the
+    current call frame exceptionally — the halt's rollback discards
+    every approval effect, including an execution approval this same
+    call already recorded.
 
     Return whether the approval was granted; a refusal reverts the
     requesting call frame, which is the frame itself only when the
     protocol default code is the caller.
+
+    [cns]: ref:ethereum.forks.bogota.keyed_nonces.consume_nonce_set
     """
     frame_context = tx_env.frame_context
     assert frame_context is not None

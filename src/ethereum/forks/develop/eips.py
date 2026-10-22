@@ -72,6 +72,7 @@ OWNED_MODULES: Final[Mapping[int, Tuple[str, ...]]] = {
         "vm.frame_interpreter",
         "vm.instructions.frame",
     ),
+    8250: ("keyed_nonces",),
 }
 """
 Modules that exist only for one EIP, keyed by EIP number and named
