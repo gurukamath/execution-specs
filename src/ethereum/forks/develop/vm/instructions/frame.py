@@ -15,7 +15,7 @@ from ethereum_types.numeric import U256, Uint
 
 from ethereum.utils.numeric import ceil32
 
-from ...eips import EIP_8250
+from ...eips import EIP_7906, EIP_8250
 from ...fork_types import ExecutionGas
 from ...transactions.frame_transaction import (
     APPROVE_SCOPE_MASK,
@@ -31,6 +31,10 @@ from ..stack import pop, push
 
 if EIP_8250:
     from ...transactions.frame_transaction import nonce_keys_hash
+
+if EIP_7906:
+    from ...transactions.frame_transaction import FrameMode
+    from ..exceptions import WriteInStaticContext
 
 
 @final
@@ -110,7 +114,10 @@ def approve(evm: Evm) -> None:
     — reverts the current call frame, not the whole frame: a caller
     that handles the revert carries on. The approval's writes
     deliberately bypass the `VERIFY` static restriction: only
-    `APPROVE` may mutate state there.
+    `APPROVE` may mutate state there. A `POST_TX` frame has no such
+    exception and halts exceptionally instead ([EIP-7906]).
+
+    [EIP-7906]: https://eips.ethereum.org/EIPS/eip-7906
     """
     # STACK
     offset = pop(evm.stack)
@@ -126,6 +133,10 @@ def approve(evm: Evm) -> None:
     tx = frame_context.tx
     frame = tx.frames[int(frame_context.current_frame_index)]
     resolved_target = resolve_frame_target(tx, frame)
+
+    if EIP_7906:
+        if frame.mode == FrameMode.POST_TX:
+            raise WriteInStaticContext
 
     evm.memory += b"\x00" * extend_memory.expand_by
 

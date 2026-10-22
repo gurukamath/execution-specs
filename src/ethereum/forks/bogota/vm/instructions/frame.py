@@ -106,7 +106,10 @@ def approve(evm: Evm) -> None:
     — reverts the current call frame, not the whole frame: a caller
     that handles the revert carries on. The approval's writes
     deliberately bypass the `VERIFY` static restriction: only
-    `APPROVE` may mutate state there.
+    `APPROVE` may mutate state there. A `POST_TX` frame has no such
+    exception and halts exceptionally instead ([EIP-7906]).
+
+    [EIP-7906]: https://eips.ethereum.org/EIPS/eip-7906
     """
     # STACK
     offset = pop(evm.stack)

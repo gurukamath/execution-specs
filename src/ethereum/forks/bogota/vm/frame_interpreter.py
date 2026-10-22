@@ -6,9 +6,13 @@ transaction describes a list of frames that `process_frames` executes
 in order, each as its own top-level call with a fresh gas meter
 holding the frame's gas limit. The frames share the transaction's
 state, a `FrameJournal` of the effects accrued across frames, and
-the approval context that the `APPROVE` instruction advances.
+the approval context that the `APPROVE` instruction advances. The
+[EIP-7906] `POST_TX` frames that may trail the list assert the
+transaction's outcome: one failing reverts the execution body that
+followed the validation prefix.
 
 [EIP-8141]: https://eips.ethereum.org/EIPS/eip-8141
+[EIP-7906]: https://eips.ethereum.org/EIPS/eip-7906
 """
 
 from dataclasses import dataclass, replace
@@ -281,6 +285,8 @@ def create_evm_from_frame(
     )
 
     ## Build the frame
+    is_static = frame.mode == FrameMode.VERIFY
+
     return Evm(
         # Context
         block_env=block_env,
@@ -293,7 +299,7 @@ def create_evm_from_frame(
         value=frame.value,
         call_data=frame.data,
         should_transfer_value=True,
-        is_static=frame.mode == FrameMode.VERIFY,
+        is_static=is_static,
         disable_precompiles=disable_precompiles,
         # Code
         code_address=code_address,
@@ -583,7 +589,11 @@ def process_frames(
     the caller of the frame about to run.
 
     A failing frame of an atomic batch unrolls the batch, and the
-    remaining batch frames are skipped.
+    remaining batch frames are skipped. A failing `POST_TX` frame
+    reverts the whole execution body instead, whatever batches it
+    held. The remaining frames, all `POST_TX` frames since the mode
+    forms a trailing suffix, are skipped: the transaction's outcome is
+    already reverted, so they have nothing left to assert.
 
     Both gas dimensions settle from the final receipts: each frame's
     unused gas is its budget less its receipt's usage, so gas a

@@ -619,7 +619,11 @@ def validate_frame_transaction(
     schemes, and field lengths — are mostly enforced by their types
     while the transaction is decoded. Checked here instead are the
     nonce and fee-cap upper bounds, which are tighter than the decoded
-    types enforce, and the constraints that span several fields.
+    types enforce, and the constraints that span several fields,
+    including [EIP-7906]'s rule that `POST_TX` frames form a trailing
+    suffix of the frame list.
+
+    [EIP-7906]: https://eips.ethereum.org/EIPS/eip-7906
 
     A frame transaction has no gas limit field; its two gas anchors are
     derived instead. The per-transaction gas cap of [EIP-7825] bounds

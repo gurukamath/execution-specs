@@ -22,7 +22,7 @@ from ethereum.trace import GasAndRefund, StateGasAndRefund, evm_trace
 from ethereum.utils.numeric import ceil32, taylor_exponential
 
 from ..blocks import Header
-from ..eips import EIP_8141, EIP_8250
+from ..eips import EIP_7906, EIP_8141, EIP_8250
 from ..exceptions import (
     BlobGasLimitExceededError,
     InsufficientMaxFeePerBlobGasError,
@@ -336,6 +336,10 @@ class GasCosts:
 
         [ftx]: ref:ethereum.forks.develop.transactions.frame_transaction.FrameTransaction
         """  # noqa: E501
+
+    if EIP_7906:
+        OPCODE_TXTRACE: Final[ExecutionGas] = WARM_ACCESS
+        OPCODE_EVENTDATACOPY_BASE: Final[ExecutionGas] = VERY_LOW
 
 
 MAX_BLOB_GAS_PER_BLOCK: Final[U64] = (

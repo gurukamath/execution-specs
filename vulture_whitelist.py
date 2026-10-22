@@ -14,7 +14,6 @@ from ethereum.forks.bogota.transactions.frame_transaction import (
     FrameMode,
 )
 from ethereum.forks.develop.eips import (
-    EIP_7906,
     OWNED_MODULES,
     REQUIRES,
     TARGETS,
@@ -69,10 +68,6 @@ Unscheduled
 REQUIRES
 OWNED_MODULES
 TARGETS
-
-# src/ethereum/forks/develop/eips.py - flags whose guards are not in the
-# source tree yet; drop each entry with the EIP's first guard
-EIP_7906
 
 # src/ethereum/forks/develop/transactions/frame_transaction.py -
 # documents the EIP-8272 recent root contract; nothing in `src/` calls it

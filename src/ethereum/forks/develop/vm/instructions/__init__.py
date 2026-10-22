@@ -15,7 +15,7 @@ implementations.
 import enum
 from typing import Callable, Dict
 
-from ...eips import EIP_8141
+from ...eips import EIP_7906, EIP_8141
 from . import arithmetic as arithmetic_instructions
 from . import bitwise as bitwise_instructions
 from . import block as block_instructions
@@ -31,6 +31,9 @@ from . import system as system_instructions
 
 if EIP_8141:
     from . import frame as frame_instructions
+
+if EIP_7906:
+    from . import assertion as assertion_instructions
 
 
 class Ops(enum.Enum):
@@ -222,6 +225,11 @@ class Ops(enum.Enum):
         SIGPARAM = 0xB4
         SIGDATACOPY = 0xB5
 
+    if EIP_7906:
+        TXTRACE = 0xB6
+        TXDIFF = 0xB7
+        EVENTDATACOPY = 0xB8
+
     # System Operations
     CREATE = 0xF0
     CALL = 0xF1
@@ -400,5 +408,14 @@ if EIP_8141:
             Ops.FRAMEPARAM: frame_instructions.frameparam,
             Ops.SIGPARAM: frame_instructions.sigparam,
             Ops.SIGDATACOPY: frame_instructions.sigdatacopy,
+        }
+    )
+
+if EIP_7906:
+    op_implementation.update(
+        {
+            Ops.TXTRACE: assertion_instructions.txtrace,
+            Ops.TXDIFF: assertion_instructions.txdiff,
+            Ops.EVENTDATACOPY: assertion_instructions.eventdatacopy,
         }
     )
