@@ -199,9 +199,11 @@ class StateTest(BaseTest):
         assert base_traces is not None, (
             "Traces not collected for gas optimization"
         )
-        new_tx = self.tx.copy(
-            gas_limit=current_gas_limit
-        ).with_signature_and_sender()
+        new_tx = (
+            self.tx.copy(gas_limit=current_gas_limit)
+            .with_fork_defaults(fork=fork)
+            .with_signature_and_sender()
+        )
         modified_tool_output = t8n.evaluate(
             transition_tool_data=TransitionTool.TransitionToolData(
                 alloc=pre_alloc,
@@ -430,14 +432,20 @@ class StateTest(BaseTest):
 
         env = self.env.set_fork_requirements(fork)
         env.check_fork_fields(fork)
-        tx = self.tx.with_gas_limit(
-            max_gas_limit=env.gas_limit,
-            transaction_gas_limit_cap=fork.transaction_gas_limit_cap(),
-            state_gas_reservoir_enabled=fork.state_gas_reservoir_enabled(),
-            transaction_total_gas_limit_cap=(
-                fork.transaction_total_gas_limit_cap()
-            ),
-        ).with_signature_and_sender(keep_secret_key=True)
+        tx = (
+            self.tx.with_gas_limit(
+                max_gas_limit=env.gas_limit,
+                transaction_gas_limit_cap=fork.transaction_gas_limit_cap(),
+                state_gas_reservoir_enabled=(
+                    fork.state_gas_reservoir_enabled()
+                ),
+                transaction_total_gas_limit_cap=(
+                    fork.transaction_total_gas_limit_cap()
+                ),
+            )
+            .with_fork_defaults(fork=fork)
+            .with_signature_and_sender(keep_secret_key=True)
+        )
         pre_alloc = self.genesis_alloc(
             self.pre, fork=self.fork, fixture_format=StateFixture
         )

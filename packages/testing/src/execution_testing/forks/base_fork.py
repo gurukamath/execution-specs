@@ -29,6 +29,7 @@ from execution_testing.base_types import (
     AccessList,
     Address,
     BlobSchedule,
+    Bytes,
     StateCommitment,
 )
 from execution_testing.base_types.conversions import BytesConvertible
@@ -250,6 +251,8 @@ class FrameTransactionIntrinsicCostCalculator(Protocol):
         frames: Sequence[FrameGasInfo] | int,
         signatures: Sequence[FrameSignatureGasInfo] = (),
         sender: BytesConvertible | None = None,
+        nonce_keys: Sequence[int] = (0,),
+        nonce_seq: int = 0,
         return_cost_deducted_prior_execution: bool = False,
     ) -> int:
         """
@@ -273,6 +276,10 @@ class FrameTransactionIntrinsicCostCalculator(Protocol):
                   explicit target differs from the sender. May be
                   omitted when no frame carries value to an explicit
                   target.
+          nonce_keys: The transaction's nonce key set, whose encoding
+                      is priced as calldata from EIP-8250 on.
+          nonce_seq: The transaction's nonce sequence, whose encoding
+                     is priced as calldata from EIP-8250 on.
           return_cost_deducted_prior_execution: If set to False, the
                                                 returned value is equal
                                                 to the transaction's
@@ -310,6 +317,8 @@ class FrameTransactionDataFloorCostCalculator(Protocol):
         frames: Sequence[FrameGasInfo] | int,
         signatures: Sequence[FrameSignatureGasInfo] = (),
         sender: BytesConvertible | None = None,
+        nonce_keys: Sequence[int] = (0,),
+        nonce_seq: int = 0,
     ) -> int:
         """
         Return the calldata floor anchor of a frame transaction given
@@ -1275,6 +1284,18 @@ class BaseFork(ForkOpcodeInterface, metaclass=BaseForkMeta):
 
     @classmethod
     @abstractmethod
+    def frame_mode_count(cls) -> int:
+        """
+        Return the number of frame modes an EIP-8141 frame may carry at
+        the fork, zero before frame transactions exist.
+
+        Modes are numbered from zero, so the count is also the smallest
+        mode value a frame cannot carry.
+        """
+        pass
+
+    @classmethod
+    @abstractmethod
     def contract_creating_tx_types(cls) -> List[int]:
         """
         Return list of the transaction types supported by the fork that can
@@ -1411,6 +1432,34 @@ class BaseFork(ForkOpcodeInterface, metaclass=BaseForkMeta):
         changed at transition time.
         """
         pass
+
+    @classmethod
+    def frame_transaction_nonce_keys(cls) -> bool:
+        """
+        Return whether frame transactions carry a nonce key set on the
+        wire, as EIP-8250 defines, instead of the single nonce of
+        EIP-8141.
+        """
+        return False
+
+    @classmethod
+    def _frame_transaction_nonce_bytes(
+        cls, nonce_keys: Sequence[int], nonce_seq: int
+    ) -> List[Bytes]:
+        """Return a frame transaction's nonce fields priced as calldata."""
+        del nonce_keys, nonce_seq
+        return []
+
+    @classmethod
+    def _frame_transaction_nonce_access_cost(
+        cls, nonce_keys: Sequence[int]
+    ) -> int:
+        """
+        Return the intrinsic cost of accessing a frame transaction's
+        nonce key set.
+        """
+        del nonce_keys
+        return 0
 
     # Engine API information abstract methods
     @classmethod

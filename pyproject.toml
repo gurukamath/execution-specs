@@ -315,6 +315,9 @@ omit = [
     "*/ethereum/forks/*_glacier/*",
     "*/ethereum/forks/dao_fork/*",
     "*/ethereum/forks/bpo*/*",
+    # The development source never runs as a fork, and its flag module
+    # is imported before coverage starts.
+    "*/ethereum/forks/develop/*",
 ]
 
 [tool.coverage.report]

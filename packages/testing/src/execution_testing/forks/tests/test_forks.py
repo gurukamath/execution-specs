@@ -436,6 +436,25 @@ def test_system_contract_call_phases(fork: Fork) -> None:
             )
 
 
+def test_frame_mode_count() -> None:
+    """
+    Count no frame modes before frame transactions and the three
+    EIP-8141 modes at Bogota; EIP-7906's `POST_TX` is a devnet
+    candidate, not part of Bogota.
+    """
+    assert Osaka.frame_mode_count() == 0
+    assert Amsterdam.frame_mode_count() == 0
+    assert Bogota.frame_mode_count() == 3
+
+
+def test_frame_transaction_nonce_keys() -> None:
+    """
+    Frame transactions carry a nonce key set only on forks with
+    EIP-8250, which Bogota does not have.
+    """
+    assert not Bogota.frame_transaction_nonce_keys()
+
+
 def test_tx_types() -> None:  # noqa: D103
     assert Cancun.tx_types() == list(reversed(range(4)))
 

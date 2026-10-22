@@ -39,7 +39,7 @@ from ..gas_costs import BASE, HIGH, LOW, MID, VERY_LOW, GasCosts
 from ..requests import SystemContractRequest
 from . import eips
 from .eips.amsterdam import AmsterdamEIPs
-from .eips.bogota import BogotaEIPs
+from .eips.bogota import TargetEIPs
 from .helpers import ceiling_division
 
 
@@ -1030,6 +1030,11 @@ class Frontier(BaseFork):
         return [0]
 
     @classmethod
+    def frame_mode_count(cls) -> int:
+        """At Genesis, there are no frame transactions to carry modes."""
+        return 0
+
+    @classmethod
     def contract_creating_tx_types(cls) -> List[int]:
         """At Genesis, only legacy transactions are allowed."""
         return [0]
@@ -1661,6 +1666,18 @@ class Amsterdam(
         limit.
         """
         return True
+
+
+if TYPE_CHECKING:
+
+    class BogotaEIPs(BaseFork):
+        """
+        Stand in for the EIP mixins that `TargetEIPs` derives from the
+        specification at runtime, which mypy cannot follow.
+        """
+
+else:
+    BogotaEIPs = TargetEIPs("bogota")
 
 
 class Bogota(

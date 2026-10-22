@@ -93,7 +93,9 @@ class TransactionTest(BaseTest):
             result={
                 fork: result,
             },
-            transaction=self.tx.with_signature_and_sender().rlp(),
+            transaction=self.tx.with_fork_defaults(fork=fork)
+            .with_signature_and_sender()
+            .rlp(),
         )
         return FillResult(
             fixture=fixture,

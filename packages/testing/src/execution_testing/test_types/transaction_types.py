@@ -443,6 +443,7 @@ class Transaction(
 
     frames: List[Frame] | None = None
     signatures: List[FrameSignature] | None = None
+    nonce_keys: List[HexNumber] | None = None
 
     secret_key: Hash | None = None
     error: List[TransactionException] | TransactionException | None = Field(
@@ -637,6 +638,7 @@ class Transaction(
         if self.ty != 6:
             assert self.initcodes is None, "initcodes must be None"
             assert self.frames is None, "frames must be None"
+            assert self.nonce_keys is None, "nonce_keys must be None"
             assert self.signatures is None, "signatures must be None"
 
         if "nonce" not in self.model_fields_set and self.sender is not None:
@@ -925,6 +927,24 @@ class Transaction(
                 "would be silently ignored."
             )
 
+    def with_fork_defaults(self, *, fork: Fork) -> Self:
+        """
+        Return a copy carrying the fields a fork adds to the wire format,
+        when the test left them unset.
+
+        A frame transaction on a fork with EIP-8250 carries a nonce key
+        set; unset, it selects the legacy key, the sender's account
+        nonce. Forks without it keep the EIP-8141 format, so the same
+        test fills against both.
+        """
+        if (
+            self.frames is None
+            or self.nonce_keys is not None
+            or not fork.frame_transaction_nonce_keys()
+        ):
+            return self
+        return self.copy(nonce_keys=[HexNumber(0)])
+
     def with_gas_limit(
         self,
         *,
@@ -1049,6 +1069,12 @@ class Transaction(
                 "fees",
                 "blob_versioned_hashes",
             ]
+            if self.nonce_keys is not None:
+                # EIP-8250: https://eips.ethereum.org/EIPS/eip-8250
+                # The key set precedes the nonce, which becomes the
+                # sequence number; `with_fork_defaults` sets it on forks
+                # whose wire format carries it.
+                field_list.insert(1, "nonce_keys")
         elif self.ty == 6:
             # EIP-7873: https://eips.ethereum.org/EIPS/eip-7873
             field_list = [

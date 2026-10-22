@@ -121,6 +121,9 @@ class Target:
 
 TARGETS: Final[Mapping[str, Target]] = {
     "bogota": Target(eips=frozenset({8141})),
+    "bogota_devnet1": Target(
+        eips=frozenset({8250, 8272, 7906}), base="bogota", generated=False
+    ),
 }
 """
 The EIP sets fixtures are filled against, keyed by short name.
