@@ -724,6 +724,7 @@ class _DecidedEntryRemover(cst.CSTTransformer):
     def __init__(self, numbers: set[int]) -> None:
         self._numbers = numbers
         self._emptied: set[cst.DictElement] = set()
+        self._emptied_calls: set[cst.Call] = set()
 
     def _is_decided(self, expression: cst.BaseExpression) -> bool:
         return (
@@ -755,6 +756,23 @@ class _DecidedEntryRemover(cst.CSTTransformer):
         return True
 
     @override
+    def visit_Call(self, node: cst.Call) -> bool:  # noqa: D102
+        if _is_name(node.func, "frozenset") and self._empties(node):
+            # A set nested in a record, such as a `Target`'s `eips`,
+            # keeps its entry and becomes `frozenset()`.
+            self._emptied_calls.add(node)
+            return False
+        return True
+
+    @override
+    def leave_Call(  # noqa: D102
+        self, original_node: cst.Call, updated_node: cst.Call
+    ) -> cst.Call:
+        if original_node in self._emptied_calls:
+            return updated_node.with_changes(args=[])
+        return updated_node
+
+    @override
     def leave_DictElement(  # noqa: D102
         self, original_node: cst.DictElement, updated_node: cst.DictElement
     ) -> cst.DictElement | cst.RemovalSentinel:
@@ -777,6 +795,10 @@ class _DecidedEntryRemover(cst.CSTTransformer):
         if self._is_decided(updated_node.value):
             return cst.RemoveFromParent()
         return updated_node
+
+
+def _is_name(node: cst.CSTNode, value: str) -> bool:
+    return isinstance(node, cst.Name) and node.value == value
 
 
 def _flag_name_check(name: str) -> str:

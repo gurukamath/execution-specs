@@ -13,7 +13,16 @@ from ethereum.fork_criteria import Unscheduled
 from ethereum.forks.bogota.transactions.frame_transaction import (
     FrameMode,
 )
-from ethereum.forks.develop.eips import OWNED_MODULES, REQUIRES, TARGETS
+from ethereum.forks.develop.eips import (
+    EIP_7906,
+    EIP_8250,
+    OWNED_MODULES,
+    REQUIRES,
+    TARGETS,
+)
+from ethereum.forks.develop.transactions.frame_transaction import (
+    RECENT_ROOT_ADDRESS,
+)
 from ethereum.trace import EvmTracer
 from ethereum.utils.hexadecimal import hex_to_bytes256
 from ethereum_optimized.state_db import State
@@ -59,6 +68,15 @@ Unscheduled
 REQUIRES
 OWNED_MODULES
 TARGETS
+
+# src/ethereum/forks/develop/eips.py - flags whose guards are not in the
+# source tree yet; drop each entry with the EIP's first guard
+EIP_8250
+EIP_7906
+
+# src/ethereum/forks/develop/transactions/frame_transaction.py -
+# documents the EIP-8272 recent root contract; nothing in `src/` calls it
+RECENT_ROOT_ADDRESS
 
 # src/ethereum/forks/bogota/transactions/frame_transaction.py -
 # constructed while decoding transactions, never compared explicitly
@@ -171,6 +189,8 @@ _DecidedEntryRemover.visit_DictElement
 _DecidedEntryRemover.leave_DictElement
 _DecidedEntryRemover.leave_Dict
 _DecidedEntryRemover.leave_Element
+_DecidedEntryRemover.visit_Call
+_DecidedEntryRemover.leave_Call
 
 # src/ethereum_spec_tools/new_fork/codemod/constant.py
 SetConstantCommand

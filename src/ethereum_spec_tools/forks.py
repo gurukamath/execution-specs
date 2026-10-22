@@ -27,7 +27,9 @@ from typing import (
     FrozenSet,
     Iterator,
     List,
+    Mapping,
     Optional,
+    Protocol,
     Type,
     TypeVar,
     cast,
@@ -186,6 +188,50 @@ a feature flag, from which the forks under development are generated.
 It is not itself a fork: discovery leaves it out unless asked for it,
 so that lints, documentation and fills only ever see generated forks.
 """
+
+
+class Target(Protocol):
+    """
+    An entry of a development source's `TARGETS` table: an EIP set that
+    fixtures are filled against. Mirrors the record the source defines.
+    """
+
+    @property
+    def eips(self) -> FrozenSet[int]:
+        """The EIPs the target enables beyond its base."""
+        ...
+
+    @property
+    def base(self) -> Optional[str]:
+        """The target this one extends, if any."""
+        ...
+
+    @property
+    def generated(self) -> bool:
+        """Whether the fold tool writes the target as a fork package."""
+        ...
+
+
+def resolve_target(targets: Mapping[str, Target], name: str) -> FrozenSet[int]:
+    """
+    Return the EIP set of `targets[name]`, including those of its bases.
+    """
+    resolved: set[int] = set()
+    chain: list[str] = []
+    current: Optional[str] = name
+    while current is not None:
+        if current in chain:
+            cycle = " -> ".join([*chain, current])
+            raise ValueError(f"target `{name}` has a base cycle: {cycle}")
+        if current not in targets:
+            raise ValueError(
+                f"target `{current}`, reached from `{name}`, is not in"
+                " `TARGETS`"
+            )
+        chain.append(current)
+        resolved |= set(targets[current].eips)
+        current = targets[current].base
+    return frozenset(resolved)
 
 
 class Hardfork:

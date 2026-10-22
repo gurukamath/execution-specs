@@ -334,7 +334,10 @@ class TestFoldFeatureGuardsCommand(CodemodTest):
         self.fold(before, after, disable=["EIP_8141"])
 
     def test_flags_module_strips_decided_flags(self) -> None:
-        """Decided flags, their docstrings and table entries are removed."""
+        """
+        Decided flags, their docstrings and table entries are removed; a
+        target whose own set empties keeps its entry with `frozenset()`.
+        """
         before = '''
             from typing import Final, FrozenSet, Mapping, Tuple
 
@@ -356,6 +359,15 @@ class TestFoldFeatureGuardsCommand(CodemodTest):
                 8141: ("frame_processing",),
                 8250: ("keyed_nonces",),
             }
+
+            TARGETS: Final[Mapping[str, Target]] = {
+                "frames": Target(eips=frozenset({8141})),
+                "devnet": Target(
+                    eips=frozenset({8141, 8250}),
+                    base="frames",
+                    generated=False,
+                ),
+            }
         '''
         after = '''
             from typing import Final, FrozenSet, Mapping, Tuple
@@ -369,6 +381,15 @@ class TestFoldFeatureGuardsCommand(CodemodTest):
 
             OWNED_MODULES: Final[Mapping[int, Tuple[str, ...]]] = {
                 8250: ("keyed_nonces",),
+            }
+
+            TARGETS: Final[Mapping[str, Target]] = {
+                "frames": Target(eips=frozenset()),
+                "devnet": Target(
+                    eips=frozenset({8250}),
+                    base="frames",
+                    generated=False,
+                ),
             }
         '''
         self.assertCodemod(

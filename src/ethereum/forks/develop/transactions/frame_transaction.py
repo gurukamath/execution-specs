@@ -32,6 +32,7 @@ from ethereum.crypto.hash import Hash32, keccak256
 from ethereum.exceptions import InvalidSignatureError, NonceOverflowError
 from ethereum.state import Address
 
+from ..eips import EIP_8272
 from ..exceptions import (
     BlobCountExceededError,
     FeeOverflowError,
@@ -84,6 +85,16 @@ EXPIRY_DATA_LENGTH: Final[int] = 8
 Exact length, in bytes, of an expiry verifier frame's data: an unsigned
 big-endian expiry timestamp.
 """
+
+if EIP_8272:
+    RECENT_ROOT_ADDRESS: Final[Address] = Address(
+        bytes.fromhex("8272d9679689ea2f307140cdf9002d27dc00ffff")
+    )
+    """
+    Address of the recent root contract of [EIP-8272].
+
+    [EIP-8272]: https://eips.ethereum.org/EIPS/eip-8272
+    """
 
 
 @final

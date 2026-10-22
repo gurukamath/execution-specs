@@ -1,12 +1,14 @@
 """
 Generate the forks under development from the development source package.
 
-Each entry of the source package's `TARGETS` names a fork and the EIPs it
-enables. The fork is produced by folding the source's feature guards for
-that selection, formatting the result and writing it next to the source.
-With `--check`, nothing is written: each fork is generated into a
-temporary directory and compared with the checked-in folder, so that
-continuous integration can require the two to agree.
+Each generated entry of the source package's `TARGETS` names a fork and
+the EIPs it enables. The fork is produced by folding the source's feature
+guards for that selection, formatting the result and writing it next to
+the source. Pseudo-fork entries are validated but never written: the test
+tooling folds them on demand. With `--check`, nothing is written: each
+fork is generated into a temporary directory and compared with the
+checked-in folder, so that continuous integration can require the two to
+agree.
 """
 
 import filecmp
@@ -18,14 +20,34 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Sequence
 
-from ..forks import DEVELOP_FORK_NAME, Hardfork
-from .builder import ForkBuilder
+from ..forks import DEVELOP_FORK_NAME, Hardfork, Target, resolve_target
+from .builder import ForkBuilder, flags_of, validate_eip_selection
 
 
 def _targets() -> Mapping[str, frozenset[int]]:
+    """
+    Resolve every entry of the source's `TARGETS` to its full EIP set,
+    checking each against the source's flags and `REQUIRES`.
+
+    Return the resolved sets of the generated entries only.
+    """
     eips = importlib.import_module(f"ethereum.forks.{DEVELOP_FORK_NAME}.eips")
-    targets: Mapping[str, frozenset[int]] = eips.TARGETS
-    return targets
+    targets: Mapping[str, Target] = eips.TARGETS
+    flags = flags_of(eips)
+    requires: Mapping[int, frozenset[int]] = getattr(eips, "REQUIRES", {})
+    resolved = {name: resolve_target(targets, name) for name in targets}
+    for name, enabled in resolved.items():
+        try:
+            validate_eip_selection(
+                enabled, set(flags) - enabled, flags, requires
+            )
+        except ValueError as error:
+            raise ValueError(f"target `{name}`: {error}") from error
+    return {
+        name: enabled
+        for name, enabled in resolved.items()
+        if targets[name].generated
+    }
 
 
 def _source_parent() -> Path:
@@ -95,7 +117,7 @@ def main(args: Sequence[str] | None = None) -> None:
         "targets",
         nargs="*",
         metavar="FORK",
-        help="forks to generate (default: every entry of TARGETS)",
+        help="forks to generate (default: every generated entry of TARGETS)",
     )
     options = parser.parse_args(args)
 
@@ -103,7 +125,7 @@ def main(args: Sequence[str] | None = None) -> None:
     selected = options.targets or sorted(targets)
     unknown = [name for name in selected if name not in targets]
     if unknown:
-        parser.error(f"not in TARGETS: {', '.join(unknown)}")
+        parser.error(f"not a generated entry of TARGETS: {', '.join(unknown)}")
 
     parent = _source_parent()
     failed = False

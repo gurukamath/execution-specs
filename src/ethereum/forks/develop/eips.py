@@ -12,15 +12,18 @@ generated fork may ship.
 
 [`REQUIRES`] records which EIPs an EIP builds on, [`OWNED_MODULES`]
 records the modules that exist only for one EIP, and [`TARGETS`]
-records which EIPs each generated fork enables. All three are read by
-the tooling that validates an EIP selection and folds the guards.
+records the EIP sets anyone fills against: the forks generated next to
+this package and the devnet pseudo-forks folded on demand. All three
+are read by the tooling that validates an EIP selection and folds the
+guards.
 
 [`REQUIRES`]: ref:ethereum.forks.develop.eips.REQUIRES
 [`OWNED_MODULES`]: ref:ethereum.forks.develop.eips.OWNED_MODULES
 [`TARGETS`]: ref:ethereum.forks.develop.eips.TARGETS
 """
 
-from typing import Final, FrozenSet, Mapping, Tuple
+from dataclasses import dataclass
+from typing import Final, FrozenSet, Mapping, Optional, Tuple
 
 EIP_8141: Final[bool] = True
 """
@@ -29,7 +32,32 @@ EIP_8141: Final[bool] = True
 [EIP-8141]: https://eips.ethereum.org/EIPS/eip-8141
 """
 
-REQUIRES: Final[Mapping[int, FrozenSet[int]]] = {}
+EIP_8250: Final[bool] = True
+"""
+[EIP-8250] keyed nonces for frame transactions.
+
+[EIP-8250]: https://eips.ethereum.org/EIPS/eip-8250
+"""
+
+EIP_8272: Final[bool] = True
+"""
+[EIP-8272] recent roots for frame transactions.
+
+[EIP-8272]: https://eips.ethereum.org/EIPS/eip-8272
+"""
+
+EIP_7906: Final[bool] = True
+"""
+[EIP-7906] transaction assertions.
+
+[EIP-7906]: https://eips.ethereum.org/EIPS/eip-7906
+"""
+
+REQUIRES: Final[Mapping[int, FrozenSet[int]]] = {
+    8250: frozenset({8141}),
+    8272: frozenset({8141}),
+    7906: frozenset({8141}),
+}
 """
 EIPs that each EIP depends on, keyed by EIP number.
 
@@ -53,13 +81,51 @@ An owned module is imported from shared modules only under its EIP's
 flag and is removed when the guards are folded with that EIP disabled.
 """
 
-TARGETS: Final[Mapping[str, FrozenSet[int]]] = {
-    "bogota": frozenset({8141}),
+
+@dataclass(frozen=True)
+class Target:
+    """
+    An EIP set that fixtures are filled against.
+
+    The set is the target's own EIPs plus, transitively, those of its
+    [`base`][b]: a devnet is its fork's accepted set plus candidates, so
+    accepting a candidate moves one number between entries rather than
+    leaving the devnet entry stale.
+
+    [b]: ref:ethereum.forks.develop.eips.Target.base
+    """
+
+    eips: FrozenSet[int]
+    """
+    The EIPs this target enables beyond its base.
+    """
+
+    base: Optional[str] = None
+    """
+    The name of the target whose set this one extends, if any.
+
+    Without one, the target extends the fork this source is derived
+    from: the source with every flag off. Every chain of bases ends
+    there, so no target names that fork.
+    """
+
+    generated: bool = True
+    """
+    Whether the fold tool writes this target as a fork package next to
+    the source. A target that is not generated is a pseudo-fork: the
+    test tooling folds it on demand and nothing is checked in for it.
+    """
+
+
+TARGETS: Final[Mapping[str, Target]] = {
+    "bogota": Target(eips=frozenset({8141})),
 }
 """
-The EIPs each generated fork enables, keyed by the fork's short name.
+The EIP sets fixtures are filled against, keyed by short name.
 
-Every flag not listed for a fork folds to its disabled branch when that
-fork is generated. While a fork is open this is its kitchen sink; the
-set shrinks only when an EIP leaves the fork.
+A generated entry names a fork package next to this one; every flag
+outside its resolved set folds to the disabled branch when the fork is
+generated. While a fork is open this is its kitchen sink; the set
+shrinks only when an EIP leaves the fork. A pseudo-fork entry names a
+devnet, and the test framework derives the devnet's fork class from it.
 """

@@ -9,8 +9,12 @@ import libcst as cst
 import pytest
 from libcst.codemod import CodemodContext
 
-from ethereum_spec_tools.forks import Hardfork
-from ethereum_spec_tools.new_fork.builder import validate_eip_selection
+from ethereum_spec_tools.forks import Hardfork, resolve_target
+from ethereum_spec_tools.new_fork.builder import (
+    validate_eip_selection,
+    with_dependents,
+    with_requirements,
+)
 from ethereum_spec_tools.new_fork.cli import main as new_fork
 from ethereum_spec_tools.new_fork.codemod.remove_docstring import (
     RemoveDocstringCommand,
@@ -200,6 +204,45 @@ def test_validate_eip_selection() -> None:
         validate_eip_selection({8250}, {8141}, flags, requires)
     with pytest.raises(ValueError, match="requires"):
         validate_eip_selection({8250}, set(), flags, requires)
+
+
+def test_eip_selection_closure() -> None:
+    """
+    Enabling an EIP pulls in what it requires; disabling one pulls in
+    what requires it, transitively either way.
+    """
+    requires = {8250: {8141}, 9000: {8250}}
+
+    assert with_requirements({9000}, requires) == frozenset({8141, 8250, 9000})
+    assert with_requirements({8141}, requires) == frozenset({8141})
+    assert with_dependents({8141}, requires) == frozenset({8141, 8250, 9000})
+    assert with_dependents({9000}, requires) == frozenset({9000})
+
+
+def test_resolve_target() -> None:
+    """
+    A target's set includes its bases' sets; a missing or cyclic base is
+    an error that names the target.
+    """
+    from ethereum.forks.develop.eips import Target
+
+    targets = {
+        "fork": Target(eips=frozenset({1})),
+        "devnet": Target(eips=frozenset({2}), base="fork", generated=False),
+        "nested": Target(eips=frozenset({3}), base="devnet"),
+        "dangling": Target(eips=frozenset(), base="missing"),
+        "loop_a": Target(eips=frozenset(), base="loop_b"),
+        "loop_b": Target(eips=frozenset(), base="loop_a"),
+    }
+
+    assert resolve_target(targets, "fork") == frozenset({1})
+    assert resolve_target(targets, "devnet") == frozenset({1, 2})
+    assert resolve_target(targets, "nested") == frozenset({1, 2, 3})
+
+    with pytest.raises(ValueError, match="`missing`, reached from `dangling`"):
+        resolve_target(targets, "dangling")
+    with pytest.raises(ValueError, match="base cycle: loop_a -> loop_b"):
+        resolve_target(targets, "loop_a")
 
 
 @pytest.mark.parametrize("enabled", [True, False], ids=["on", "off"])

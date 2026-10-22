@@ -11,7 +11,7 @@ from ethereum_types.numeric import U64, Uint
 from ethereum.fork_criteria import ByBlockNumber, ByTimestamp, Unscheduled
 
 from ..forks import Hardfork
-from .builder import ForkBuilder
+from .builder import ForkBuilder, with_dependents, with_requirements
 
 
 def _make_parser() -> ArgumentParser:
@@ -60,8 +60,8 @@ def _make_parser() -> ArgumentParser:
         metavar="N",
         help=(
             "fold the template's EIP-N feature guards to their `if` branch;"
-            " when given without --disable-eip, every other flag is"
-            " disabled"
+            " when given without --disable-eip, the EIPs it requires are"
+            " enabled too and every other flag is disabled"
         ),
     )
 
@@ -73,8 +73,8 @@ def _make_parser() -> ArgumentParser:
         metavar="N",
         help=(
             "fold the template's EIP-N feature guards to their `else`"
-            " branch; when given without --enable-eip, every other flag is"
-            " enabled"
+            " branch; when given without --enable-eip, the EIPs that"
+            " require it are disabled too and every other flag is enabled"
         ),
     )
 
@@ -215,11 +215,14 @@ def main(args: Sequence[str] | None = None) -> None:
 
     if options.enable_eips is not None or options.disable_eips is not None:
         flags = set(builder.template_flags())
+        requires = builder.template_requires()
         enabled = set(options.enable_eips or [])
         disabled = set(options.disable_eips or [])
         if options.enable_eips is None:
+            disabled = set(with_dependents(disabled, requires))
             enabled = flags - disabled
         elif options.disable_eips is None:
+            enabled = set(with_requirements(enabled, requires))
             disabled = flags - enabled
         builder.fold_feature_guards(enabled, disabled)
 

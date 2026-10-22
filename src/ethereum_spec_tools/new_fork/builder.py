@@ -135,6 +135,41 @@ def validate_eip_selection(
             )
 
 
+def with_requirements(
+    eips: Collection[int], requires: Mapping[int, Collection[int]]
+) -> frozenset[int]:
+    """
+    Close a set of EIPs under `requires`: add every EIP one of them
+    builds on, transitively.
+    """
+    closed = set(eips)
+    pending = list(eips)
+    while pending:
+        for requirement in requires.get(pending.pop(), ()):
+            if requirement not in closed:
+                closed.add(requirement)
+                pending.append(requirement)
+    return frozenset(closed)
+
+
+def with_dependents(
+    eips: Collection[int], requires: Mapping[int, Collection[int]]
+) -> frozenset[int]:
+    """
+    Close a set of EIPs under the reverse of `requires`: add every EIP
+    that builds on one of them, transitively.
+    """
+    closed = set(eips)
+    pending = list(eips)
+    while pending:
+        removed = pending.pop()
+        for dependent, requirements in requires.items():
+            if removed in requirements and dependent not in closed:
+                closed.add(dependent)
+                pending.append(dependent)
+    return frozenset(closed)
+
+
 @dataclass
 class FoldFeatureGuards(CodemodArgs):
     """
@@ -773,6 +808,17 @@ class ForkBuilder:
         except ModuleNotFoundError:
             return {}
         return flags_of(eips)
+
+    def template_requires(self) -> Mapping[int, Collection[int]]:
+        """
+        The `REQUIRES` table of the template fork's flags module.
+        """
+        try:
+            eips = importlib.import_module(f"{self.template_fork.name}.eips")
+        except ModuleNotFoundError:
+            return {}
+        requires: Mapping[int, Collection[int]] = getattr(eips, "REQUIRES", {})
+        return requires
 
     def fold_feature_guards(
         self,
