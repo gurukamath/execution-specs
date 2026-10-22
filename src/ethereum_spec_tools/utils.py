@@ -11,6 +11,7 @@ from typing import (
     Any,
     Callable,
     Dict,
+    FrozenSet,
     List,
     Optional,
     Sequence,
@@ -20,7 +21,11 @@ from typing import (
 
 from ethereum_types.numeric import U64, U256, Uint
 
-from ethereum_spec_tools.forks import Hardfork
+from ethereum_spec_tools.forks import (
+    DEVELOP_FORK_NAME,
+    Hardfork,
+    pseudo_fork_targets,
+)
 
 W = TypeVar("W", Uint, U64, U256)
 
@@ -122,6 +127,9 @@ def find_fork(
 
     current_fork_module = re.sub("^b_p_o", "bpo", current_fork_module)
 
+    if current_fork_module in pseudo_fork_targets():
+        return development_source(), current_fork_block
+
     for fork in forks:
         if current_fork_module == fork.short_name:
             return fork, current_fork_block
@@ -144,15 +152,9 @@ _SPEC_SHORT_NAME_OVERRIDES: Dict[str, str] = {
 }
 
 
-@functools.cache
-def resolve_fork(fork_name: str) -> Hardfork:
+def _spec_short_name(fork_name: str) -> str:
     """
-    Resolve a testing ``Fork.transition_tool_name()`` to its matching
-    spec ``Hardfork``.
-
-    CLI exception aliases like ``HomesteadToDaoAt5`` are resolved by
-    :func:`find_fork` before the testing ``Fork`` is built, so the name
-    reaching this function is always post-alias-resolution.
+    Convert a testing fork name to the spec's snake-case short name.
     """
     short = _SPEC_SHORT_NAME_OVERRIDES.get(fork_name)
     if short is None:
@@ -160,6 +162,51 @@ def resolve_fork(fork_name: str) -> Hardfork:
         # ``BPO1`` and friends would otherwise become ``b_p_o1``; mirror
         # the ``b_p_o → bpo`` collapse that :func:`find_fork` performs.
         short = re.sub(r"^b_p_o", "bpo", short)
+    return short
+
+
+def _testing_fork_name(target: str) -> str:
+    """
+    Convert a target name to the testing fork name it is declared as.
+    """
+    return "".join(part.capitalize() for part in target.split("_"))
+
+
+@functools.cache
+def development_source() -> Hardfork:
+    """
+    Return the development source package as a ``Hardfork``.
+    """
+    for fork in Hardfork.discover(include_develop=True):
+        if fork.short_name == DEVELOP_FORK_NAME:
+            return fork
+    raise ValueError("no development source package")
+
+
+@functools.cache
+def resolve_enabled_eips(fork_name: str) -> FrozenSet[int] | None:
+    """
+    Return the EIP set a pseudo-fork folds the development source with,
+    or ``None`` when ``fork_name`` is a fork with its own package.
+    """
+    return pseudo_fork_targets().get(_spec_short_name(fork_name))
+
+
+@functools.cache
+def resolve_fork(fork_name: str) -> Hardfork:
+    """
+    Resolve a testing ``Fork.transition_tool_name()`` to its matching
+    spec ``Hardfork``.
+
+    A pseudo-fork resolves to the development source; the set to fold
+    it with comes from :func:`resolve_enabled_eips`. CLI exception
+    aliases like ``HomesteadToDaoAt5`` are resolved by :func:`find_fork`
+    before the testing ``Fork`` is built, so the name reaching this
+    function is always post-alias-resolution.
+    """
+    short = _spec_short_name(fork_name)
+    if short in pseudo_fork_targets():
+        return development_source()
     for fork in Hardfork.discover():
         if fork.short_name == short:
             return fork
@@ -176,6 +223,11 @@ def get_supported_forks() -> List[str]:
     supported_forks = [
         fork.title_case_name.replace(" ", "") for fork in Hardfork.discover()
     ]
+
+    # Add the pseudo-forks, folded from the development source on demand
+    supported_forks.extend(
+        _testing_fork_name(target) for target in pseudo_fork_targets()
+    )
 
     # Add the exception forks
     supported_forks.extend(EXCEPTION_MAPS.keys())

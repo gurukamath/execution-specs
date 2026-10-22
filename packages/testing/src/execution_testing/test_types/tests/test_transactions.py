@@ -421,3 +421,50 @@ def test_mismatched_sender_address_is_trusted() -> None:
     ).with_signature_and_sender()
     assert signed.sender == inconsistent
     assert signed.sender != recover_sender(signed)
+
+
+def test_frame_transaction_nonce_keys_default(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """
+    A frame transaction takes the nonce key set at construction when
+    the fork under test carries one, and signs over it; otherwise it
+    keeps the EIP-8141 format.
+    """
+    from execution_testing.base_types import Bytes
+
+    from ..transaction_types import FrameSignature, TransactionDefaults
+
+    def build() -> Transaction:
+        return Transaction(
+            sender=EOA(key=SIGNING_KEY),
+            frames=[Frame()],
+            signatures=[
+                FrameSignature(scheme=1, signer=Bytes(EOA(key=SIGNING_KEY))),
+                FrameSignature(
+                    scheme=1,
+                    signer=Bytes(EOA(key=OTHER_KEY)),
+                    secret_key=OTHER_KEY,
+                ),
+            ],
+        )
+
+    plain = build()
+    assert plain.nonce_keys is None
+    assert "nonce_keys" not in plain.get_rlp_signing_fields()
+
+    monkeypatch.setattr(
+        TransactionDefaults, "frame_transaction_nonce_keys", True
+    )
+    keyed = build()
+    assert keyed.nonce_keys == [0]
+    assert "nonce_keys" not in keyed.model_fields_set
+    assert keyed.get_rlp_signing_fields()[1] == "nonce_keys"
+    assert keyed.copy(gas_limit=1_000_000).nonce_keys == [0]
+    explicit = Transaction(
+        sender=EOA(key=SIGNING_KEY), frames=[Frame()], nonce_keys=[1]
+    )
+    assert explicit.nonce_keys == [1]
+    signed = keyed.with_signature_and_sender()
+    assert signed.signatures is not None
+    assert [len(sig.signature) for sig in signed.signatures] == [65, 65]

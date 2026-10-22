@@ -20,6 +20,7 @@ from ..forks.forks import (
     Amsterdam,
     Berlin,
     Bogota,
+    BogotaDevnet1,
     Cancun,
     Frontier,
     Homestead,
@@ -32,6 +33,7 @@ from ..forks.forks import (
 )
 from ..forks.transition import (
     AmsterdamToBogotaAtTime15k,
+    AmsterdamToBogotaDevnet1AtTime15k,
     BerlinToLondonAt5,
     BPO1ToBPO2AtTime15k,
     BPO2ToAmsterdamAtTime15k,
@@ -49,10 +51,12 @@ from ..helpers import (
     ForkAdapter,
     ForkOrNoneAdapter,
     ForkSetAdapter,
+    InvalidForkError,
     TransitionFork,
     forks_from,
     forks_from_until,
     get_deployed_forks,
+    get_fork_enabling_eip,
     get_forks,
     get_selected_fork_set,
     transition_fork_from_to,
@@ -63,8 +67,8 @@ from ..transition_base_fork import TransitionBaseClass, transition_fork
 
 FIRST_DEPLOYED = Frontier
 LAST_DEPLOYED = Osaka
-LAST_DEVELOPMENT = Bogota
-DEVELOPMENT_FORKS = [Amsterdam, Bogota]
+LAST_DEVELOPMENT = BogotaDevnet1
+DEVELOPMENT_FORKS = [Amsterdam, Bogota, BogotaDevnet1]
 
 
 def test_transition_forks() -> None:
@@ -75,6 +79,10 @@ def test_transition_forks() -> None:
     assert (
         transition_fork_from_to(Amsterdam, Bogota)
         == AmsterdamToBogotaAtTime15k
+    )
+    assert (
+        transition_fork_from_to(Amsterdam, BogotaDevnet1)
+        == AmsterdamToBogotaDevnet1AtTime15k
     )
 
     # Test forks transitioned to and from
@@ -445,14 +453,57 @@ def test_frame_mode_count() -> None:
     assert Osaka.frame_mode_count() == 0
     assert Amsterdam.frame_mode_count() == 0
     assert Bogota.frame_mode_count() == 3
+    assert BogotaDevnet1.frame_mode_count() == 4
 
 
 def test_frame_transaction_nonce_keys() -> None:
     """
     Frame transactions carry a nonce key set only on forks with
-    EIP-8250, which Bogota does not have.
+    EIP-8250: the first Bogota devnet, not Bogota.
     """
     assert not Bogota.frame_transaction_nonce_keys()
+    assert BogotaDevnet1.frame_transaction_nonce_keys()
+
+
+def test_target_eips_derive_from_the_specification() -> None:
+    """
+    A fork declared through `TargetEIPs` enables exactly the EIPs its
+    target resolves to in the specification's `TARGETS`.
+    """
+    from ethereum.forks.develop.eips import TARGETS
+    from ethereum_spec_tools.forks import resolve_target
+
+    assert Bogota.is_eip_enabled(*resolve_target(TARGETS, "bogota"))
+    assert not Bogota.is_eip_enabled(8250)
+    assert BogotaDevnet1.is_eip_enabled(
+        *resolve_target(TARGETS, "bogota_devnet1")
+    )
+    assert BogotaDevnet1.parent() is Bogota
+
+
+def test_target_eips_reject_a_misnamed_fork_class() -> None:
+    """
+    The class declared through a target must be named after it, so a
+    renamed devnet cannot leave fixtures carrying the old name.
+    """
+    from ..forks.eips.bogota import TargetEIPs
+
+    with pytest.raises(TypeError, match="name the class after the target"):
+
+        class BogotaDevnet2(
+            TargetEIPs("bogota_devnet1"),  # type: ignore[misc]
+            Bogota,
+            deployed=False,
+        ):
+            pass
+
+
+def test_get_fork_enabling_eip() -> None:
+    """Resolve an EIP name to the earliest fork enabling it."""
+    assert get_fork_enabling_eip("EIP8141") is Bogota
+    assert get_fork_enabling_eip("EIP8250") is BogotaDevnet1
+    with pytest.raises(InvalidForkError):
+        get_fork_enabling_eip("EIP1")
 
 
 def test_tx_types() -> None:  # noqa: D103

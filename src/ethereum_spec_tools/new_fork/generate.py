@@ -18,7 +18,7 @@ from argparse import ArgumentParser
 from collections.abc import Mapping
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Sequence
+from typing import Iterable, Sequence
 
 from ..forks import DEVELOP_FORK_NAME, Hardfork, Target, resolve_target
 from .builder import ForkBuilder, flags_of, validate_eip_selection
@@ -43,11 +43,31 @@ def _targets() -> Mapping[str, frozenset[int]]:
             )
         except ValueError as error:
             raise ValueError(f"target `{name}`: {error}") from error
+    uncovered = uncovered_eips(flags, resolved)
+    if uncovered:
+        raise ValueError(
+            "no entry of `TARGETS` enables EIP "
+            + ", ".join(str(eip) for eip in uncovered)
+            + "; tests gated on an EIP that no fork enables are not"
+            " collected, silently"
+        )
     return {
         name: enabled
         for name, enabled in resolved.items()
         if targets[name].generated
     }
+
+
+def uncovered_eips(
+    flags: Iterable[int], resolved: Mapping[str, frozenset[int]]
+) -> list[int]:
+    """
+    Return the flagged EIPs that no resolved target enables, in order.
+    """
+    covered: set[int] = set()
+    for enabled in resolved.values():
+        covered |= enabled
+    return sorted(set(flags) - covered)
 
 
 def _source_parent() -> Path:

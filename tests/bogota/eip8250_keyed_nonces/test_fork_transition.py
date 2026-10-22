@@ -29,12 +29,8 @@ from .spec import Spec, keyed_nonce_slot, ref_spec_8250
 REFERENCE_SPEC_GIT_PATH = ref_spec_8250.git_path
 REFERENCE_SPEC_VERSION = ref_spec_8250.version
 
-pytestmark = [
-    pytest.mark.valid_at_transition_to("Bogota"),
-    # The transition that first enables EIP-8250 is the one to the
-    # devnet pseudo-fork, which has no transition fork yet.
-    pytest.mark.skip(reason="needs the devnet transition pseudo-fork"),
-]
+# The transition into whichever fork first enables EIP-8250.
+pytestmark = [pytest.mark.valid_at_transition_to("EIP8250")]
 
 FORK_TIMESTAMP = 15_000
 """Timestamp at which the transition fork activates EIP-8250."""

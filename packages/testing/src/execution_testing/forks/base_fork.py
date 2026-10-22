@@ -477,6 +477,19 @@ class SystemCallPhase(Enum):
     AFTER_TRANSACTIONS = "after_transactions"
 
 
+class TargetMarker:
+    """
+    Record the specification target a fork class is declared through.
+
+    The EIP sentinel of a development fork package adds a subclass of
+    this to the fork's bases, and `BaseFork.__init_subclass__` checks
+    that the fork's class name is the one the target name maps to, so
+    that the two cannot drift apart silently.
+    """
+
+    fork_class_name: ClassVar[str]
+
+
 class BaseForkMeta(ABCMeta):
     """Metaclass for BaseFork."""
 
@@ -619,6 +632,19 @@ class BaseFork(ForkOpcodeInterface, metaclass=BaseForkMeta):
         """
         cls._transition_tool_name = transition_tool_name
         cls._ignore = ignore
+        for marker in cls.__bases__:
+            # A fork class inherits its own target's marker, so only a
+            # marker that declares the name itself ties this class.
+            if (
+                issubclass(marker, TargetMarker)
+                and "fork_class_name" in marker.__dict__
+                and cls.__name__ != marker.fork_class_name
+            ):
+                raise TypeError(
+                    f"`{cls.__name__}` is declared through the target of"
+                    f" `{marker.fork_class_name}`; name the class after"
+                    " the target"
+                )
         cls._bpo_fork = bpo_fork
         cls._ruleset_name = ruleset_name
         cls._children = set()

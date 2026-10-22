@@ -9,7 +9,6 @@ import importlib.abc
 import importlib.util
 import pkgutil
 import random
-import re
 import sys
 from contextlib import AbstractContextManager
 from dataclasses import astuple, dataclass
@@ -87,7 +86,9 @@ class ForkOverrides:
     """
     EIPs whose feature guards fold to their enabled branch; every other
     flag of the template folds to its disabled branch. `None` leaves the
-    template's guards alone.
+    template's guards alone. A set always folds, even one that enables
+    every flag of the template, so that fixtures filled against a set
+    come from the same transformation as the generated forks.
     """
 
     def is_empty(self) -> bool:
@@ -125,19 +126,7 @@ class ForkOverrides:
             return False
 
         if self.enabled_eips is not None:
-            # The template carries every flag enabled, so only the
-            # selection of all of them needs no fold.
-            try:
-                eips = template.module("eips")
-            except ModuleNotFoundError:
-                return False
-            template_flags = {
-                int(match.group(1))
-                for name in dir(eips)
-                if (match := re.match(r"^EIP_(\d+)$", name)) is not None
-            }
-            if self.enabled_eips != template_flags:
-                return False
+            return False
 
         fork_mod = template.module("fork")
         gas_costs = template.module("vm.gas").GasCosts
@@ -232,6 +221,23 @@ def resolve_target(targets: Mapping[str, Target], name: str) -> FrozenSet[int]:
         resolved |= set(targets[current].eips)
         current = targets[current].base
     return frozenset(resolved)
+
+
+def pseudo_fork_targets() -> Mapping[str, FrozenSet[int]]:
+    """
+    Return the resolved EIP set of every `TARGETS` entry the development
+    source does not generate, keyed by target name.
+
+    These are the pseudo-forks: devnet EIP sets that the test tooling
+    folds from the source on demand instead of reading a fork package.
+    """
+    eips = importlib.import_module(f"ethereum.forks.{DEVELOP_FORK_NAME}.eips")
+    targets: Mapping[str, Target] = eips.TARGETS
+    return {
+        name: resolve_target(targets, name)
+        for name, target in targets.items()
+        if not target.generated
+    }
 
 
 class Hardfork:

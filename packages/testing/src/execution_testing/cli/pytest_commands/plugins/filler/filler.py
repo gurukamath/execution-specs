@@ -83,7 +83,11 @@ from execution_testing.forks import (
 )
 from execution_testing.specs import BaseTest
 from execution_testing.specs.base import FillResult, OpMode
-from execution_testing.test_types import AllocGroupHash, EnvironmentDefaults
+from execution_testing.test_types import (
+    AllocGroupHash,
+    EnvironmentDefaults,
+    TransactionDefaults,
+)
 from execution_testing.test_types.chain_config_types import (
     DEFAULT_CHAIN_ID,
     ChainConfigDefaults,
@@ -1213,6 +1217,27 @@ def transition_tool_cache_stats(
     # For xdist workers, send stats to controller via workeroutput
     if hasattr(request.config, "workeroutput"):
         request.config.workeroutput["t8n_cache_stats"] = stats.to_dict()
+
+
+@pytest.fixture(autouse=True, scope="function")
+def fork_transaction_defaults(fork: Fork) -> Generator[None, None, None]:
+    """
+    Give transactions the wire-format shape of the fork under test.
+
+    A frame transaction carries a nonce key set only on forks with
+    EIP-8250. Set at construction, the shape is the same for what the
+    test signs or prices itself and for what the filler sends. A
+    transition test takes the shape of the fork it transitions to; a
+    transaction meant for a block before the transition sets the
+    fields explicitly.
+    """
+    target = fork.transitions_to() if fork.is_transition_fork else fork
+    previous = TransactionDefaults.frame_transaction_nonce_keys
+    TransactionDefaults.frame_transaction_nonce_keys = (
+        target.frame_transaction_nonce_keys()
+    )
+    yield
+    TransactionDefaults.frame_transaction_nonce_keys = previous
 
 
 @pytest.fixture(autouse=True, scope="function")

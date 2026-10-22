@@ -10,7 +10,11 @@ import libcst as cst
 import pytest
 from libcst.codemod import CodemodContext
 
-from ethereum_spec_tools.forks import Hardfork, resolve_target
+from ethereum_spec_tools.forks import (
+    Hardfork,
+    pseudo_fork_targets,
+    resolve_target,
+)
 from ethereum_spec_tools.new_fork.builder import (
     validate_eip_selection,
     with_dependents,
@@ -23,6 +27,7 @@ from ethereum_spec_tools.new_fork.codemod.feature_guards import (
 from ethereum_spec_tools.new_fork.codemod.remove_docstring import (
     RemoveDocstringCommand,
 )
+from ethereum_spec_tools.new_fork.generate import uncovered_eips
 
 
 @pytest.mark.parametrize(
@@ -346,3 +351,38 @@ def test_fold_rejects_unknown_eip() -> None:
                     "9999",
                 ]
             )
+
+
+def test_pseudo_fork_targets() -> None:
+    """
+    The source's non-generated targets resolve to their full EIP sets
+    and to the development source, under their testing fork names.
+    """
+    from ethereum.forks.develop.eips import TARGETS
+    from ethereum_spec_tools.utils import (
+        get_supported_forks,
+        resolve_enabled_eips,
+        resolve_fork,
+    )
+
+    targets = pseudo_fork_targets()
+    assert set(targets) == {
+        name for name, target in TARGETS.items() if not target.generated
+    }
+    assert "bogota" not in targets
+    assert targets["bogota_devnet1"] == resolve_target(
+        TARGETS, "bogota_devnet1"
+    )
+    assert resolve_fork("BogotaDevnet1").short_name == "develop"
+    assert resolve_enabled_eips("BogotaDevnet1") == targets["bogota_devnet1"]
+    assert resolve_fork("Bogota").short_name == "bogota"
+    assert resolve_enabled_eips("Bogota") is None
+    assert "BogotaDevnet1" in get_supported_forks()
+
+
+def test_uncovered_eips() -> None:
+    """Report the flags that no target enables, in order."""
+    flags = {8141: "EIP_8141", 8250: "EIP_8250", 7906: "EIP_7906"}
+    assert uncovered_eips(flags, {"a": frozenset({8141})}) == [7906, 8250]
+    assert uncovered_eips(flags, {"a": frozenset({8141, 8250, 7906})}) == []
+    assert uncovered_eips(flags, {}) == [7906, 8141, 8250]

@@ -67,6 +67,13 @@ class TransactionDefaults:
     gas_price: int = 10
     max_fee_per_gas: int = 7
     max_priority_fee_per_gas: int = 0
+    frame_transaction_nonce_keys: bool = False
+    """
+    Whether a frame transaction carries a nonce key set on the wire, as
+    EIP-8250 adds. The filler sets it from the fork each test fills for,
+    so that a transaction takes the fork's shape when it is built: what
+    the test signs or prices is what the filler sends.
+    """
 
 
 class AuthorizationTupleGeneric(
@@ -608,6 +615,13 @@ class Transaction(
             self.max_fee_per_blob_gas = HexNumber(1)
             self.model_fields_set.remove("max_fee_per_blob_gas")
         if self.frames is not None:
+            if (
+                self.nonce_keys is None
+                and TransactionDefaults.frame_transaction_nonce_keys
+            ):
+                # EIP-8250: the legacy key set selects the account nonce.
+                self.nonce_keys = [HexNumber(0)]
+                self.model_fields_set.remove("nonce_keys")
             # EIP-8141: Frame transactions always carry blob fields.
             if self.blob_versioned_hashes is None:
                 self.blob_versioned_hashes = []
@@ -927,24 +941,6 @@ class Transaction(
                 "would be silently ignored."
             )
 
-    def with_fork_defaults(self, *, fork: Fork) -> Self:
-        """
-        Return a copy carrying the fields a fork adds to the wire format,
-        when the test left them unset.
-
-        A frame transaction on a fork with EIP-8250 carries a nonce key
-        set; unset, it selects the legacy key, the sender's account
-        nonce. Forks without it keep the EIP-8141 format, so the same
-        test fills against both.
-        """
-        if (
-            self.frames is None
-            or self.nonce_keys is not None
-            or not fork.frame_transaction_nonce_keys()
-        ):
-            return self
-        return self.copy(nonce_keys=[HexNumber(0)])
-
     def with_gas_limit(
         self,
         *,
@@ -1072,8 +1068,8 @@ class Transaction(
             if self.nonce_keys is not None:
                 # EIP-8250: https://eips.ethereum.org/EIPS/eip-8250
                 # The key set precedes the nonce, which becomes the
-                # sequence number; `with_fork_defaults` sets it on forks
-                # whose wire format carries it.
+                # sequence number; `TransactionDefaults` sets it on
+                # forks whose wire format carries it.
                 field_list.insert(1, "nonce_keys")
         elif self.ty == 6:
             # EIP-7873: https://eips.ethereum.org/EIPS/eip-7873

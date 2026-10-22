@@ -10,6 +10,7 @@ from ethereum.fork_criteria import (
     Unscheduled,
 )
 from ethereum_spec_tools.forks import ForkOverrides, Hardfork
+from ethereum_spec_tools.utils import development_source
 from ethereum_types.numeric import U64, Uint
 from typing_extensions import assert_never
 
@@ -285,3 +286,55 @@ def test_fork_cache_reuses_cached_clone_for_identical_changed_request(
     assert second is cloned
     assert first is second
     assert clone_count == 1
+
+
+def test_fork_cache_folds_for_every_enabled_eip_set(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """
+    Clone whenever an EIP set is requested, even the set of every flag
+    the development source carries: fixtures filled against a set must
+    come from the same fold as the generated forks.
+    """
+    template = development_source()
+    eips = template.module("eips")
+    every_flag = frozenset(
+        int(name.removeprefix("EIP_"))
+        for name in dir(eips)
+        if name.startswith("EIP_")
+    )
+    cloned = DummyTemporaryFork()
+    seen: dict[str, Any] = {}
+
+    def clone(
+        template: Hardfork,
+        overrides: ForkOverrides,
+    ) -> DummyTemporaryFork:
+        seen["template"] = template
+        seen["overrides"] = overrides
+        return cloned
+
+    monkeypatch.setattr(Hardfork, "clone", clone)
+
+    with ForkCache() as cache:
+        fork = cache.get(template, enabled_eips=every_flag)
+
+    assert fork is cloned
+    assert seen["template"] is template
+    assert _seen_overrides(seen).enabled_eips == every_flag
+
+
+def test_fork_cache_folds_the_development_source() -> None:
+    """
+    Fold the development source for an EIP set: the clone keeps the
+    enabled EIP's modules and drops the modules the disabled EIPs own.
+    """
+    template = development_source()
+
+    with ForkCache() as cache:
+        fork = cache.get(template, enabled_eips=frozenset({8141}))
+        assert fork is not template
+        fork.module("transactions.frame_transaction")
+        with pytest.raises(ModuleNotFoundError):
+            fork.module("keyed_nonces")
+        assert fork is cache.get(template, enabled_eips=frozenset({8141}))

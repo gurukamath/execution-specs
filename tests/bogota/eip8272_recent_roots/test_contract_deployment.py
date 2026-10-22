@@ -32,7 +32,7 @@ from execution_testing import (
     generate_system_contract_deploy_test,
 )
 from execution_testing.checklists import EIPChecklist
-from execution_testing.forks import Bogota, TransitionFork
+from execution_testing.forks import TransitionFork, get_fork_enabling_eip
 
 from ..eip8141_frame_transactions.helpers import sender_frame, verify_frame
 from ..eip8141_frame_transactions.spec import Spec as FrameSpec
@@ -64,11 +64,9 @@ deployment blocks.
 
 @EIPChecklist.SystemContract.Test.Deployment.Address()
 @EIPChecklist.SystemContract.Test.Deployment.Missing()
-# The deployment belongs to the fork that first enables EIP-8272, the
-# devnet pseudo-fork, which does not exist yet.
-@pytest.mark.skip(reason="needs the devnet pseudo-fork")
+# The deployment belongs to whichever fork first enables EIP-8272.
 @generate_system_contract_deploy_test(
-    fork=Bogota,
+    fork=get_fork_enabling_eip("EIP8272"),
     tx_json_path=Path(realpath(__file__)).parent
     / "recent_root_deploy_tx.json",
     expected_deploy_address=Spec.RECENT_ROOT_ADDRESS,
