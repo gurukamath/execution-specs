@@ -11,6 +11,7 @@ from typing import (
     Any,
     Dict,
     Final,
+    FrozenSet,
     List,
     Optional,
     Sequence,
@@ -32,7 +33,11 @@ from ethereum_spec_tools.loaders.transaction_loader import (
     TransactionLoad,
     UnsupportedTxError,
 )
-from ethereum_spec_tools.utils import get_stream_logger, resolve_fork
+from ethereum_spec_tools.utils import (
+    get_stream_logger,
+    resolve_enabled_eips,
+    resolve_fork,
+)
 from ethereum_types.bytes import Bytes
 from ethereum_types.numeric import U64, U256, Uint
 from typing_extensions import override
@@ -88,10 +93,14 @@ class ForkCache(AbstractContextManager):
         max_blob_gas_per_block: U64 | None = None,
         blob_schedule_target: U64 | None = None,
         blob_schedule_max: U64 | None = None,
+        enabled_eips: FrozenSet[int] | None = None,
     ) -> Hardfork:
         """
         Search the cache for a matching hardfork, or create one if it doesn't
         exist.
+
+        `enabled_eips` folds the template's feature guards for that set;
+        the template is then the development source.
         """
         overrides = ForkOverrides(
             fork_criteria=fork_criteria,
@@ -102,6 +111,7 @@ class ForkCache(AbstractContextManager):
             max_blob_gas_per_block=max_blob_gas_per_block,
             blob_schedule_target=blob_schedule_target,
             blob_schedule_max=blob_schedule_max,
+            enabled_eips=enabled_eips,
         )
         if overrides.matches_template(template):
             return template
@@ -160,6 +170,9 @@ class T8N(Load):
         # number at which the resolved fork activates via
         # ``fork_block``; the in-process path leaves it ``None``.
         fork_module = resolve_fork(t8n_data.fork_name)
+        # A pseudo-fork (a devnet EIP set) resolves to the development
+        # source, which the cache folds with its set.
+        enabled_eips = resolve_enabled_eips(t8n_data.fork_name)
         fork_criteria: Optional[ByBlockNumber] = None
         if fork_block is not None and fork_block != 0:
             fork_criteria = ByBlockNumber(fork_block)
@@ -200,6 +213,7 @@ class T8N(Load):
             blob_schedule_target=target_blobs_per_block,
             blob_schedule_max=max_blobs_per_block,
             blob_base_fee_update_fraction=base_fee_update_fraction,
+            enabled_eips=enabled_eips,
         )
 
         # The tracer active before this transition, put back by `run`.

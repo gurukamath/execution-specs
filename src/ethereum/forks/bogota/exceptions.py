@@ -111,13 +111,6 @@ class NoBlobDataError(InvalidTransaction):
     """
 
 
-class InvalidMaxFeePerBlobGasError(InvalidTransaction):
-    """
-    The transaction carries no blobs but has a nonzero
-    `max_fee_per_blob_gas`.
-    """
-
-
 class BlobCountExceededError(InvalidTransaction):
     """
     The transaction has more blobs than the limit.
@@ -127,20 +120,6 @@ class BlobCountExceededError(InvalidTransaction):
 class PriorityFeeGreaterThanMaxFeeError(InvalidTransaction):
     """
     The priority fee is greater than the maximum fee per gas.
-    """
-
-
-class FeeOverflowError(InvalidTransaction):
-    """
-    A fee field of the transaction exceeds the largest representable
-    256-bit value.
-    """
-
-
-class MaxCostOverflowError(InvalidTransaction):
-    """
-    The maximum wei cost the transaction can incur exceeds the largest
-    representable 256-bit value.
     """
 
 
@@ -163,6 +142,27 @@ class TransactionGasLimitExceededError(InvalidTransaction):
 
     Note that this is _not_ the exception thrown when bytecode execution runs
     out of gas.
+    """
+
+
+class InvalidMaxFeePerBlobGasError(InvalidTransaction):
+    """
+    The transaction carries no blobs but has a nonzero
+    `max_fee_per_blob_gas`.
+    """
+
+
+class FeeOverflowError(InvalidTransaction):
+    """
+    A fee field of the transaction exceeds the largest representable
+    256-bit value.
+    """
+
+
+class MaxCostOverflowError(InvalidTransaction):
+    """
+    The maximum wei cost the transaction can incur exceeds the largest
+    representable 256-bit value.
     """
 
 

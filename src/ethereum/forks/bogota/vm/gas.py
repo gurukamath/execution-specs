@@ -61,9 +61,6 @@ class StateGasCosts:
     AUTH_BASE: Final[StateGas] = (
         STATE_BYTES_PER_AUTH_BASE * COST_PER_STATE_BYTE
     )
-    KEYED_NONCE_FIRST_USE: Final[StateGas] = (
-        STATE_BYTES_PER_STORAGE_SET * COST_PER_STATE_BYTE
-    )
 
 
 # These values may be patched at runtime by a future gas repricing utility
@@ -169,70 +166,6 @@ class GasCosts:
         + Uint(2) * WARM_ACCESS
     )
 
-    TX_FRAME_INTRINSIC: Final[ExecutionGas] = ExecutionGas(Uint(12000))
-    """
-    Base gas cost for [`FrameTransaction`][ftx]s, equal to [`TX_BASE`][tb].
-
-    Frame transactions price signature recovery per signature entry, so
-    the recovery component of the base cost instead covers payer
-    settlement, which regular transactions do not price separately.
-
-    [ftx]: ref:ethereum.forks.bogota.transactions.frame_transaction.FrameTransaction
-    [tb]: ref:ethereum.forks.bogota.vm.gas.GasCosts.TX_BASE
-    """  # noqa: E501
-
-    TX_PER_FRAME: Final[ExecutionGas] = ExecutionGas(Uint(475))
-    """
-    Additional per-[`Frame`] gas cost for [`FrameTransaction`][ftx]s.
-
-    [ftx]: ref:ethereum.forks.bogota.transactions.frame_transaction.FrameTransaction
-    [`Frame`]: ref:ethereum.forks.bogota.transactions.frame_transaction.Frame
-    """  # noqa: E501
-
-    # Frames
-    FRAME_SIGNATURE_SCHEME_SECP256K1: Final[ExecutionGas] = ExecutionGas(
-        Uint(2800)
-    )
-    """
-    Cost for verifying a [`SECP256K1`][s] signature in a
-    [`FrameTransaction`][ftx].
-
-    [s]: ref:ethereum.forks.bogota.transactions.frame_transaction.FrameSignatureScheme.SECP256K1
-    [ftx]: ref:ethereum.forks.bogota.transactions.frame_transaction.FrameTransaction
-    """  # noqa: E501
-
-    FRAME_SIGNATURE_SCHEME_P256: Final[ExecutionGas] = ExecutionGas(Uint(6700))
-    """
-    Cost for verifying a [`P256`][s] signature in a [`FrameTransaction`][ftx].
-
-    [s]: ref:ethereum.forks.bogota.transactions.frame_transaction.FrameSignatureScheme.P256
-    [ftx]: ref:ethereum.forks.bogota.transactions.frame_transaction.FrameTransaction
-    """  # noqa: E501
-
-    FRAME_SIGNATURE_SCHEME_ARBITRARY: Final[ExecutionGas] = ExecutionGas(
-        Uint(100)
-    )
-    """
-    Cost charged for an [`ARBITRARY`][s] signature entry in a
-    [`FrameTransaction`][ftx]. The protocol does not cryptographically
-    validate these entries; the charge covers making the bytes available
-    for introspection.
-
-    [s]: ref:ethereum.forks.bogota.transactions.frame_transaction.FrameSignatureScheme.ARBITRARY
-    [ftx]: ref:ethereum.forks.bogota.transactions.frame_transaction.FrameTransaction
-    """  # noqa: E501
-
-    KEYED_NONCE_ACCESS: Final[ExecutionGas] = (
-        COLD_STORAGE_ACCESS + STORAGE_WRITE
-    )
-    """
-    Intrinsic cost of each non-zero nonce key of a [`FrameTransaction`][ftx]:
-    the cold read and the write of its slot in the nonce manager, which the
-    protocol performs outside the access lists and `SSTORE` pricing.
-
-    [ftx]: ref:ethereum.forks.bogota.transactions.frame_transaction.FrameTransaction
-    """  # noqa: E501
-
     # Block
     LIMIT_ADJUSTMENT_FACTOR: Final[Uint] = Uint(1024)
     LIMIT_MINIMUM: Final[Uint] = Uint(5000)
@@ -300,19 +233,11 @@ class GasCosts:
     OPCODE_EXCHANGE: Final[ExecutionGas] = VERY_LOW
     OPCODE_TLOAD: Final[ExecutionGas] = ExecutionGas(Uint(100))
     OPCODE_TSTORE: Final[ExecutionGas] = ExecutionGas(Uint(100))
-    OPCODE_TXPARAM: Final[ExecutionGas] = BASE
-    OPCODE_TXTRACE: Final[ExecutionGas] = WARM_ACCESS
-    OPCODE_FRAMEDATALOAD: Final[ExecutionGas] = VERY_LOW
-    OPCODE_FRAMEPARAM: Final[ExecutionGas] = BASE
-    OPCODE_SIGPARAM: Final[ExecutionGas] = BASE
 
     # Dynamic Opcode Components
-    OPCODE_FRAMEDATACOPY_BASE: Final[ExecutionGas] = VERY_LOW
-    OPCODE_SIGDATACOPY_BASE: Final[ExecutionGas] = VERY_LOW
     OPCODE_RETURNDATACOPY_BASE: Final[ExecutionGas] = VERY_LOW
     OPCODE_RETURNDATACOPY_PER_WORD: Final[ExecutionGas] = ExecutionGas(Uint(3))
     OPCODE_CALLDATACOPY_BASE: Final[ExecutionGas] = VERY_LOW
-    OPCODE_EVENTDATACOPY_BASE: Final[ExecutionGas] = VERY_LOW
     OPCODE_CODECOPY_BASE: Final[ExecutionGas] = VERY_LOW
     OPCODE_MCOPY_BASE: Final[ExecutionGas] = VERY_LOW
     OPCODE_MLOAD_BASE: Final[ExecutionGas] = VERY_LOW
@@ -327,6 +252,67 @@ class GasCosts:
     OPCODE_LOG_DATA_PER_BYTE: Final[ExecutionGas] = ExecutionGas(Uint(8))
     OPCODE_LOG_TOPIC: Final[ExecutionGas] = ExecutionGas(Uint(375))
     OPCODE_SELFDESTRUCT_BASE: Final[ExecutionGas] = ExecutionGas(Uint(5000))
+
+    # Frame transactions
+    TX_FRAME_INTRINSIC: Final[ExecutionGas] = ExecutionGas(Uint(12000))
+    """
+    Base gas cost for [`FrameTransaction`][ftx]s, equal to [`TX_BASE`][tb].
+
+    Frame transactions price signature recovery per signature entry, so
+    the recovery component of the base cost instead covers payer
+    settlement, which regular transactions do not price separately.
+
+    [ftx]: ref:ethereum.forks.bogota.transactions.frame_transaction.FrameTransaction
+    [tb]: ref:ethereum.forks.bogota.vm.gas.GasCosts.TX_BASE
+    """  # noqa: E501
+
+    TX_PER_FRAME: Final[ExecutionGas] = ExecutionGas(Uint(475))
+    """
+    Additional per-[`Frame`] gas cost for [`FrameTransaction`][ftx]s.
+
+    [ftx]: ref:ethereum.forks.bogota.transactions.frame_transaction.FrameTransaction
+    [`Frame`]: ref:ethereum.forks.bogota.transactions.frame_transaction.Frame
+    """  # noqa: E501
+
+    # Frames
+    FRAME_SIGNATURE_SCHEME_SECP256K1: Final[ExecutionGas] = ExecutionGas(
+        Uint(2800)
+    )
+    """
+    Cost for verifying a [`SECP256K1`][s] signature in a
+    [`FrameTransaction`][ftx].
+
+    [s]: ref:ethereum.forks.bogota.transactions.frame_transaction.FrameSignatureScheme.SECP256K1
+    [ftx]: ref:ethereum.forks.bogota.transactions.frame_transaction.FrameTransaction
+    """  # noqa: E501
+
+    FRAME_SIGNATURE_SCHEME_P256: Final[ExecutionGas] = ExecutionGas(Uint(6700))
+    """
+    Cost for verifying a [`P256`][s] signature in a [`FrameTransaction`][ftx].
+
+    [s]: ref:ethereum.forks.bogota.transactions.frame_transaction.FrameSignatureScheme.P256
+    [ftx]: ref:ethereum.forks.bogota.transactions.frame_transaction.FrameTransaction
+    """  # noqa: E501
+
+    FRAME_SIGNATURE_SCHEME_ARBITRARY: Final[ExecutionGas] = ExecutionGas(
+        Uint(100)
+    )
+    """
+    Cost charged for an [`ARBITRARY`][s] signature entry in a
+    [`FrameTransaction`][ftx]. The protocol does not cryptographically
+    validate these entries; the charge covers making the bytes available
+    for introspection.
+
+    [s]: ref:ethereum.forks.bogota.transactions.frame_transaction.FrameSignatureScheme.ARBITRARY
+    [ftx]: ref:ethereum.forks.bogota.transactions.frame_transaction.FrameTransaction
+    """  # noqa: E501
+
+    OPCODE_TXPARAM: Final[ExecutionGas] = BASE
+    OPCODE_FRAMEDATALOAD: Final[ExecutionGas] = VERY_LOW
+    OPCODE_FRAMEPARAM: Final[ExecutionGas] = BASE
+    OPCODE_SIGPARAM: Final[ExecutionGas] = BASE
+    OPCODE_FRAMEDATACOPY_BASE: Final[ExecutionGas] = VERY_LOW
+    OPCODE_SIGDATACOPY_BASE: Final[ExecutionGas] = VERY_LOW
 
 
 MAX_BLOB_GAS_PER_BLOCK: Final[U64] = (
@@ -1171,8 +1157,7 @@ def calculate_total_blob_gas(tx: Transaction) -> U64:
     """
     if isinstance(tx, BlobCapableTransaction):
         return GasCosts.PER_BLOB * U64(len(tx.blob_versioned_hashes))
-    else:
-        return U64(0)
+    return U64(0)
 
 
 def calculate_blob_gas_price(excess_blob_gas: U64) -> Uint:

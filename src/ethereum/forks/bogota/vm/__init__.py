@@ -28,24 +28,21 @@ from ethereum.utils.byte import left_pad_zero_bytes
 from ..block_access_lists import BlockAccessList, BlockAccessListBuilder
 from ..blocks import FrameReceipt, Log, Receipt, Withdrawal
 from ..fork_types import Authorization, ExecutionGas, StateGas, VersionedHash
-from ..keyed_nonces import consume_nonce_set, count_first_uses
 from ..state_tracker import (
     BlockState,
     TransactionState,
     get_account,
+    increment_nonce,
     is_account_alive,
     set_account_balance,
 )
 from ..transactions import LegacyTransaction
 from ..transactions.frame_transaction import (
     APPROVE_SCOPE_MASK,
-    LEGACY_NONCE_KEYS,
-    MAX_NONCE_SEQ,
     FrameFlag,
     FrameTransaction,
     resolve_frame_target,
 )
-from .exceptions import NonceOverflow
 from .gas import (
     GasMeter,
     StateGasCosts,
@@ -311,7 +308,7 @@ class TransactionEnvironment:
     flow entries assert it.
     """
 
-    frame_context: Optional[FrameContext]
+    frame_context: Optional[FrameContext] = None
     """
     Present iff this is a frame transaction. The frame-only opcodes
     exceptionally halt when this is `None`.
@@ -382,27 +379,28 @@ def attempt_approval(
     transaction's sender. Approving payment requires that no payer is
     set, that execution is approved (by this same scope or earlier),
     and that the resolved target can cover the transaction's maximum
-    cost; it consumes the transaction's nonce set (see
-    [`consume_nonce_set`][cns]) and collects the maximum cost from the
-    resolved target, which becomes the payer. The payer needs no
+    cost; it consumes the transaction's nonce — the sender's account
+    nonce, or its nonce key set under [EIP-8250] (see
+    `consume_nonce_set`) — and collects the maximum cost from
+    the resolved target, which becomes the payer. The payer needs no
     warming here: it is the frame's resolved target, whose access the
     frame charged and warmed at frame entry.
 
-    Consuming the nonce set is charged from the executing frame's state
-    gas pool immediately before it happens: for the legacy key set, the
-    account creation when incrementing the nonce creates the sender
-    account; otherwise one storage slot creation per selected key used
-    for the first time. A pool that cannot cover the charge, or a
-    legacy increment that would overflow the account nonce, halts the
-    current call frame exceptionally — the halt's rollback discards
-    every approval effect, including an execution approval this same
-    call already recorded.
+    Consuming the nonce is charged from the executing frame's state
+    gas pool immediately before it happens: the account creation when
+    incrementing the nonce creates the sender account, or under
+    [EIP-8250] one storage slot creation per selected key used for the
+    first time. A pool that cannot cover the charge, or under
+    [EIP-8250] a legacy increment that would overflow the account
+    nonce, halts the current call frame exceptionally — the halt's
+    rollback discards every approval effect, including an execution
+    approval this same call already recorded.
 
     Return whether the approval was granted; a refusal reverts the
     requesting call frame, which is the frame itself only when the
     protocol default code is the caller.
 
-    [cns]: ref:ethereum.forks.bogota.keyed_nonces.consume_nonce_set
+    [EIP-8250]: https://eips.ethereum.org/EIPS/eip-8250
     """
     frame_context = tx_env.frame_context
     assert frame_context is not None
@@ -441,21 +439,9 @@ def attempt_approval(
     if approves_execution:
         frame_context.sender_approved = True
     if approves_payment:
-        if tx.nonce_keys == LEGACY_NONCE_KEYS:
-            sender_nonce = get_account(tx_env.state, tx.sender).nonce
-            if sender_nonce >= Uint(MAX_NONCE_SEQ):
-                raise NonceOverflow
-            if is_account_alive(tx_env.state, tx.sender):
-                nonce_state_gas = StateGas(Uint(0))
-            else:
-                nonce_state_gas = StateGasCosts.NEW_ACCOUNT
-        else:
-            nonce_state_gas = StateGas(
-                StateGasCosts.KEYED_NONCE_FIRST_USE
-                * count_first_uses(tx_env.state, tx)
-            )
-        charge_frame_state_gas(frame_context, nonce_state_gas)
-        consume_nonce_set(tx_env.state, tx)
+        if not is_account_alive(tx_env.state, tx.sender):
+            charge_frame_state_gas(frame_context, StateGasCosts.NEW_ACCOUNT)
+        increment_nonce(tx_env.state, tx.sender)
         set_account_balance(
             tx_env.state,
             resolved_target,

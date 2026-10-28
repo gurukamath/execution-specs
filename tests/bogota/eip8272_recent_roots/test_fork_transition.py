@@ -47,7 +47,8 @@ from .spec import (
 REFERENCE_SPEC_GIT_PATH = ref_spec_8272.git_path
 REFERENCE_SPEC_VERSION = ref_spec_8272.version
 
-pytestmark = pytest.mark.valid_at_transition_to("Bogota")
+# The transition into whichever fork first enables EIP-8272.
+pytestmark = [pytest.mark.valid_at_transition_to("EIP8272")]
 
 FORK_TIMESTAMP = 15_000
 """Timestamp at which the transition fork activates EIP-8272."""

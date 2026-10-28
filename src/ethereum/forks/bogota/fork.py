@@ -635,7 +635,6 @@ def check_transaction(
             data=tx.data,
             value=tx.value,
         ),
-        frame_context=None,
     )
 
 
@@ -785,7 +784,6 @@ def process_unchecked_system_transaction(
             data=data,
             value=U256(0),
         ),
-        frame_context=None,
     )
 
     system_tx_output = process_top_level(block_env, tx_env)

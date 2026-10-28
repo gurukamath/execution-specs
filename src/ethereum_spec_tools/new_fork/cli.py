@@ -11,11 +11,11 @@ from ethereum_types.numeric import U64, Uint
 from ethereum.fork_criteria import ByBlockNumber, ByTimestamp, Unscheduled
 
 from ..forks import Hardfork
-from .builder import ForkBuilder
+from .builder import ForkBuilder, with_dependents, with_requirements
 
 
 def _make_parser() -> ArgumentParser:
-    forks = Hardfork.discover()
+    forks = Hardfork.discover(include_develop=True)
     fork_short_names = [f.short_name for f in forks]
 
     parser = ArgumentParser(
@@ -50,6 +50,49 @@ def _make_parser() -> ArgumentParser:
         type=Path,
         metavar="PATH",
         help="directory in which to place the generated fork",
+    )
+
+    parser.add_argument(
+        "--enable-eip",
+        dest="enable_eips",
+        type=int,
+        action="append",
+        metavar="N",
+        help=(
+            "fold the template's EIP-N feature guards to their `if` branch;"
+            " when given without --disable-eip, the EIPs it requires are"
+            " enabled too and every other flag is disabled"
+        ),
+    )
+
+    parser.add_argument(
+        "--disable-eip",
+        dest="disable_eips",
+        type=int,
+        action="append",
+        metavar="N",
+        help=(
+            "fold the template's EIP-N feature guards to their `else`"
+            " branch; when given without --enable-eip, the EIPs that"
+            " require it are disabled too and every other flag is enabled"
+        ),
+    )
+
+    parser.add_argument(
+        "--fold-only",
+        action="store_true",
+        default=False,
+        help=(
+            "only fold feature guards: keep the template's name, fork"
+            " criteria and docstring"
+        ),
+    )
+
+    parser.add_argument(
+        "--format",
+        action="store_true",
+        default=False,
+        help="run the formatter and import sorter over the generated fork",
     )
 
     parser.add_argument(
@@ -165,6 +208,23 @@ def main(args: Sequence[str] | None = None) -> None:
         builder.output = options.output
 
     builder.force = options.force
+    builder.format = options.format
+
+    if options.fold_only:
+        builder.modifiers = []
+
+    if options.enable_eips is not None or options.disable_eips is not None:
+        flags = set(builder.template_flags())
+        requires = builder.template_requires()
+        enabled = set(options.enable_eips or [])
+        disabled = set(options.disable_eips or [])
+        if options.enable_eips is None:
+            disabled = set(with_dependents(disabled, requires))
+            enabled = flags - disabled
+        elif options.disable_eips is None:
+            enabled = set(with_requirements(enabled, requires))
+            disabled = flags - enabled
+        builder.fold_feature_guards(enabled, disabled)
 
     if options.fork_criteria is not None:
         builder.fork_criteria = options.fork_criteria

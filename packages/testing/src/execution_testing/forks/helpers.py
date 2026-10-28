@@ -390,6 +390,23 @@ def get_fork_by_name(fork_name: str) -> Type[BaseFork] | None:
     return None
 
 
+def get_fork_enabling_eip(eip_name: str) -> Type[BaseFork]:
+    """
+    Return the earliest fork that enables the named EIP, e.g. `EIP8250`.
+
+    Tests that belong to whichever fork first enables an EIP, such as
+    the deployment of its system contract, pin that fork through the
+    EIP rather than by name, so that they follow the EIP when it moves.
+    """
+    for eip in all_eips:
+        if eip.name() == eip_name:
+            enabling = eip.enabling_forks()
+            if not enabling:
+                raise InvalidForkError(f"No fork enables {eip_name}")
+            return min(enabling)
+    raise InvalidForkError(f"Unknown EIP: {eip_name}")
+
+
 def ssz_schema_fork_key(
     schema: SSZForkSchema, fork: Type[BaseFork]
 ) -> Type[BaseFork]:

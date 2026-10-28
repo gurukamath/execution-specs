@@ -87,6 +87,26 @@ def test_visitor_class_nested() -> None:
     ]
 
 
+def test_visitor_feature_guard_alternatives() -> None:
+    """
+    Tests that the visitor collects only the first branch of an `if`, so
+    that a feature guard defining a name in both branches registers it
+    once.
+    """
+    src = """
+    if EIP_8141:
+        Transaction = Legacy | Frame
+    else:
+        Transaction = Legacy
+    variable0 = 67
+    """
+    tree = ast.parse(dedent(src))
+    visitor = PatchHygieneVisitor()
+    visitor.visit(tree)
+    items = visitor.items
+    assert items == ["Transaction", "variable0"]
+
+
 def test_patch_hygiene_compare_new_module() -> None:
     """Tests that patch hygiene allows creating new modules without issues."""
     old = None

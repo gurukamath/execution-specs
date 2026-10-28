@@ -132,6 +132,17 @@ class _Visitor(ast.NodeVisitor):
         got = self.path.pop()
         assert klass.name == got
 
+    def visit_If(self, if_statement: ast.If) -> None:
+        """
+        Visit an `if` statement.
+
+        Only the first branch is collected. The `else` branch of a feature
+        guard defines the same names as alternatives, and collecting it
+        would register them twice.
+        """
+        for statement in if_statement.body:
+            self.visit(statement)
+
     def visit_Assign(self, assign: ast.Assign) -> None:
         """
         Visit an assignment.

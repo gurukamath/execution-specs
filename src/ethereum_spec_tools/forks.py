@@ -22,9 +22,13 @@ from typing import (
     TYPE_CHECKING,
     Any,
     Dict,
+    Final,
+    FrozenSet,
     Iterator,
     List,
+    Mapping,
     Optional,
+    Protocol,
     Type,
     TypeVar,
     cast,
@@ -78,6 +82,14 @@ class ForkOverrides:
     max_blob_gas_per_block: U64 | None = None
     blob_schedule_target: U64 | None = None
     blob_schedule_max: U64 | None = None
+    enabled_eips: FrozenSet[int] | None = None
+    """
+    EIPs whose feature guards fold to their enabled branch; every other
+    flag of the template folds to its disabled branch. `None` leaves the
+    template's guards alone. A set always folds, even one that enables
+    every flag of the template, so that fixtures filled against a set
+    come from the same transformation as the generated forks.
+    """
 
     def is_empty(self) -> bool:
         """
@@ -111,6 +123,9 @@ class ForkOverrides:
             self.fork_criteria is not None
             and self.fork_criteria != template.criteria
         ):
+            return False
+
+        if self.enabled_eips is not None:
             return False
 
         fork_mod = template.module("fork")
@@ -153,6 +168,78 @@ class ForkOverrides:
         return all(self._matches_field(*x) for x in checks)
 
 
+DEVELOP_FORK_NAME: Final[str] = "develop"
+"""
+Short name of the development source package under `ethereum.forks`.
+
+It is a complete fork package with every EIP under consideration behind
+a feature flag, from which the forks under development are generated.
+It is not itself a fork: discovery leaves it out unless asked for it,
+so that lints, documentation and fills only ever see generated forks.
+"""
+
+
+class Target(Protocol):
+    """
+    An entry of a development source's `TARGETS` table: an EIP set that
+    fixtures are filled against. Mirrors the record the source defines.
+    """
+
+    @property
+    def eips(self) -> FrozenSet[int]:
+        """The EIPs the target enables beyond its base."""
+        ...
+
+    @property
+    def base(self) -> Optional[str]:
+        """The target this one extends, if any."""
+        ...
+
+    @property
+    def generated(self) -> bool:
+        """Whether the fold tool writes the target as a fork package."""
+        ...
+
+
+def resolve_target(targets: Mapping[str, Target], name: str) -> FrozenSet[int]:
+    """
+    Return the EIP set of `targets[name]`, including those of its bases.
+    """
+    resolved: set[int] = set()
+    chain: list[str] = []
+    current: Optional[str] = name
+    while current is not None:
+        if current in chain:
+            cycle = " -> ".join([*chain, current])
+            raise ValueError(f"target `{name}` has a base cycle: {cycle}")
+        if current not in targets:
+            raise ValueError(
+                f"target `{current}`, reached from `{name}`, is not in"
+                " `TARGETS`"
+            )
+        chain.append(current)
+        resolved |= set(targets[current].eips)
+        current = targets[current].base
+    return frozenset(resolved)
+
+
+def pseudo_fork_targets() -> Mapping[str, FrozenSet[int]]:
+    """
+    Return the resolved EIP set of every `TARGETS` entry the development
+    source does not generate, keyed by target name.
+
+    These are the pseudo-forks: devnet EIP sets that the test tooling
+    folds from the source on demand instead of reading a fork package.
+    """
+    eips = importlib.import_module(f"ethereum.forks.{DEVELOP_FORK_NAME}.eips")
+    targets: Mapping[str, Target] = eips.TARGETS
+    return {
+        name: resolve_target(targets, name)
+        for name, target in targets.items()
+        if not target.generated
+    }
+
+
 class Hardfork:
     """
     Metadata associated with an Ethereum hardfork.
@@ -162,10 +249,15 @@ class Hardfork:
 
     @classmethod
     def discover(
-        cls: Type[H], submodule_search_locations: None | list[str] = None
+        cls: Type[H],
+        submodule_search_locations: None | list[str] = None,
+        include_develop: bool = False,
     ) -> List[H]:
         """
         Find packages which contain Ethereum hardfork specifications.
+
+        The development source package is included only when
+        `include_develop` is set.
         """
         if submodule_search_locations is None:
             ethereum_forks = importlib.import_module("ethereum.forks")
@@ -186,6 +278,11 @@ class Hardfork:
         forks: List[H] = []
 
         for pkg in modules:
+            if (
+                not include_develop
+                and pkg.name.rsplit(".", 1)[-1] == DEVELOP_FORK_NAME
+            ):
+                continue
             try:
                 mod = sys.modules[pkg.name]
                 if hasattr(mod, "FORK_CRITERIA"):
@@ -352,6 +449,9 @@ class Hardfork:
 
             if overrides.blob_schedule_max is not None:
                 builder.modify_blob_schedule_max(overrides.blob_schedule_max)
+
+            if overrides.enabled_eips is not None:
+                builder.fold_feature_guards(overrides.enabled_eips)
 
             builder.build()
 

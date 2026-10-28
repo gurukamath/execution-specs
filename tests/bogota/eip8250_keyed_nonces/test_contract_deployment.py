@@ -24,7 +24,7 @@ from execution_testing import (
     generate_system_contract_deploy_test,
 )
 from execution_testing.checklists import EIPChecklist
-from execution_testing.forks import Bogota, TransitionFork
+from execution_testing.forks import TransitionFork, get_fork_enabling_eip
 
 from ..eip8141_frame_transactions.helpers import verify_frame
 from .helpers import NONCE_KEY
@@ -36,8 +36,9 @@ REFERENCE_SPEC_VERSION = ref_spec_8250.version
 
 @EIPChecklist.SystemContract.Test.Deployment.Address()
 @EIPChecklist.SystemContract.Test.Deployment.Missing()
+# The deployment belongs to whichever fork first enables EIP-8250.
 @generate_system_contract_deploy_test(
-    fork=Bogota,
+    fork=get_fork_enabling_eip("EIP8250"),
     tx_json_path=Path(realpath(__file__)).parent
     / "nonce_manager_deploy_tx.json",
     expected_deploy_address=Spec.NONCE_MANAGER,
