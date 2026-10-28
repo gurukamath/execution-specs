@@ -48,7 +48,7 @@ from .spec import (
 REFERENCE_SPEC_GIT_PATH = ref_spec_8272.git_path
 REFERENCE_SPEC_VERSION = ref_spec_8272.version
 
-pytestmark = pytest.mark.valid_from("Bogota")
+pytestmark = pytest.mark.valid_from("EIP8272")
 
 SLOT_EXECUTED = 0x01
 """Storage slot used by target contracts to record execution."""

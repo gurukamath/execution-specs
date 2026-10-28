@@ -39,7 +39,7 @@ from ..gas_costs import BASE, HIGH, LOW, MID, VERY_LOW, GasCosts
 from ..requests import SystemContractRequest
 from . import eips
 from .eips.amsterdam import AmsterdamEIPs
-from .eips.bogota import BogotaEIPs
+from .eips.bogota import TargetEIPs
 from .helpers import ceiling_division
 
 
@@ -1668,11 +1668,53 @@ class Amsterdam(
         return True
 
 
+if TYPE_CHECKING:
+
+    class BogotaEIPs(BaseFork):
+        """
+        Stand in for the EIP mixins that `TargetEIPs` derives from the
+        specification at runtime, which mypy cannot follow.
+        """
+
+else:
+    BogotaEIPs = TargetEIPs("bogota")
+
+
 class Bogota(
     BogotaEIPs,
     Amsterdam,
     deployed=False,
 ):
     """Bogota fork."""
+
+    pass
+
+
+if TYPE_CHECKING:
+
+    class BogotaDevnet1EIPs(BaseFork):
+        """
+        Stand in for the EIP mixins that `TargetEIPs` derives from the
+        specification at runtime, which mypy cannot follow.
+        """
+
+else:
+    BogotaDevnet1EIPs = TargetEIPs("bogota_devnet1")
+
+
+class BogotaDevnet1(
+    BogotaDevnet1EIPs,
+    Bogota,
+    deployed=False,
+):
+    """
+    First Bogota devnet: a pseudo-fork that extends Bogota with the
+    candidate EIPs the specification's `bogota_devnet1` target names.
+
+    It has no fork package of its own; the transition tool folds the
+    development source for its EIP set. Fill it explicitly with
+    `--fork=BogotaDevnet1`: as a subclass of Bogota it lies beyond every
+    `--until=Bogota` range.
+    """
 
     pass

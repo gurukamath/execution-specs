@@ -19,14 +19,12 @@ from ...fork_types import ExecutionGas
 from ...transactions.frame_transaction import (
     APPROVE_SCOPE_MASK,
     FrameFlag,
-    FrameMode,
     FrameSignatureScheme,
-    nonce_keys_hash,
     resolve_frame_target,
 )
 from ...vm.memory import buffer_read, memory_read_bytes, memory_write
 from .. import Evm, FrameContext, attempt_approval
-from ..exceptions import InvalidParameter, Revert, WriteInStaticContext
+from ..exceptions import InvalidParameter, Revert
 from ..gas import GasCosts, calculate_gas_extend_memory, charge_gas
 from ..stack import pop, push
 
@@ -128,9 +126,6 @@ def approve(evm: Evm) -> None:
     frame = tx.frames[int(frame_context.current_frame_index)]
     resolved_target = resolve_frame_target(tx, frame)
 
-    if frame.mode == FrameMode.POST_TX:
-        raise WriteInStaticContext
-
     evm.memory += b"\x00" * extend_memory.expand_by
 
     # Only the frame's resolved target may approve.
@@ -168,7 +163,7 @@ def txparam(evm: Evm) -> None:
         # The frame transaction's type identifier.
         value = U256(0x06)
     elif param == TransactionParameter.NONCE:
-        value = U256(tx.nonce_seq)
+        value = U256(tx.nonce)
     elif param == TransactionParameter.SENDER:
         value = U256.from_be_bytes(tx.sender)
     elif param == TransactionParameter.MAX_PRIORITY_FEE_PER_GAS:
@@ -192,14 +187,6 @@ def txparam(evm: Evm) -> None:
     elif param == TransactionParameter.STATE_GAS_LEFT:
         # State gas remaining in the executing frame's pool.
         value = U256(frame_context.state_gas_left)
-    elif param == U256(0x0D):
-        value = U256(frame_context.legacy_nonce)
-    elif param == U256(0x0E):
-        value = U256(len(tx.nonce_keys))
-    elif param == U256(0x0F):
-        value = U256.from_be_bytes(nonce_keys_hash(tx))
-    elif param == U256(0x10):
-        value = tx.nonce_keys[0]
     else:
         raise InvalidParameter("undefined TXPARAM parameter")
 

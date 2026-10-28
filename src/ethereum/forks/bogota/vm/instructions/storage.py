@@ -141,8 +141,9 @@ def sstore(evm: Evm) -> None:
 
     # STATE GAS
     # A first-time set of a zero slot pays for the state it creates; a
-    # slot set then cleared refills the earlier charge — to the meter's
-    # reservoir, or to the frame that owns the outstanding charge.
+    # slot set then cleared refills the earlier charge.
+    # The refill goes to the meter's reservoir, or to the frame that
+    # owns the outstanding charge.
     frame_context = evm.tx_env.frame_context
     if original_value == current_value and current_value != new_value:
         if original_value == 0:
@@ -167,8 +168,8 @@ def sstore(evm: Evm) -> None:
     # reservoir on frame failure.
     charge_gas(evm, gas_cost)
     charge_state_gas(evm, state_gas)
-    # Record the executing frame as the outstanding charge's owner: a
-    # later refill of this slot is attributed back to it.
+    # Record the executing frame as the outstanding charge's owner:
+    # a later refill of this slot is attributed back to it.
     if frame_context is not None and state_gas != Uint(0):
         frame_context.outstanding_charge_owners[(evm.current_target, key)] = (
             frame_context.current_frame_index

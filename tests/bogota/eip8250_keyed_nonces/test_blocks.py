@@ -35,7 +35,7 @@ from .spec import Spec, keyed_nonce_slot, ref_spec_8250
 REFERENCE_SPEC_GIT_PATH = ref_spec_8250.git_path
 REFERENCE_SPEC_VERSION = ref_spec_8250.version
 
-pytestmark = pytest.mark.valid_from("Bogota")
+pytestmark = pytest.mark.valid_from("EIP8250")
 
 
 def test_sequence_progression(

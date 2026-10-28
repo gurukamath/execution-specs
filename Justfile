@@ -296,6 +296,22 @@ consume-collect: (_tmp "consume-collect")
             --input "$fixtures"
     done
 
+# Generate the forks under development from src/ethereum/forks/develop
+# (`just generate-forks --check` only compares with the checked-in forks)
+[group('fork tooling')]
+generate-forks *args:
+    uv run ethereum-spec-generate-forks {{ args }}
+
+# Fold a flagged fork's EIP guards into a plain fork under OUTPUT/<template>,
+# e.g. `just fold-fork bogota /tmp/fold --disable-eip 8141`
+[group('fork tooling')]
+fold-fork template output *args:
+    uv run ethereum-spec-new-fork \
+        --template-fork {{ template }} \
+        --new-fork {{ template }} \
+        --output {{ output }} \
+        --fold-only --format --force {{ args }}
+
 # Run the spec-tools tests (lint and new-fork tooling)
 [group('integration tests')]
 spec-tools *args: (_tmp "spec-tools")

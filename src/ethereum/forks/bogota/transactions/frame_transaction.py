@@ -85,53 +85,6 @@ Exact length, in bytes, of an expiry verifier frame's data: an unsigned
 big-endian expiry timestamp.
 """
 
-RECENT_ROOT_ADDRESS: Final[Address] = Address(
-    bytes.fromhex("8272d9679689ea2f307140cdf9002d27dc00ffff")
-)
-"""
-Address of the recent root contract of [EIP-8272].
-
-[EIP-8272]: https://eips.ethereum.org/EIPS/eip-8272
-"""
-
-NONCE_MANAGER: Final[Address] = Address(
-    bytes.fromhex("8250968c12e01a19d6f667b9b2f3b3a4d0e51cb7")
-)
-"""
-Address of the nonce manager contract, whose storage holds the
-keyed nonce sequences of every sender (see [`nonce_slot`][ns]).
-
-The nonce manager is an ordinary contract, deployed by the pre-signed
-creation transaction that [EIP-8250] publishes, from a synthetic sender
-whose only transaction it is. The protocol does not install it, and it
-must already be in the state when the fork activates. A chain without
-it violates the EIP, which leaves keyed transactions on such a chain
-undefined, as does this specification. The EIP gives its canonical
-runtime code, which reverts on every ordinary call: only the protocol
-writes keyed nonces.
-
-[EIP-8250]: https://eips.ethereum.org/EIPS/eip-8250
-[ns]: ref:ethereum.forks.bogota.keyed_nonces.nonce_slot
-"""
-
-MAX_NONCE_KEYS: Final[Uint] = Uint(16)
-"""
-Maximum number of nonce keys a [`FrameTransaction`][ftx] may select.
-
-[ftx]: ref:ethereum.forks.bogota.transactions.frame_transaction.FrameTransaction
-"""  # noqa: E501
-
-MAX_NONCE_SEQ: Final[U64] = U64.MAX_VALUE
-"""
-The exhausted nonce sequence: a key at this sequence cannot advance.
-"""
-
-LEGACY_NONCE_KEYS: Final[Tuple[U256, ...]] = (U256(0),)
-"""
-The nonce key set selecting the sender's account nonce rather than a
-keyed nonce sequence held by the nonce manager.
-"""
-
 
 @final
 class FrameMode(UintEnum, boundary=STRICT):
@@ -166,19 +119,6 @@ class FrameMode(UintEnum, boundary=STRICT):
 
     [s]: ref:ethereum.forks.bogota.transactions.frame_transaction.FrameTransaction.sender
     """  # noqa: E501
-
-    POST_TX = Uint(3)
-    """
-    Assert the transaction's outcome, as defined by [EIP-7906].
-
-    `POST_TX` frames execute read-only as a trailing suffix of the
-    transaction's frames, after the execution body, and are the only
-    context in which the transaction-diff instructions are valid. A
-    failing `POST_TX` frame reverts the execution body without
-    invalidating the transaction.
-
-    [EIP-7906]: https://eips.ethereum.org/EIPS/eip-7906
-    """
 
 
 @final
@@ -449,25 +389,13 @@ class FrameTransaction:
     The ID of the chain on which this transaction is executed.
     """
 
-    nonce_keys: Tuple[U256, ...]
+    nonce: U256
     """
-    The nonce domains the transaction consumes, sharing one
-    [`nonce_seq`][ns].
+    A scalar value equal to the number of transactions sent by the
+    [`sender`][s].
 
-    [`LEGACY_NONCE_KEYS`][lnk] selects the [`sender`][s]'s account nonce;
-    any other set selects independent sequences held by the nonce
-    manager (see [`current_nonce_seq`][cns]).
-
-    [ns]: ref:ethereum.forks.bogota.transactions.frame_transaction.FrameTransaction.nonce_seq
-    [lnk]: ref:ethereum.forks.bogota.transactions.frame_transaction.LEGACY_NONCE_KEYS
     [s]: ref:ethereum.forks.bogota.transactions.frame_transaction.FrameTransaction.sender
-    [cns]: ref:ethereum.forks.bogota.keyed_nonces.current_nonce_seq
     """  # noqa: E501
-
-    nonce_seq: U64
-    """
-    The sequence number every selected nonce key must currently hold.
-    """
 
     sender: Address
     """
@@ -708,9 +636,8 @@ def validate_frame_transaction(
     from ..vm.gas import GasCosts
     from . import BLOB_COUNT_LIMIT, VERSIONED_HASH_VERSION_KZG
 
-    if tx.nonce_seq >= MAX_NONCE_SEQ:
+    if tx.nonce >= U256(U64.MAX_VALUE):
         raise NonceOverflowError("Nonce too high")
-    validate_nonce_keys(tx.nonce_keys)
 
     if tx.fees.max_fee_per_gas > Uint(U256.MAX_VALUE):
         raise FeeOverflowError("Max fee per gas too high")
@@ -746,7 +673,6 @@ def validate_frame_transaction(
     )
 
     has_expiry_verifier_frame = False
-    has_post_tx_frame = False
     total_frame_gas = Uint(0)
     total_frame_execution_gas = Uint(0)
     total_frame_state_gas = Uint(0)
@@ -762,16 +688,6 @@ def validate_frame_transaction(
         if frame.mode != FrameMode.SENDER and frame.value != U256(0):
             raise InvalidFrameError("only sender frames can transfer value")
 
-        # EIP-7906: `POST_TX` frames form a contiguous trailing suffix
-        # of the frame list, so the diff they observe is the
-        # transaction's final outcome.
-        if frame.mode == FrameMode.POST_TX:
-            has_post_tx_frame = True
-        elif has_post_tx_frame:
-            raise InvalidFrameError(
-                "frame after a POST_TX frame is not POST_TX"
-            )
-
         if FrameFlag.APPROVE_EXECUTION in frame.flags:
             if isinstance(frame.to, Address) and frame.to != tx.sender:
                 raise InvalidFrameError(
@@ -783,22 +699,11 @@ def validate_frame_transaction(
                 raise InvalidFrameError(
                     "atomic batches cannot contain verify frames"
                 )
-            # The flag is valid only on `DEFAULT` and `SENDER` frames, and
-            # no batch may end on a `POST_TX` frame, so unrolling a failed
-            # batch can never skip an assertion.
-            if frame.mode == FrameMode.POST_TX:
-                raise InvalidFrameError(
-                    "POST_TX frames cannot have atomic flag"
-                )
             if index + 1 >= len(tx.frames):
                 raise InvalidFrameError("last frame cannot have atomic flag")
             if tx.frames[index + 1].mode == FrameMode.VERIFY:
                 raise InvalidFrameError(
                     "atomic batches cannot contain verify frames"
-                )
-            if tx.frames[index + 1].mode == FrameMode.POST_TX:
-                raise InvalidFrameError(
-                    "atomic batches cannot contain POST_TX frames"
                 )
 
         # Approval scope is disallowed on every frame of an atomic
@@ -861,47 +766,6 @@ def validate_frame_transaction(
     )
 
 
-def validate_nonce_keys(nonce_keys: Tuple[U256, ...]) -> None:
-    """
-    Check that a transaction selects a well-formed set of nonce keys.
-
-    The set holds between one and [`MAX_NONCE_KEYS`][mnk] keys in
-    strictly increasing order, so each set has one canonical encoding.
-    The zero key aliases the sender's account nonce and may only appear
-    alone, as [`LEGACY_NONCE_KEYS`][lnk].
-
-    [mnk]: ref:ethereum.forks.bogota.transactions.frame_transaction.MAX_NONCE_KEYS
-    [lnk]: ref:ethereum.forks.bogota.transactions.frame_transaction.LEGACY_NONCE_KEYS
-    """  # noqa: E501
-    key_count = ulen(nonce_keys)
-    if key_count < Uint(1) or key_count > MAX_NONCE_KEYS:
-        raise InvalidFrameError("invalid nonce key count")
-    for previous, key in zip(nonce_keys, nonce_keys[1:], strict=False):
-        if key <= previous:
-            raise InvalidFrameError("nonce keys not strictly increasing")
-    if U256(0) in nonce_keys and nonce_keys != LEGACY_NONCE_KEYS:
-        raise InvalidFrameError("zero nonce key alongside other keys")
-
-
-def nonce_keys_hash(tx: FrameTransaction) -> Hash32:
-    """
-    Return the commitment to the transaction's nonce key set exposed to
-    the EVM: the hash of the key count followed by every key, each as a
-    32-byte big-endian word.
-    """
-    words = [U256(len(tx.nonce_keys)).to_be_bytes32()]
-    words.extend(nonce_key.to_be_bytes32() for nonce_key in tx.nonce_keys)
-    return keccak256(b"".join(words))
-
-
-def nonce_calldata(tx: FrameTransaction) -> Bytes:
-    """
-    Return the encoding of the transaction's nonce fields, which is
-    priced as transaction data.
-    """
-    return rlp.encode(tx.nonce_keys) + rlp.encode(tx.nonce_seq)
-
-
 def signature_verification_gas(signature: FrameSignature) -> ExecutionGas:
     """
     Return the gas charged for validating a single signature entry.
@@ -929,12 +793,13 @@ def calculate_frame_transaction_intrinsic_cost(
     The intrinsic cost is the base cost, the per-frame cost, the calldata
     cost of the byte fields priced as calldata — the `data` of each
     frame, the `signer`, `message`, and `signature` bytes of each
-    signature entry, and the encoding of the nonce fields (see
-    [`nonce_calldata`][nc]) — the signature verification cost, the value transfer cost
-    of each value-bearing frame with an explicit target other than the
-    sender, covering the recipient balance write and transfer log, and
-    the keyed nonce access cost of each non-zero nonce key (see
-    [`KEYED_NONCE_ACCESS`][kna]), covering the read and write of its slot.
+    signature entry, and under [EIP-8250] the encoding of the nonce
+    fields (see `nonce_calldata`) — the signature verification
+    cost, the value transfer cost of each value-bearing frame with an
+    explicit target other than the sender, covering the recipient balance
+    write and transfer log, and under [EIP-8250] the keyed nonce access
+    cost of each non-zero nonce key (see `KEYED_NONCE_ACCESS`),
+    covering the read and write of its slot.
     Unlike other transaction types, there is no recipient component:
     target access is paid during frame execution from each frame's own
     execution gas budget.
@@ -947,15 +812,13 @@ def calculate_frame_transaction_intrinsic_cost(
     base.
 
     [EIP-7976]: https://eips.ethereum.org/EIPS/eip-7976
-    [nc]: ref:ethereum.forks.bogota.transactions.frame_transaction.nonce_calldata
-    [kna]: ref:ethereum.forks.bogota.vm.gas.GasCosts.KEYED_NONCE_ACCESS
+    [EIP-8250]: https://eips.ethereum.org/EIPS/eip-8250
     """  # noqa: E501
     from ..vm.gas import GasCosts
     from . import IntrinsicGasCost, count_tokens_in_data
 
-    nonce_data = nonce_calldata(tx)
-    tokens = count_tokens_in_data(nonce_data)
-    data_length = ulen(nonce_data)
+    tokens = Uint(0)
+    data_length = Uint(0)
     value_transfer_gas = Uint(0)
     for frame in tx.frames:
         tokens += count_tokens_in_data(frame.data)
@@ -981,19 +844,11 @@ def calculate_frame_transaction_intrinsic_cost(
     # EIP-7976 floor tokens: all charged bytes count uniformly.
     floor_tokens = data_length * GasCosts.TX_DATA_TOKEN_STANDARD
 
-    # The legacy key set reads and writes the account nonce instead.
-    keyed_nonce_access_gas = Uint(0)
-    if tx.nonce_keys != LEGACY_NONCE_KEYS:
-        keyed_nonce_access_gas = (
-            ulen(tx.nonce_keys) * GasCosts.KEYED_NONCE_ACCESS
-        )
-
     base_execution_gas = (
         GasCosts.TX_FRAME_INTRINSIC
         + ulen(tx.frames) * GasCosts.TX_PER_FRAME
         + signature_gas
         + value_transfer_gas
-        + keyed_nonce_access_gas
     )
 
     return IntrinsicGasCost(

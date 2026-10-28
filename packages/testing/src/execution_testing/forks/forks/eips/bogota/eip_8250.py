@@ -27,6 +27,11 @@ class EIP8250(BaseFork):
     """EIP-8250 class."""
 
     @classmethod
+    def frame_transaction_nonce_keys(cls) -> bool:
+        """Frame transactions carry a nonce key set on the wire."""
+        return True
+
+    @classmethod
     def gas_costs(cls) -> GasCosts:
         """
         Add the keyed nonce access cost: EIP-8038's cold storage access

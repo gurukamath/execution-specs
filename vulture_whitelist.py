@@ -11,8 +11,15 @@ from ethereum.cancun.blocks import Withdrawal
 from ethereum.ethash import *
 from ethereum.fork_criteria import Unscheduled
 from ethereum.forks.bogota.transactions.frame_transaction import (
-    RECENT_ROOT_ADDRESS,
     FrameMode,
+)
+from ethereum.forks.develop.eips import (
+    OWNED_MODULES,
+    REQUIRES,
+    TARGETS,
+)
+from ethereum.forks.develop.transactions.frame_transaction import (
+    RECENT_ROOT_ADDRESS,
 )
 from ethereum.trace import EvmTracer
 from ethereum.utils.hexadecimal import hex_to_bytes256
@@ -34,6 +41,15 @@ from ethereum_spec_tools.loaders.transaction_loader import (
 )
 from ethereum_spec_tools.new_fork.codemod.comment import CommentReplaceCommand
 from ethereum_spec_tools.new_fork.codemod.constant import SetConstantCommand
+from ethereum_spec_tools.new_fork.codemod.feature_guards import (
+    FoldFeatureGuardsCommand,
+    _ConditionalNameCollector,
+    _DecidedEntryRemover,
+    _DedentDocstrings,
+    _RemovedQualifiedNames,
+    _RewriteDocstringLinks,
+    _SurvivingFlagFinder,
+)
 from ethereum_spec_tools.new_fork.codemod.string_replace import (
     StringReplaceCommand,
 )
@@ -47,11 +63,19 @@ Withdrawal.validator_index
 # src/ethereum/fork_criteria.py
 Unscheduled
 
+# src/ethereum/forks/develop/eips.py - read by the guard lint, the fold
+# codemod and the fork generator
+REQUIRES
+OWNED_MODULES
+TARGETS
+
+# src/ethereum/forks/develop/transactions/frame_transaction.py -
+# documents the EIP-8272 recent root contract; nothing in `src/` calls it
+RECENT_ROOT_ADDRESS
+
 # src/ethereum/forks/bogota/transactions/frame_transaction.py -
 # constructed while decoding transactions, never compared explicitly
 FrameMode.DEFAULT
-# Documents the EIP-8272 recent root contract; nothing in `src/` calls it.
-RECENT_ROOT_ADDRESS
 
 # src/ethereum/ethash.py
 ethash.generate_dataset
@@ -139,6 +163,38 @@ GlacierForksHygiene.visit_Pass
 # src/ethereum_spec_tools/lint/lints/glacier_forks_hygiene.py
 ImportHygiene
 ImportHygiene.visit_AnnAssign
+
+# src/ethereum_spec_tools/new_fork/codemod/feature_guards.py - libcst
+# visitor hooks and command-line entry points
+FoldFeatureGuardsCommand
+FoldFeatureGuardsCommand.METADATA_DEPENDENCIES
+FoldFeatureGuardsCommand.add_args
+FoldFeatureGuardsCommand.leave_If
+FoldFeatureGuardsCommand.leave_IndentedBlock
+FoldFeatureGuardsCommand.leave_ImportFrom
+FoldFeatureGuardsCommand.visit_Annotation
+FoldFeatureGuardsCommand.leave_Annotation
+FoldFeatureGuardsCommand.leave_FunctionDef
+FoldFeatureGuardsCommand.leave_BinaryOperation
+FoldFeatureGuardsCommand.leave_Subscript
+_ConditionalNameCollector.visit_If
+_DedentDocstrings.visit_SimpleStatementLine
+_DedentDocstrings.leave_SimpleStatementLine
+_DedentDocstrings.leave_SimpleString
+_RewriteDocstringLinks.visit_SimpleStatementLine
+_RewriteDocstringLinks.leave_SimpleStatementLine
+_RewriteDocstringLinks.leave_SimpleString
+_RemovedQualifiedNames.visit_ClassDef
+_RemovedQualifiedNames.leave_ClassDef
+_RemovedQualifiedNames.visit_FunctionDef
+_RemovedQualifiedNames.visit_If
+_SurvivingFlagFinder.visit_Name
+_DecidedEntryRemover.visit_DictElement
+_DecidedEntryRemover.leave_DictElement
+_DecidedEntryRemover.leave_Dict
+_DecidedEntryRemover.leave_Element
+_DecidedEntryRemover.visit_Call
+_DecidedEntryRemover.leave_Call
 
 # src/ethereum_spec_tools/new_fork/codemod/constant.py
 SetConstantCommand

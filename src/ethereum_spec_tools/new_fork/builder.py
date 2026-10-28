@@ -3,18 +3,23 @@ Defines `ForkBuilder`, a class that can take a template fork and transform it
 into a new fork.
 """
 
+import importlib
 import json
 import re
+import subprocess
 import sys
 import warnings
 from abc import ABC, abstractmethod
+from collections.abc import Collection, Mapping
 from contextlib import ExitStack, chdir
 from dataclasses import dataclass, field
 from pathlib import Path
 from shutil import copytree, ignore_patterns, rmtree
 from tempfile import TemporaryDirectory
+from types import ModuleType
 from typing import ClassVar, Final, NamedTuple
 
+import libcst as cst
 from ethereum_types.numeric import U64, U256, Uint
 from libcst.tool import main as libcst_tool
 from typing_extensions import override
@@ -26,7 +31,8 @@ from ethereum.fork_criteria import (
     Unscheduled,
 )
 
-from ..forks import Hardfork
+from ..forks import DEVELOP_FORK_NAME, Hardfork
+from .codemod.feature_guards import FLAG_PATTERN, removed_qualified_names
 
 
 def _source_file_for(fork_root: Path, qualified_name: str) -> Path:
@@ -72,6 +78,221 @@ class CodemodArgs(ABC):
         self, fork_builder: "ForkBuilder", working_directory: Path
     ) -> list[list[str]]:
         raise NotImplementedError
+
+    def _before(
+        self, fork_builder: "ForkBuilder", working_directory: Path
+    ) -> None:
+        """
+        Run before this modifier's codemods; file system work goes here.
+        """
+        del fork_builder, working_directory
+
+    def _after(
+        self, fork_builder: "ForkBuilder", working_directory: Path
+    ) -> None:
+        """
+        Run after this modifier's codemods have been applied.
+        """
+        del fork_builder, working_directory
+
+
+def flags_of(eips: ModuleType) -> dict[int, str]:
+    """
+    Map each EIP number a flags module defines to its flag name.
+    """
+    flags: dict[int, str] = {}
+    for name in dir(eips):
+        match = FLAG_PATTERN.match(name)
+        if match is not None:
+            flags[int(match.group(1))] = name
+    return flags
+
+
+def validate_eip_selection(
+    enabled: Collection[int],
+    disabled: Collection[int],
+    flags: Collection[int],
+    requires: Mapping[int, Collection[int]],
+) -> None:
+    """
+    Reject a selection of EIPs that the flags module cannot honour.
+
+    An EIP cannot be both enabled and disabled, every selected EIP needs
+    a flag, and an enabled EIP's requirements must be enabled as well: a
+    requirement left undecided would keep its guards around code that the
+    dependent EIP already assumes is present.
+    """
+    both = set(enabled) & set(disabled)
+    if both:
+        raise ValueError(f"EIPs both enabled and disabled: {sorted(both)}")
+    unknown = (set(enabled) | set(disabled)) - set(flags)
+    if unknown:
+        raise ValueError(f"no feature flag for EIPs: {sorted(unknown)}")
+    for eip in sorted(enabled):
+        missing = set(requires.get(eip, ())) - set(enabled)
+        if missing:
+            raise ValueError(
+                f"EIP-{eip} requires {sorted(missing)}, which are not enabled"
+            )
+
+
+def with_requirements(
+    eips: Collection[int], requires: Mapping[int, Collection[int]]
+) -> frozenset[int]:
+    """
+    Close a set of EIPs under `requires`: add every EIP one of them
+    builds on, transitively.
+    """
+    closed = set(eips)
+    pending = list(eips)
+    while pending:
+        for requirement in requires.get(pending.pop(), ()):
+            if requirement not in closed:
+                closed.add(requirement)
+                pending.append(requirement)
+    return frozenset(closed)
+
+
+def with_dependents(
+    eips: Collection[int], requires: Mapping[int, Collection[int]]
+) -> frozenset[int]:
+    """
+    Close a set of EIPs under the reverse of `requires`: add every EIP
+    that builds on one of them, transitively.
+    """
+    closed = set(eips)
+    pending = list(eips)
+    while pending:
+        removed = pending.pop()
+        for dependent, requirements in requires.items():
+            if removed in requirements and dependent not in closed:
+                closed.add(dependent)
+                pending.append(dependent)
+    return frozenset(closed)
+
+
+@dataclass
+class FoldFeatureGuards(CodemodArgs):
+    """
+    Fold the template fork's EIP feature guards for a decided selection.
+
+    EIPs in neither set keep their guards. Modules that exist only for a
+    disabled EIP are deleted before the fold, and the flags module itself
+    is deleted afterwards when no flag remains in it. Docstring `ref:`
+    links move from the template's package name to the new fork's, and
+    links to names the fold removes are dropped: the deleted modules and,
+    from a scan of the template before folding, every name bound only in
+    a discarded branch.
+    """
+
+    enabled: frozenset[int]
+    disabled: frozenset[int]
+    flags_module: str = "eips"
+    _removed_names: list[str] = field(default_factory=list, init=False)
+
+    def _eips(self, fork_builder: "ForkBuilder") -> ModuleType:
+        name = f"{fork_builder.template_fork.name}.{self.flags_module}"
+        try:
+            return importlib.import_module(name)
+        except ModuleNotFoundError as error:
+            raise ValueError(
+                f"fork `{fork_builder.template_fork.short_name}` has no"
+                f" `{self.flags_module}` module to fold"
+            ) from error
+
+    @staticmethod
+    def _fork_root(
+        fork_builder: "ForkBuilder", working_directory: Path
+    ) -> Path:
+        return working_directory / "ethereum" / fork_builder.new_fork
+
+    @override
+    def _before(
+        self, fork_builder: "ForkBuilder", working_directory: Path
+    ) -> None:
+        eips = self._eips(fork_builder)
+        validate_eip_selection(
+            self.enabled,
+            self.disabled,
+            flags_of(eips),
+            getattr(eips, "REQUIRES", {}),
+        )
+        owned: Mapping[int, Collection[str]] = getattr(
+            eips, "OWNED_MODULES", {}
+        )
+        fork_root = self._fork_root(fork_builder, working_directory)
+        qualname = f"ethereum.forks.{fork_builder.new_fork}"
+        removed: set[str] = set()
+        for eip in sorted(self.disabled):
+            for dotted in owned.get(eip, ()):
+                target = fork_root.joinpath(*dotted.split("."))
+                if target.is_dir():
+                    rmtree(target)
+                elif target.with_suffix(".py").is_file():
+                    target.with_suffix(".py").unlink()
+                else:
+                    raise FileNotFoundError(
+                        f"owned module `{dotted}` of EIP-{eip} is not in"
+                        " the fork"
+                    )
+                removed.add(f"{qualname}.{dotted}")
+
+        flags = flags_of(eips)
+        enable = [flags[eip] for eip in sorted(self.enabled)]
+        disable = [flags[eip] for eip in sorted(self.disabled)]
+        for path in sorted(fork_root.rglob("*.py")):
+            parts = list(path.relative_to(fork_root).with_suffix("").parts)
+            if parts[-1] == "__init__":
+                parts.pop()
+            module_name = ".".join([qualname, *parts])
+            removed |= removed_qualified_names(
+                cst.parse_module(path.read_text()),
+                module_name,
+                enable,
+                disable,
+            )
+        self._removed_names = sorted(removed)
+
+    @override
+    def _to_args(
+        self, fork_builder: "ForkBuilder", working_directory: Path
+    ) -> list[list[str]]:
+        flags = flags_of(self._eips(fork_builder))
+        command = [
+            "codemod",
+            "feature_guards.FoldFeatureGuardsCommand",
+            "--no-format",
+            "--flags-module",
+            self.flags_module,
+        ]
+        for eip in sorted(self.enabled):
+            command.extend(["--enable", flags[eip]])
+        for eip in sorted(self.disabled):
+            command.extend(["--disable", flags[eip]])
+        command.extend(
+            [
+                "--ref-prefix",
+                fork_builder.template_fork.name,
+                f"ethereum.forks.{fork_builder.new_fork}",
+            ]
+        )
+        for name in self._removed_names:
+            command.extend(["--removed-name", name])
+        command.append(str(self._fork_root(fork_builder, working_directory)))
+        return [command]
+
+    @override
+    def _after(
+        self, fork_builder: "ForkBuilder", working_directory: Path
+    ) -> None:
+        path = (
+            self._fork_root(fork_builder, working_directory)
+            / f"{self.flags_module}.py"
+        )
+        if path.is_file() and not re.search(
+            r"^EIP_\d+\s*:", path.read_text(), re.MULTILINE
+        ):
+            path.unlink()
 
 
 @dataclass
@@ -397,6 +618,12 @@ class ForkBuilder:
     Ordered list of code modifiers to apply while creating the new fork.
     """
 
+    format: bool
+    """
+    Run the formatter and import sorter over the new fork after the
+    modifiers. Off for temporary clones, on for forks people will read.
+    """
+
     fork_criteria: ForkCriteria
     """
     When the new fork is scheduled.
@@ -420,21 +647,32 @@ class ForkBuilder:
         new_fork: str,
     ) -> None:
         self.force = False
+        self.format = False
 
-        forks = Hardfork.discover()
+        forks = Hardfork.discover(include_develop=True)
+        generated = [f for f in forks if f.short_name != DEVELOP_FORK_NAME]
 
-        # Find the `Hardfork` object named by `template_fork`.
+        # Find the `Hardfork` object named by `template_fork`, and the fork
+        # that precedes it. The development source precedes nothing and
+        # shares its criteria with the forks generated from it, so its
+        # predecessor is the last fork scheduled strictly before it.
         before = None
         found = None
-        for index, fork in enumerate(forks):
+        for fork in forks:
             if fork.short_name == template_fork:
                 found = fork
-                if index > 0:
-                    before = forks[index - 1]
                 break
 
         if found is None:
             raise ValueError(f"no fork named `{template_fork}` found")
+
+        if found.short_name == DEVELOP_FORK_NAME:
+            earlier = [f for f in generated if f.criteria < found.criteria]
+            before = earlier[-1] if earlier else None
+        else:
+            index = generated.index(found)
+            if index > 0:
+                before = generated[index - 1]
 
         if before:
             assert before.short_name != new_fork
@@ -450,7 +688,7 @@ class ForkBuilder:
             self.output = Path(template_path).parent
 
         # Try to make a sane guess for the activation criteria.
-        if found is forks[-1] or isinstance(found.criteria, Unscheduled):
+        if found is generated[-1] or isinstance(found.criteria, Unscheduled):
             order_index = 0
 
             # check template fork's criteria and bump order_index if needed
@@ -526,6 +764,7 @@ class ForkBuilder:
 
     def _modify(self, working_directory: TemporaryDirectory) -> None:
         for modifier in self.modifiers:
+            modifier._before(self, Path(working_directory.name))
             for args in modifier._to_args(self, Path(working_directory.name)):
                 with TemporaryDirectory() as config_directory:
                     with chdir(config_directory):
@@ -536,6 +775,46 @@ class ForkBuilder:
                         )
                         if exit_code != 0:
                             sys.exit(exit_code)
+            modifier._after(self, Path(working_directory.name))
+
+    @staticmethod
+    def _ruff_config() -> Path | None:
+        """
+        Find the repository's `pyproject.toml`, so that a fork written
+        outside the repository is still formatted to its rules.
+        """
+        for start in (Path.cwd(), Path(__file__).resolve()):
+            for directory in (start, *start.parents):
+                candidate = directory / "pyproject.toml"
+                if candidate.is_file() and "[tool.ruff]" in (
+                    candidate.read_text()
+                ):
+                    return candidate
+        return None
+
+    def _format(self, package: Path) -> None:
+        config = self._ruff_config()
+        config_args = ["--config", str(config)] if config else []
+        for args in (
+            ["format", *config_args, str(package)],
+            [
+                "check",
+                "--fix",
+                "--select",
+                "I,F401",
+                *config_args,
+                str(package),
+            ],
+        ):
+            result = subprocess.run(
+                [sys.executable, "-m", "ruff", *args],
+                capture_output=True,
+                text=True,
+            )
+            if result.returncode != 0:
+                raise RuntimeError(
+                    f"ruff {args[0]} failed:\n{result.stdout}{result.stderr}"
+                )
 
     def build(self) -> None:
         """
@@ -550,7 +829,46 @@ class ForkBuilder:
 
             self._copy(package)
             self._modify(working_directory)
+            if self.format:
+                self._format(package)
             self._commit(package)
+
+    def template_flags(self) -> dict[int, str]:
+        """
+        The EIP feature flags the template fork defines, by EIP number.
+        """
+        try:
+            eips = importlib.import_module(f"{self.template_fork.name}.eips")
+        except ModuleNotFoundError:
+            return {}
+        return flags_of(eips)
+
+    def template_requires(self) -> Mapping[int, Collection[int]]:
+        """
+        The `REQUIRES` table of the template fork's flags module.
+        """
+        try:
+            eips = importlib.import_module(f"{self.template_fork.name}.eips")
+        except ModuleNotFoundError:
+            return {}
+        requires: Mapping[int, Collection[int]] = getattr(eips, "REQUIRES", {})
+        return requires
+
+    def fold_feature_guards(
+        self,
+        enabled: Collection[int],
+        disabled: Collection[int] | None = None,
+    ) -> None:
+        """
+        Append a `CodemodArgs` that folds the template's EIP feature
+        guards. With `disabled` omitted, every flag not enabled is
+        disabled, so the result carries no guard at all.
+        """
+        if disabled is None:
+            disabled = set(self.template_flags()) - set(enabled)
+        self.modifiers.append(
+            FoldFeatureGuards(frozenset(enabled), frozenset(disabled))
+        )
 
     def modify_target_blob_gas_per_block(
         self, blob_target_gas_per_block: U64

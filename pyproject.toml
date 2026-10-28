@@ -181,6 +181,13 @@ packages = [
     "ethereum.forks.bogota.vm.instructions",
     "ethereum.forks.bogota.vm.precompiled_contracts",
     "ethereum.forks.bogota.vm.precompiled_contracts.bls12_381",
+    "ethereum.forks.develop",
+    "ethereum.forks.develop.transactions",
+    "ethereum.forks.develop.utils",
+    "ethereum.forks.develop.vm",
+    "ethereum.forks.develop.vm.instructions",
+    "ethereum.forks.develop.vm.precompiled_contracts",
+    "ethereum.forks.develop.vm.precompiled_contracts.bls12_381",
 ]
 
 [tool.setuptools.package-data]
@@ -273,6 +280,7 @@ version = { attr = "ethereum.__version__" }
 ethereum-spec-lint = "ethereum_spec_tools.lint:main"
 ethereum-spec-sync = "ethereum_spec_tools.sync:main"
 ethereum-spec-new-fork = "ethereum_spec_tools.new_fork.cli:main"
+ethereum-spec-generate-forks = "ethereum_spec_tools.new_fork.generate:main"
 ethereum-spec-patch = "ethereum_spec_tools.patch_tool:main"
 
 [project.entry-points."docc.plugins"]
@@ -307,6 +315,9 @@ omit = [
     "*/ethereum/forks/*_glacier/*",
     "*/ethereum/forks/dao_fork/*",
     "*/ethereum/forks/bpo*/*",
+    # The development source never runs as a fork, and its flag module
+    # is imported before coverage starts.
+    "*/ethereum/forks/develop/*",
 ]
 
 [tool.coverage.report]
@@ -365,6 +376,8 @@ paths = [
 excluded_paths = [
     "src/ethereum_optimized",
     "src/ethereum_spec_tools",
+    # The development source: every EIP behind a flag, not a fork.
+    "src/ethereum/forks/develop",
 ]
 
 [tool.docc.plugins."docc.html.context"]
@@ -499,6 +512,10 @@ warn_unused_ignores = true
 warn_unused_configs = true
 warn_redundant_casts = true
 ignore_missing_imports = false
+# EIP feature flags of the fork under development; every checked-in
+# flag is True, so their `else` branches are type-checked only on
+# folded output.
+always_true = ["EIP_8141", "EIP_8250", "EIP_8272", "EIP_7906"]
 mypy_path = ["src", "packages/testing/src", "packages/testing/stubs"]
 files = ["src", "tests", "packages"]
 enable_error_code = [

@@ -22,7 +22,7 @@ import os
 from typing import Any, Dict, List, Optional, TextIO, Tuple
 
 from ethereum_rlp import rlp
-from ethereum_spec_tools.forks import Hardfork
+from ethereum_spec_tools.forks import DEVELOP_FORK_NAME, Hardfork
 from ethereum_spec_tools.loaders.fork_loader import ForkLoad
 from ethereum_spec_tools.utils import FatalError, find_fork, parse_hex_or_int
 from ethereum_types.bytes import Bytes
@@ -265,13 +265,23 @@ _TESTING_FORK_NAME_OVERRIDES = {
 }
 
 
-def _testing_fork_from_spec_hardfork(hardfork: Hardfork) -> Any:
-    """Map a spec ``Hardfork`` to the matching testing ``Fork`` class."""
+def _testing_fork_from_spec_hardfork(
+    hardfork: Hardfork, state_fork: str
+) -> Any:
+    """
+    Map a spec ``Hardfork`` to the matching testing ``Fork`` class.
+
+    A pseudo-fork resolves to the development source, which names no
+    testing fork; its class is the one named by ``state_fork``.
+    """
     # Function-scoped: see import-cycle note in ``result.py``.
     from execution_testing.forks import get_fork_by_name
 
-    name = hardfork.title_case_name.replace(" ", "")
-    name = _TESTING_FORK_NAME_OVERRIDES.get(name, name)
+    if hardfork.short_name == DEVELOP_FORK_NAME:
+        name = state_fork
+    else:
+        name = hardfork.title_case_name.replace(" ", "")
+        name = _TESTING_FORK_NAME_OVERRIDES.get(name, name)
     fork = get_fork_by_name(name)
     if fork is None:
         raise ValueError(
@@ -337,7 +347,9 @@ def build_t8n_from_cli_options(
         stdin = None
 
     fork_module, fork_block = find_fork(forks, options, stdin)
-    testing_fork = _testing_fork_from_spec_hardfork(fork_module)
+    testing_fork = _testing_fork_from_spec_hardfork(
+        fork_module, options.state_fork
+    )
 
     raw_alloc_json = _read_json_input(options.input_alloc, stdin, "alloc")
     raw_env_json = _read_json_input(options.input_env, stdin, "env")

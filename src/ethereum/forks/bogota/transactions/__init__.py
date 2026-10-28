@@ -562,6 +562,8 @@ def encode_transaction(tx: Transaction) -> LegacyTransaction | Bytes:
     Legacy transactions are returned as-is, while other transaction types
     are prefixed with their type identifier and RLP encoded.
     """
+    if isinstance(tx, FrameTransaction):
+        return b"\x06" + rlp.encode(tx)
     if isinstance(tx, LegacyTransaction):
         return tx
     elif isinstance(tx, AccessListTransaction):
@@ -572,8 +574,6 @@ def encode_transaction(tx: Transaction) -> LegacyTransaction | Bytes:
         return b"\x03" + rlp.encode(tx)
     elif isinstance(tx, SetCodeTransaction):
         return b"\x04" + rlp.encode(tx)
-    elif isinstance(tx, FrameTransaction):
-        return b"\x06" + rlp.encode(tx)
     else:
         raise Exception(f"Unable to encode transaction of type {type(tx)}")
 
@@ -593,6 +593,8 @@ def decode_transaction(tx: LegacyTransaction | Bytes) -> Transaction:
     if isinstance(tx, Bytes):
         if len(tx) == 0:
             raise InvalidBlock("empty transaction")
+        if tx[0] == 6:
+            return rlp.decode_to(FrameTransaction, tx[1:])
         if tx[0] == 1:
             return rlp.decode_to(AccessListTransaction, tx[1:])
         elif tx[0] == 2:
@@ -601,8 +603,6 @@ def decode_transaction(tx: LegacyTransaction | Bytes) -> Transaction:
             return rlp.decode_to(BlobTransaction, tx[1:])
         elif tx[0] == 4:
             return rlp.decode_to(SetCodeTransaction, tx[1:])
-        elif tx[0] == 6:
-            return rlp.decode_to(FrameTransaction, tx[1:])
         elif 0xC0 <= tx[0] <= 0xFE:
             return rlp.decode_to(LegacyTransaction, tx)
         else:
@@ -757,8 +757,9 @@ def calculate_intrinsic_cost(
     """
     from ..vm.gas import GasCosts, init_code_cost
 
-    # Frame transactions never reach this function; their intrinsic cost
-    # is calculated by `calculate_frame_transaction_intrinsic_cost`.
+    # Frame transactions never reach this function; their intrinsic
+    # cost is calculated by
+    # `calculate_frame_transaction_intrinsic_cost`.
     assert not isinstance(tx, FrameTransaction)
 
     tokens_in_calldata = count_tokens_in_data(tx.data)
@@ -898,12 +899,11 @@ def check_nonce(tx: Transaction, sender_nonce: Uint) -> None:
     """
     Check that the transaction's nonce equals the sender's next nonce.
 
-    Frame transactions select nonce keys instead and are checked by
-    [`check_nonce_set`][cns].
+    Frame transactions under [EIP-8250] select nonce keys instead and
+    are checked by `check_nonce_set`.
 
-    [cns]: ref:ethereum.forks.bogota.keyed_nonces.check_nonce_set
+    [EIP-8250]: https://eips.ethereum.org/EIPS/eip-8250
     """
-    assert not isinstance(tx, FrameTransaction)
     if sender_nonce > Uint(tx.nonce):
         raise NonceMismatchError("nonce too low")
     elif sender_nonce < Uint(tx.nonce):

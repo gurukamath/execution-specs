@@ -490,6 +490,8 @@ def encode_receipt(
     - FrameTransaction receipts are prefixed with `b"\x06"`.
     - LegacyTransaction receipts are returned as is.
     """
+    if isinstance(tx, FrameTransaction):
+        return b"\x06" + rlp.encode(receipt)
     if isinstance(tx, AccessListTransaction):
         return b"\x01" + rlp.encode(receipt)
     elif isinstance(tx, FeeMarketTransaction):
@@ -498,8 +500,6 @@ def encode_receipt(
         return b"\x03" + rlp.encode(receipt)
     elif isinstance(tx, SetCodeTransaction):
         return b"\x04" + rlp.encode(receipt)
-    elif isinstance(tx, FrameTransaction):
-        return b"\x06" + rlp.encode(receipt)
     else:
         assert isinstance(receipt, Receipt)
         return receipt
